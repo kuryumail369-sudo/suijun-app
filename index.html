@@ -241,14 +241,34 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="g2">
         <div class="mi"><label>作業名</label><input type="text" id="proj" placeholder="○○道路測量" oninput="markDirty()"></div>
         <div class="mi"><label>測量日</label><input type="date" id="date" oninput="markDirty()"></div>
-        <div class="mi"><label>担当者</label><input type="text" id="worker" placeholder="氏名" oninput="markDirty()"></div>
+        <div class="mi"><label>観測者名</label>
+          <div style="display:flex;gap:4px;">
+            <input type="text" id="worker" list="worker-dl" placeholder="観測者名" oninput="markDirty()" style="flex:1;">
+            <datalist id="worker-dl"></datalist>
+            <button onclick="saveWorkerName()" style="padding:6px 10px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-secondary);white-space:nowrap;">登録</button>
+          </div>
+        </div>
         <div class="mi"><label>天候</label><select id="wx" onchange="markDirty()"><option>晴</option><option>曇</option><option>雨</option><option>雪</option></select></div>
       </div>
       <div class="g3" style="margin-top:10px;">
-        <div class="mi"><label>起点BM (m)</label><input type="number" id="bm-s" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
-        <div class="mi"><label>終点BM (m)</label><input type="number" id="bm-e" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
+        <div class="mi"><label>起点BM (m)</label>
+          <div style="display:flex;gap:3px;align-items:center;">
+            <input type="number" id="bm-s" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" style="flex:1;">
+            <button onclick="startVoiceField('bm-s',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
+          </div>
+        </div>
+        <div class="mi"><label>終点BM (m)</label>
+          <div style="display:flex;gap:3px;align-items:center;">
+            <input type="number" id="bm-e" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" style="flex:1;">
+            <button onclick="startVoiceField('bm-e',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
+          </div>
+        </div>
         <div class="mi"><label>器差K (mm) <span id="k-ind" style="display:none;color:#d97706;font-size:10px;">●</span></label>
-          <input type="number" id="k-corr" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
+          <div style="display:flex;gap:3px;align-items:center;">
+            <input type="number" id="k-corr" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" style="flex:1;">
+            <button onclick="startVoiceField('k-corr',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -506,6 +526,7 @@ function showTab(n){
   if(n==='chk')runChecks();
   if(n==='exp')buildPrev();
   if(n==='sk'){renderThumbs();renderPins();}
+  if(n==='obs')updateWorkerDatalist();
   document.getElementById('pv').style.display='none';
   document.getElementById('ocr').style.display='none';
 }
@@ -646,19 +667,23 @@ function renderTbl(){
         <input class="ni" type="number" step="0.001" value="${val}" placeholder="—"
           onfocus="focusNi(${i},'${field}',${r.id})"
           oninput="updateField(${i},'${field}',this.value)">
-        <div style="display:flex;gap:3px;">
+        <div style="display:flex;gap:3px;margin-top:2px;">
           <button id="mic-${i}-${field}" onclick="startVoice(${i},'${field}')"
-            style="width:30px;height:22px;border-radius:4px;border:none;background:#E24B4A;color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">🎤</button>
+            style="font-size:9px;padding:1px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;-webkit-tap-highlight-color:transparent;">🎤</button>
           <button onclick="captureForCell(${r.id},'${field}')"
-            style="width:30px;height:22px;border-radius:4px;border:none;background:#185FA5;color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">📷</button>
+            style="font-size:9px;padding:1px 5px;border:0.5px solid #185FA5;border-radius:3px;cursor:pointer;background:none;color:#185FA5;-webkit-tap-highlight-color:transparent;">📷</button>
         </div>
       </div>`;
 
     const tr=document.createElement('tr');
     if(isFS)tr.style.color=isRet?'#d97706':'#185FA5';
+    const remeasBadge=r.remeasure?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#FAEEDA;color:#854F0B;margin-left:3px;">再測</span>`:'';
     tr.innerHTML=`
       <td style="vertical-align:top;min-width:92px;">
-        <input class="pi" type="text" value="${r.point}" placeholder="BM.1" oninput="getCurRows()[${i}].point=this.value;markDirty()">
+        <div style="display:flex;align-items:center;gap:2px;">
+          <input class="pi" type="text" value="${r.point}" placeholder="BM.1" oninput="getCurRows()[${i}].point=this.value;markDirty()">
+          ${remeasBadge}
+        </div>
         ${gpsHtml}
       </td>
       <td>${mk('bs',r.bs)}</td>
@@ -758,6 +783,57 @@ function captureForCell(rid,field){
     inp.remove();
   };
   document.body.appendChild(inp);inp.click();
+}
+
+// 任意フィールドへの音声入力
+function startVoiceField(fieldId, allowNegative=true){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('音声入力非対応（Chrome推奨）');return;}
+  const el=document.getElementById(fieldId);
+  if(!el)return;
+  ensureMicPermission().then(ok=>{
+    if(!ok)return;
+    const rec=new SR();
+    rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
+    const btn=event.target;
+    const orig=btn.textContent;
+    btn.textContent='⏺';btn.style.color='#E24B4A';btn.style.background='#FCEBEB';
+    rec.onresult=e=>{
+      const t=e.results[0][0].transcript;
+      const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);
+      if(m){
+        el.value=parseFloat(m[0]).toFixed(3);
+        el.dispatchEvent(new Event('input',{bubbles:true}));
+      } else {
+        alert(`"${t}" — 数値が認識できませんでした`);
+      }
+    };
+    const rst=()=>{btn.textContent=orig;btn.style.color='#E24B4A';btn.style.background='none';};
+    rec.onerror=rst;rec.onend=rst;
+    rec.start();
+  });
+}
+
+// ===== 観測者名管理 =====
+function loadWorkerNames(){
+  try{return JSON.parse(localStorage.getItem('suijun_workers')||'[]');}
+  catch(e){return[];}
+}
+function saveWorkerName(){
+  const name=document.getElementById('worker').value.trim();
+  if(!name){alert('観測者名を入力してください');return;}
+  const names=loadWorkerNames();
+  if(names.includes(name)){alert(`「${name}」はすでに登録されています`);return;}
+  names.push(name);
+  localStorage.setItem('suijun_workers',JSON.stringify(names));
+  updateWorkerDatalist();
+  alert(`「${name}」を登録しました`);
+}
+function updateWorkerDatalist(){
+  const dl=document.getElementById('worker-dl');
+  if(!dl)return;
+  const names=loadWorkerNames();
+  dl.innerHTML=names.map(n=>`<option value="${n}">`).join('');
 }
 
 // ===== GPS =====
@@ -1325,6 +1401,8 @@ if(!loaded||routes.length===0){
 renderRouteList();
 // スケッチ初期ページ
 newSkPage();
+// 観測者名datalist初期化
+updateWorkerDatalist();
 </script>
 </body>
 </html>
