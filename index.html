@@ -684,7 +684,10 @@ function renderTbl(){
           <input class="pi" type="text" value="${r.point}" placeholder="BM.1" oninput="getCurRows()[${i}].point=this.value;markDirty()">
           ${remeasBadge}
         </div>
-        ${gpsHtml}
+        <div style="display:flex;gap:3px;margin-top:2px;">
+          <button onclick="startVoicePoint(${i})" style="font-size:9px;padding:1px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;-webkit-tap-highlight-color:transparent;">🎤</button>
+          ${gpsHtml}
+        </div>
       </td>
       <td>${mk('bs',r.bs)}</td>
       <td>${mk('fs',r.fs)}</td>
@@ -783,6 +786,27 @@ function captureForCell(rid,field){
     inp.remove();
   };
   document.body.appendChild(inp);inp.click();
+}
+
+// 測点名の音声入力
+function startVoicePoint(idx){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('音声入力非対応（Chrome推奨）');return;}
+  ensureMicPermission().then(ok=>{
+    if(!ok)return;
+    const rec=new SR();
+    rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
+    const btn=event.target;
+    btn.textContent='⏺';btn.style.background='#FCEBEB';
+    rec.onresult=e=>{
+      const t=e.results[0][0].transcript.trim();
+      getCurRows()[idx].point=t;
+      markDirty();renderTbl();
+    };
+    const rst=()=>{btn.textContent='🎤';btn.style.background='none';};
+    rec.onerror=rst;rec.onend=rst;
+    rec.start();
+  });
 }
 
 // 任意フィールドへの音声入力
