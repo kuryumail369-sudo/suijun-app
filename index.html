@@ -386,8 +386,6 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 <!-- キーボードアクセサリバー -->
 <div id="kb-bar">
   <span id="kb-label" style="flex:1;font-size:13px;font-weight:500;color:var(--color-text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-  <button class="kb-btn" onclick="startVoiceKb()">🎤 音声</button>
-  <button class="kb-btn" onclick="captureDirectKb()">📷 撮影→OCR</button>
   <button class="kb-btn p" onclick="blurKb()">完了</button>
 </div>
 
@@ -643,9 +641,18 @@ function renderTbl(){
           <span class="pt-cam" style="display:flex;align-items:center;justify-content:center;">📸</span>
         </label>`;
 
-    const mk=(field,val)=>`<input class="ni" type="number" step="0.001" value="${val}" placeholder="—"
-      onfocus="focusNi(${i},'${field}',${r.id})"
-      oninput="updateField(${i},'${field}',this.value)">`;
+    const mk=(field,val)=>`
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <input class="ni" type="number" step="0.001" value="${val}" placeholder="—"
+          onfocus="focusNi(${i},'${field}',${r.id})"
+          oninput="updateField(${i},'${field}',this.value)">
+        <div style="display:flex;gap:3px;">
+          <button id="mic-${i}-${field}" onclick="startVoice(${i},'${field}')"
+            style="width:30px;height:22px;border-radius:4px;border:none;background:#E24B4A;color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">🎤</button>
+          <button onclick="captureForCell(${r.id},'${field}')"
+            style="width:30px;height:22px;border-radius:4px;border:none;background:#185FA5;color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">📷</button>
+        </div>
+      </div>`;
 
     const tr=document.createElement('tr');
     if(isFS)tr.style.color=isRet?'#d97706':'#185FA5';
@@ -716,6 +723,32 @@ function captureDirectKb(){
     const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
     const r=getCurRows().find(r=>r.id===activeKb?.rid)||{point:''};
     document.getElementById('ocr-lbl').textContent=`→${r.point} ${lbs[ocrTgt.field]||''}`;
+    ['ocr-res','ocr-spin','ocr-err'].forEach(x=>document.getElementById(x).style.display='none');
+    document.getElementById('ocr-prev').style.display='none';
+    document.getElementById('pv').style.display='none';
+    document.getElementById('ocr').style.display='block';
+    document.getElementById('ocr').scrollIntoView({behavior:'smooth',block:'start'});
+    handleOcrF(file);
+    inp.remove();
+  };
+  document.body.appendChild(inp);inp.click();
+}
+
+function captureDirectKb(){
+  if(!activeKb)return;
+  captureForCell(activeKb.rid,activeKb.field);
+}
+
+// セル内カメラボタン：直接撮影してOCR
+function captureForCell(rid,field){
+  ocrTgt={id:rid,field,dir:viewMode};
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='environment';inp.style.display='none';
+  inp.onchange=()=>{
+    const file=inp.files[0];if(!file){inp.remove();return;}
+    const r=getCurRows().find(r=>r.id===rid)||{point:''};
+    const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
+    document.getElementById('ocr-lbl').textContent=`→${r.point} ${lbs[field]||''}`;
     ['ocr-res','ocr-spin','ocr-err'].forEach(x=>document.getElementById(x).style.display='none');
     document.getElementById('ocr-prev').style.display='none';
     document.getElementById('pv').style.display='none';
