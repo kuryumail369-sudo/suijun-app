@@ -16,7 +16,6 @@
   --color-background-secondary:#f5f5f7;
   --color-text-primary:#1d1d1f;
   --color-text-secondary:#6e6e73;
-  --color-border-primary:#d2d2d7;
   --color-border-secondary:#d2d2d7;
   --color-border-tertiary:#e5e5ea;
   --border-radius-md:8px;
@@ -30,33 +29,56 @@
     --color-background-secondary:#2c2c2e;
     --color-text-primary:#f5f5f7;
     --color-text-secondary:#98989d;
-    --color-border-primary:#3a3a3c;
     --color-border-secondary:#3a3a3c;
     --color-border-tertiary:#2c2c2e;
   }
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{
-  background:var(--color-background-secondary);
-  color:var(--color-text-primary);
-  font-family:var(--font-sans);
-  min-height:100vh;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-.app{max-width:720px;margin:0 auto;padding:1rem;padding-top:max(1rem, env(safe-area-inset-top));}
-.rbar{display:flex;align-items:center;gap:6px;margin-bottom:12px;padding:8px 10px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);}
-.rbar select{flex:1;font-size:13px;padding:4px 6px;border:0.5px solid var(--color-border-secondary);border-radius:4px;background:var(--color-background-secondary);color:var(--color-text-primary);}
-.rbtn{font-size:12px;padding:4px 8px;border:0.5px solid var(--color-border-secondary);border-radius:4px;cursor:pointer;background:none;color:var(--color-text-secondary);white-space:nowrap;}
-.rbtn:hover{background:var(--color-background-secondary);}
+body{background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);min-height:100vh;padding-bottom:env(safe-area-inset-bottom);}
+.app{max-width:720px;margin:0 auto;padding:1rem;padding-top:max(1rem,env(safe-area-inset-top));}
+
+/* ===== ホーム画面 ===== */
+.home-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem;}
+.home-title{font-size:20px;font-weight:600;color:var(--color-text-primary);}
+.home-sub{font-size:12px;color:var(--color-text-secondary);margin-top:2px;}
+.route-list{display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem;}
+.route-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;}
+.route-card:active{background:var(--color-background-secondary);}
+.route-card-icon{font-size:22px;flex-shrink:0;}
+.route-card-body{flex:1;min-width:0;}
+.route-card-name{font-size:15px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.route-card-meta{font-size:12px;color:var(--color-text-secondary);margin-top:2px;}
+.route-card-badge{font-size:11px;padding:2px 8px;border-radius:20px;background:#E1F5EE;color:#0F6E56;white-space:nowrap;}
+.route-card-badge.ng{background:#FCEBEB;color:#A32D2D;}
+.route-card-badge.none{background:var(--color-background-secondary);color:var(--color-text-secondary);}
+.route-card-arrow{color:var(--color-text-secondary);font-size:16px;flex-shrink:0;}
+.new-route-btn{width:100%;padding:13px;border-radius:var(--border-radius-lg);border:1.5px dashed var(--color-border-secondary);background:none;color:#185FA5;font-size:15px;font-weight:500;cursor:pointer;}
+.new-route-btn:active{background:var(--color-background-primary);}
+.route-actions{display:flex;gap:8px;margin-bottom:8px;}
+.ract{flex:1;padding:7px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-secondary);}
+.ract:active{background:var(--color-background-primary);}
+.ract.danger{color:#E24B4A;}
+
+/* ===== 観測画面ヘッダー ===== */
+.obs-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.back-btn{font-size:14px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:#185FA5;white-space:nowrap;}
+.obs-title{font-size:16px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.save-ind{font-size:11px;color:var(--color-text-secondary);white-space:nowrap;}
+
+/* ===== タブ ===== */
 .tbar{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1.2rem;background:var(--color-background-primary);border-radius:var(--border-radius-md) var(--border-radius-md) 0 0;overflow:hidden;}
 .t{flex:1;padding:10px 2px;font-size:11px;cursor:pointer;color:var(--color-text-secondary);border-bottom:2px solid transparent;background:none;border-left:none;border-right:none;border-top:none;text-align:center;}
 .t.active{color:#185FA5;border-bottom:2px solid #185FA5;font-weight:600;}
+
+/* ===== カード ===== */
 .card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;}
 .slabel{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:block;}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 .mi label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:3px;}
 .mi input,.mi select{width:100%;padding:6px 8px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);}
+
+/* ===== 観測テーブル ===== */
 .tbl-wrap{overflow-x:auto;margin-top:8px;-webkit-overflow-scrolling:touch;}
 .otbl{border-collapse:collapse;font-size:13px;white-space:nowrap;}
 .otbl th{font-size:10px;color:var(--color-text-secondary);font-weight:500;padding:3px 4px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:right;}
@@ -64,24 +86,32 @@ body{
 .otbl td{padding:3px 4px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:right;vertical-align:top;}
 .otbl td:first-child{text-align:left;}
 .cc{color:var(--color-text-secondary);font-size:12px;vertical-align:middle!important;}
-.ni{width:66px;padding:3px 5px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:4px;text-align:right;background:var(--color-background-secondary);color:var(--color-text-primary);}
-.pi{width:50px;padding:3px 5px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:4px;background:var(--color-background-secondary);color:var(--color-text-primary);}
-.ic{font-size:12px;cursor:pointer;background:none;border:none;padding:1px;opacity:.45;line-height:1;}
-.ic:hover{opacity:1;}
+/* 測点名入力 — 広げて複数文字対応 */
+.ni{width:72px;padding:3px 5px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:4px;text-align:right;background:var(--color-background-secondary);color:var(--color-text-primary);}
+.pi{width:90px;padding:3px 6px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:4px;background:var(--color-background-secondary);color:var(--color-text-primary);}
+.ic{font-size:12px;cursor:pointer;background:none;border:none;padding:2px;opacity:.45;line-height:1;-webkit-tap-highlight-color:transparent;}
+.ic:active{opacity:1;}
 .rd{font-size:12px;cursor:pointer;color:var(--color-text-secondary);background:none;border:none;padding:0 3px;}
-.rd:hover{color:#E24B4A;}
-.pt-thumb{width:32px;height:32px;object-fit:cover;border-radius:4px;cursor:pointer;border:0.5px solid var(--color-border-secondary);}
-.pt-cam{width:30px;height:30px;border:1px dashed var(--color-border-secondary);border-radius:4px;cursor:pointer;background:none;font-size:13px;color:var(--color-text-secondary);}
-.add-btn{margin-top:8px;padding:5px 12px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:none;cursor:pointer;color:var(--color-text-secondary);}
-.pb{padding:6px 13px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-primary);}
+.rd:active{color:#E24B4A;}
+.pt-thumb{width:34px;height:34px;object-fit:cover;border-radius:4px;cursor:pointer;border:0.5px solid var(--color-border-secondary);}
+.pt-cam{width:34px;height:34px;border:1px dashed var(--color-border-secondary);border-radius:4px;cursor:pointer;background:none;font-size:15px;color:var(--color-text-secondary);-webkit-tap-highlight-color:transparent;}
+.pt-cam:active{background:var(--color-background-secondary);}
+.add-btn{margin-top:8px;padding:6px 12px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:none;cursor:pointer;color:var(--color-text-secondary);}
+
+/* ===== パネル ===== */
+.panel{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:1rem;margin-bottom:1rem;}
+.dz{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);padding:1.2rem;text-align:center;cursor:pointer;background:var(--color-background-primary);}
+.ocr-res{margin-top:10px;padding:10px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);display:none;}
+
+/* ===== ボタン ===== */
+.pb{padding:7px 14px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-primary);}
 .pb.p{background:#185FA5;color:#fff;border-color:#185FA5;}
 .xb{width:100%;padding:11px;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:none;color:var(--color-text-primary);margin-bottom:7px;}
 .xb.p{background:#185FA5;color:#fff;border-color:#185FA5;}
 .dir-btn{padding:6px 16px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-secondary);}
 .dir-btn.active{background:#185FA5;color:#fff;border-color:#185FA5;}
-.panel{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:1rem;margin-bottom:1rem;}
-.dz{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);padding:1.2rem;text-align:center;cursor:pointer;background:var(--color-background-primary);}
-.ocr-res{margin-top:10px;padding:10px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);display:none;}
+
+/* ===== 点検 ===== */
 .sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;}
 .sc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.7rem 1rem;}
 .sc .sl{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;}
@@ -94,7 +124,8 @@ body{
 .kftbl th{font-size:11px;font-weight:500;padding:4px 8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);text-align:center;}
 .kftbl td{padding:5px 8px;border:0.5px solid var(--color-border-tertiary);font-size:13px;}
 .kftbl td:first-child{color:var(--color-text-secondary);font-size:12px;}
-.kftbl td:last-child{text-align:right;font-weight:500;}
+
+/* ===== スケッチ ===== */
 .toolbar{display:flex;align-items:center;gap:5px;padding:7px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:8px;flex-wrap:wrap;}
 .tb{padding:5px 9px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:var(--color-background-primary);color:var(--color-text-primary);}
 .tb.active{background:#185FA5;color:#fff;border-color:#185FA5;}
@@ -114,204 +145,306 @@ body{
 .pth:hover .pd{display:block;}
 .addp{flex-shrink:0;width:68px;height:51px;border-radius:5px;border:1px dashed var(--color-border-secondary);cursor:pointer;background:none;color:var(--color-text-secondary);font-size:20px;}
 .note{width:100%;min-height:72px;font-size:14px;padding:8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);resize:vertical;font-family:var(--font-sans);}
+
+/* マイク録音中 */
+.mic-active{color:#E24B4A!important;opacity:1!important;}
 </style>
 </head>
 <body>
 <div class="app">
-<div style="margin-bottom:10px;display:flex;align-items:baseline;gap:8px;">
-  <div style="font-size:18px;font-weight:600;color:var(--color-text-primary);">水準測量 現場野帳</div>
-  <div style="font-size:11px;color:var(--color-text-secondary);">v0.5</div>
-</div>
 
-<div class="rbar">
-  <span style="font-size:12px;color:var(--color-text-secondary);white-space:nowrap;">路線</span>
-  <select id="route-sel" onchange="switchRoute(this.value)"></select>
-  <button class="rbtn" onclick="createRoute()">＋</button>
-  <button class="rbtn" onclick="renameRoute()">✏</button>
-  <button class="rbtn" onclick="deleteCurrentRoute()">🗑</button>
-  <span id="save-ind" style="font-size:11px;color:var(--color-text-secondary);white-space:nowrap;">✓</span>
-</div>
-
-<div id="pv" class="panel" style="display:none;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-    <div style="font-size:14px;font-weight:500;" id="pv-title">測点写真</div>
-    <button class="pb" onclick="closePV()">閉じる</button>
-  </div>
-  <img id="pv-img" style="max-width:100%;max-height:260px;border-radius:var(--border-radius-md);display:block;margin:0 auto;">
-  <div style="margin-top:10px;"><button class="pb p" onclick="retakePhoto()">📸 撮り直す</button></div>
-</div>
-
-<div id="ocr" class="panel" style="display:none;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-    <div style="font-size:14px;font-weight:500;">液晶読み取り <span id="ocr-lbl" style="font-size:12px;font-weight:400;color:var(--color-text-secondary);"></span></div>
-    <button class="pb" onclick="closeOcr()">閉じる</button>
-  </div>
-  <div class="dz" onclick="document.getElementById('ocr-fi').click()">
-    <div style="font-size:22px;margin-bottom:4px;">📷</div>
-    <div style="font-size:13px;color:var(--color-text-secondary);">タップして撮影・選択</div>
-    <input type="file" id="ocr-fi" accept="image/*" capture="environment" style="display:none" onchange="handleOcrF(this.files[0])">
-  </div>
-  <img id="ocr-prev" style="max-width:100%;max-height:130px;border-radius:8px;margin-top:8px;display:none;">
-  <div id="ocr-spin" style="display:none;text-align:center;padding:10px;font-size:13px;color:var(--color-text-secondary);">🔍 解析中...</div>
-  <div id="ocr-err" style="display:none;font-size:12px;color:#A32D2D;margin-top:6px;"></div>
-  <div id="ocr-res" class="ocr-res">
-    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">読み取り値</div>
-    <div style="font-size:26px;font-weight:500;color:#1D9E75;" id="ocr-val">—</div>
-    <button class="pb p" style="margin-top:8px;width:100%;" onclick="confirmOcr()">この値を入力する</button>
-  </div>
-</div>
-
-<input type="file" id="pt-fi" accept="image/*" capture="environment" style="display:none" onchange="handlePtPhoto(this.files[0])">
-<input type="file" id="sk-fi" accept="image/*" capture="environment" style="display:none" onchange="loadSkPhoto(this.files[0])">
-
-<div class="tbar">
-  <button class="t active" onclick="showTab('obs')">📋 観測入力</button>
-  <button class="t" onclick="showTab('sk')">🗺 スケッチ</button>
-  <button class="t" onclick="showTab('chk')">✓ 点検</button>
-  <button class="t" onclick="showTab('exp')">📤 出力</button>
-</div>
-
-<div id="tab-obs">
-  <div class="card">
-    <span class="slabel">測量情報</span>
-    <div class="g2">
-      <div class="mi"><label>作業名</label><input type="text" id="proj" placeholder="○○道路測量" oninput="markDirty()"></div>
-      <div class="mi"><label>測量日</label><input type="date" id="date" oninput="markDirty()"></div>
-      <div class="mi"><label>担当者</label><input type="text" id="worker" placeholder="氏名" oninput="markDirty()"></div>
-      <div class="mi"><label>天候</label><select id="wx" onchange="markDirty()"><option>晴</option><option>曇</option><option>雨</option><option>雪</option></select></div>
+<!-- ===== ホーム画面 ===== -->
+<div id="home-screen">
+  <div class="home-header">
+    <div>
+      <div class="home-title">水準測量 現場野帳</div>
+      <div class="home-sub">路線を選択して観測を開始</div>
     </div>
-    <div class="g3" style="margin-top:10px;">
-      <div class="mi"><label>起点BM (m)</label><input type="number" id="bm-s" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
-      <div class="mi"><label>終点BM (m)</label><input type="number" id="bm-e" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
-      <div class="mi"><label>器差K (mm) <span id="k-ind" style="display:none;color:#d97706;font-size:10px;">●</span></label>
-        <input type="number" id="k-corr" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
+    <div style="font-size:11px;color:var(--color-text-secondary);">v0.6</div>
+  </div>
+  <div class="route-list" id="route-list"></div>
+  <button class="new-route-btn" onclick="createRoute()">＋ 新規路線を作成</button>
+</div>
+
+<!-- ===== 観測画面 ===== -->
+<div id="obs-screen" style="display:none;">
+  <div class="obs-header">
+    <button class="back-btn" onclick="goHome()">◀ 路線一覧</button>
+    <div class="obs-title" id="obs-title">路線名</div>
+    <span class="save-ind" id="save-ind">✓</span>
+  </div>
+
+  <!-- 写真ビューア -->
+  <div id="pv" class="panel" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:14px;font-weight:500;" id="pv-title">測点写真</div>
+      <button class="pb" onclick="closePV()">閉じる</button>
+    </div>
+    <img id="pv-img" style="max-width:100%;max-height:260px;border-radius:var(--border-radius-md);display:block;margin:0 auto;">
+    <div style="margin-top:10px;"><button class="pb p" onclick="retakePhoto()">📸 撮り直す</button></div>
+  </div>
+
+  <!-- OCRパネル -->
+  <div id="ocr" class="panel" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:14px;font-weight:500;">液晶読み取り <span id="ocr-lbl" style="font-size:12px;font-weight:400;color:var(--color-text-secondary);"></span></div>
+      <button class="pb" onclick="closeOcr()">閉じる</button>
+    </div>
+    <div class="dz" onclick="document.getElementById('ocr-fi').click()">
+      <div style="font-size:22px;margin-bottom:4px;">📷</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);">タップして撮影・選択</div>
+      <input type="file" id="ocr-fi" accept="image/*" capture="environment" style="display:none" onchange="handleOcrF(this.files[0])">
+    </div>
+    <img id="ocr-prev" style="max-width:100%;max-height:130px;border-radius:8px;margin-top:8px;display:none;">
+    <div id="ocr-spin" style="display:none;text-align:center;padding:10px;font-size:13px;color:var(--color-text-secondary);">🔍 解析中...</div>
+    <div id="ocr-err" style="display:none;font-size:12px;color:#A32D2D;margin-top:6px;"></div>
+    <div id="ocr-res" class="ocr-res">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">読み取り値</div>
+      <div style="font-size:26px;font-weight:500;color:#1D9E75;" id="ocr-val">—</div>
+      <button class="pb p" style="margin-top:8px;width:100%;" onclick="confirmOcr()">この値を入力する</button>
     </div>
   </div>
-  <div class="card">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-      <button class="dir-btn active" id="dir-out" onclick="setDir('out')">↗ 往路</button>
-      <button class="dir-btn" id="dir-ret" onclick="setDir('ret')">↙ 復路</button>
-      <span id="dir-hint" style="font-size:11px;color:var(--color-text-secondary);"></span>
+
+  <!-- タブ -->
+  <div class="tbar">
+    <button class="t active" onclick="showTab('obs')">📋 観測入力</button>
+    <button class="t" onclick="showTab('sk')">🗺 スケッチ</button>
+    <button class="t" onclick="showTab('chk')">✓ 点検</button>
+    <button class="t" onclick="showTab('exp')">📤 出力</button>
+  </div>
+
+  <!-- 観測入力 -->
+  <div id="tab-obs">
+    <div class="card">
+      <span class="slabel">測量情報</span>
+      <div class="g2">
+        <div class="mi"><label>作業名</label><input type="text" id="proj" placeholder="○○道路測量" oninput="markDirty()"></div>
+        <div class="mi"><label>測量日</label><input type="date" id="date" oninput="markDirty()"></div>
+        <div class="mi"><label>担当者</label><input type="text" id="worker" placeholder="氏名" oninput="markDirty()"></div>
+        <div class="mi"><label>天候</label><select id="wx" onchange="markDirty()"><option>晴</option><option>曇</option><option>雨</option><option>雪</option></select></div>
+      </div>
+      <div class="g3" style="margin-top:10px;">
+        <div class="mi"><label>起点BM (m)</label><input type="number" id="bm-s" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
+        <div class="mi"><label>終点BM (m)</label><input type="number" id="bm-e" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
+        <div class="mi"><label>器差K (mm) <span id="k-ind" style="display:none;color:#d97706;font-size:10px;">●</span></label>
+          <input type="number" id="k-corr" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()"></div>
+      </div>
     </div>
-    <div class="tbl-wrap">
-      <table class="otbl">
-        <thead><tr>
-          <th style="text-align:left;min-width:60px;">測点</th>
-          <th>後視 BS</th><th>前視 FS</th><th>中間視 IS</th>
-          <th id="ih-hd">IH (m)</th><th id="gh-hd">GH (m)</th><th>📸</th><th></th>
-        </tr></thead>
-        <tbody id="obs-tb"></tbody>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <button class="dir-btn active" id="dir-out" onclick="setDir('out')">↗ 往路</button>
+        <button class="dir-btn" id="dir-ret" onclick="setDir('ret')">↙ 復路</button>
+        <span id="dir-hint" style="font-size:11px;color:var(--color-text-secondary);"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="otbl">
+          <thead><tr>
+            <th style="text-align:left;min-width:90px;">測点</th>
+            <th>後視 BS</th><th>前視 FS</th><th>中間視 IS</th>
+            <th id="ih-hd">IH (m)</th><th id="gh-hd">GH (m)</th><th>📸</th><th></th>
+          </tr></thead>
+          <tbody id="obs-tb"></tbody>
+        </table>
+      </div>
+      <button class="add-btn" onclick="addRow()">+ 測点を追加</button>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;">🎤 音声入力 &nbsp;📷 液晶OCR &nbsp;📍 GPS取得</div>
+    </div>
+    <div class="card">
+      <span class="slabel">現場メモ</span>
+      <textarea class="note" id="memo" placeholder="特記事項・機器番号など..." oninput="markDirty()"></textarea>
+    </div>
+  </div>
+
+  <!-- スケッチ -->
+  <div id="tab-sk" style="display:none;">
+    <div class="ptrow" id="ptrow"></div>
+    <div class="toolbar">
+      <button class="tb active" id="tb-pen" onclick="setTool('pen')">✏️</button>
+      <button class="tb" id="tb-marker" onclick="setTool('marker')">🖊</button>
+      <button class="tb" id="tb-pin" onclick="setTool('pin')">📍</button>
+      <button class="tb" id="tb-text" onclick="setTool('text')">T</button>
+      <button class="tb" id="tb-eraser" onclick="setTool('eraser')">◻</button>
+      <div class="sp"></div>
+      <div class="cd active" style="background:#2563eb;" onclick="setColor('#2563eb',this)"></div>
+      <div class="cd" style="background:#dc2626;" onclick="setColor('#dc2626',this)"></div>
+      <div class="cd" style="background:#16a34a;" onclick="setColor('#16a34a',this)"></div>
+      <div class="cd" style="background:#d97706;" onclick="setColor('#d97706',this)"></div>
+      <div class="cd" style="background:#111827;" onclick="setColor('#111827',this)"></div>
+      <div class="sp"></div>
+      <input type="range" min="1" max="18" value="3" id="sz" oninput="bsz=+this.value;document.getElementById('szl').textContent=this.value" style="width:55px;accent-color:#185FA5;">
+      <span id="szl" style="font-size:11px;color:var(--color-text-secondary);min-width:16px;">3</span>
+      <div class="sp"></div>
+      <button class="tb" onclick="skUndo()">↩</button>
+      <button class="tb" onclick="skClear()">🗑</button>
+    </div>
+    <div class="cw" id="cw">
+      <canvas id="bg-cv"></canvas>
+      <canvas id="dr-cv" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+      <div id="cv-ui" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"></div>
+      <div class="pin-pp" id="pin-pp">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">測点名</div>
+        <input type="text" id="pin-name" list="pts-dl" placeholder="BM1, No.1...">
+        <datalist id="pts-dl"></datalist>
+        <div><button onclick="confirmPin()">打つ</button><button onclick="cancelPin()">戻る</button></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:8px;">
+      <button class="tb" style="flex:1;" onclick="document.getElementById('sk-fi').click()">📷 写真読込</button>
+      <button class="tb" style="flex:1;" onclick="newBlank()">📄 白紙追加</button>
+      <button class="tb" style="flex:1;background:#185FA5;color:#fff;border-color:#185FA5;" onclick="saveSk()">💾 PNG</button>
+    </div>
+  </div>
+
+  <!-- 点検 -->
+  <div id="tab-chk" style="display:none;">
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 往路</div>
+    <div class="sgrid">
+      <div class="sc"><div class="sl">ΣBS</div><div class="sv" id="c-bs">—</div></div>
+      <div class="sc"><div class="sl">ΣFS</div><div class="sv" id="c-fs">—</div></div>
+      <div class="sc"><div class="sl">ΣBS－ΣFS</div><div class="sv" id="c-df">—</div></div>
+    </div>
+    <div class="sgrid">
+      <div class="sc"><div class="sl">実測終点BM</div><div class="sv" id="c-en">—</div></div>
+      <div class="sc"><div class="sl">既知終点BM</div><div class="sv" id="c-kn">—</div></div>
+      <div class="sc"><div class="sl">閉合差</div><div class="sv" id="c-cl">—</div></div>
+    </div>
+    <div class="card">
+      <div class="crow"><span style="flex:1;">計算チェック</span><span class="badge" id="ck-c">—</span></div>
+      <div class="crow"><span style="flex:1;">閉合差 (±10√n mm)</span><span class="badge" id="ck-cl">—</span></div>
+      <div class="crow" style="border:none;"><span style="flex:1;">データ完整性</span><span class="badge" id="ck-d">—</span></div>
+    </div>
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 往復比較</div>
+    <div class="card">
+      <table class="kftbl">
+        <thead><tr><th style="text-align:left;width:40%;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead>
+        <tbody>
+          <tr><td>総高低差 (m)</td><td id="kf-out">—</td><td id="kf-ret">—</td><td></td></tr>
+          <tr><td>往復較差</td><td colspan="2" id="kf-kor" style="text-align:center;">—</td><td id="kf-jdg"><span class="badge bwarn">復路未入力</span></td></tr>
+          <tr><td>許容較差</td><td colspan="2" id="kf-allow" style="text-align:center;">—</td><td></td></tr>
+          <tr><td>最確値</td><td colspan="2" id="kf-best" style="text-align:center;font-size:15px;font-weight:500;">—</td><td></td></tr>
+        </tbody>
       </table>
     </div>
-    <button class="add-btn" onclick="addRow()">+ 測点を追加</button>
-    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;">🎤 音声入力 &nbsp;📷 液晶OCR &nbsp;📍 GPS取得</div>
   </div>
-  <div class="card">
-    <span class="slabel">現場メモ</span>
-    <textarea class="note" id="memo" placeholder="特記事項・機器番号など..." oninput="markDirty()"></textarea>
-  </div>
-</div>
 
-<div id="tab-sk" style="display:none;">
-  <div class="ptrow" id="ptrow"></div>
-  <div class="toolbar">
-    <button class="tb active" id="tb-pen" onclick="setTool('pen')">✏️</button>
-    <button class="tb" id="tb-marker" onclick="setTool('marker')">🖊</button>
-    <button class="tb" id="tb-pin" onclick="setTool('pin')">📍</button>
-    <button class="tb" id="tb-text" onclick="setTool('text')">T</button>
-    <button class="tb" id="tb-eraser" onclick="setTool('eraser')">◻</button>
-    <div class="sp"></div>
-    <div class="cd active" style="background:#2563eb;" onclick="setColor('#2563eb',this)"></div>
-    <div class="cd" style="background:#dc2626;" onclick="setColor('#dc2626',this)"></div>
-    <div class="cd" style="background:#16a34a;" onclick="setColor('#16a34a',this)"></div>
-    <div class="cd" style="background:#d97706;" onclick="setColor('#d97706',this)"></div>
-    <div class="cd" style="background:#111827;" onclick="setColor('#111827',this)"></div>
-    <div class="sp"></div>
-    <input type="range" min="1" max="18" value="3" id="sz" oninput="bsz=+this.value;document.getElementById('szl').textContent=this.value" style="width:55px;accent-color:#185FA5;">
-    <span id="szl" style="font-size:11px;color:var(--color-text-secondary);min-width:16px;">3</span>
-    <div class="sp"></div>
-    <button class="tb" onclick="skUndo()">↩</button>
-    <button class="tb" onclick="skClear()">🗑</button>
-  </div>
-  <div class="cw" id="cw">
-    <canvas id="bg-cv"></canvas>
-    <canvas id="dr-cv" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
-    <div id="cv-ui" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"></div>
-    <div class="pin-pp" id="pin-pp">
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">測点名</div>
-      <input type="text" id="pin-name" list="pts-dl" placeholder="BM1, No.1...">
-      <datalist id="pts-dl"></datalist>
-      <div><button onclick="confirmPin()">打つ</button><button onclick="cancelPin()">戻る</button></div>
+  <!-- 出力 -->
+  <div id="tab-exp" style="display:none;">
+    <div class="card">
+      <span class="slabel" style="margin-bottom:10px;">PDF 印刷・保存</span>
+      <button class="xb p" onclick="printReport()">📄 成果表 PDF（A4）</button>
+      <button class="xb" onclick="printSketch()">🗺 スケッチ PDF（A4）</button>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:14px;">新しいタブで開きます。印刷ダイアログで「PDFに保存」を選択。</div>
+      <span class="slabel" style="margin-bottom:10px;">データエクスポート</span>
+      <button class="xb" onclick="expCSV()">CSV（GPS座標含む）</button>
+      <button class="xb" onclick="expTxt()">テキスト野帳形式</button>
+    </div>
+    <div class="card">
+      <span class="slabel" style="margin-bottom:8px;">テキストプレビュー</span>
+      <pre id="prev" style="font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono);white-space:pre;overflow-x:auto;line-height:1.6;"></pre>
     </div>
   </div>
-  <div style="display:flex;gap:7px;margin-top:8px;">
-    <button class="tb" style="flex:1;" onclick="document.getElementById('sk-fi').click()">📷 写真読込</button>
-    <button class="tb" style="flex:1;" onclick="newBlank()">📄 白紙追加</button>
-    <button class="tb" style="flex:1;background:#185FA5;color:#fff;border-color:#185FA5;" onclick="saveSk()">💾 PNG</button>
-  </div>
-</div>
+</div><!-- /obs-screen -->
 
-<div id="tab-chk" style="display:none;">
-  <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 往路</div>
-  <div class="sgrid">
-    <div class="sc"><div class="sl">ΣBS</div><div class="sv" id="c-bs">—</div></div>
-    <div class="sc"><div class="sl">ΣFS</div><div class="sv" id="c-fs">—</div></div>
-    <div class="sc"><div class="sl">ΣBS－ΣFS</div><div class="sv" id="c-df">—</div></div>
-  </div>
-  <div class="sgrid">
-    <div class="sc"><div class="sl">実測終点BM</div><div class="sv" id="c-en">—</div></div>
-    <div class="sc"><div class="sl">既知終点BM</div><div class="sv" id="c-kn">—</div></div>
-    <div class="sc"><div class="sl">閉合差</div><div class="sv" id="c-cl">—</div></div>
-  </div>
-  <div class="card">
-    <div class="crow"><span style="flex:1;">計算チェック</span><span class="badge" id="ck-c">—</span></div>
-    <div class="crow"><span style="flex:1;">閉合差 (±10√n mm)</span><span class="badge" id="ck-cl">—</span></div>
-    <div class="crow" style="border:none;"><span style="flex:1;">データ完整性</span><span class="badge" id="ck-d">—</span></div>
-  </div>
-  <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 往復比較</div>
-  <div class="card">
-    <table class="kftbl">
-      <thead><tr><th style="text-align:left;width:40%;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead>
-      <tbody>
-        <tr><td>総高低差 (m)</td><td id="kf-out">—</td><td id="kf-ret">—</td><td></td></tr>
-        <tr><td>往復較差</td><td colspan="2" id="kf-kor" style="text-align:center;">—</td><td id="kf-jdg"><span class="badge bwarn">復路未入力</span></td></tr>
-        <tr><td>許容較差</td><td colspan="2" id="kf-allow" style="text-align:center;">—</td><td></td></tr>
-        <tr><td>最確値</td><td colspan="2" id="kf-best" style="text-align:center;font-size:15px;font-weight:500;">—</td><td></td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+<!-- 隠しファイル入力 (スケッチ写真読込) -->
+<input type="file" id="sk-fi" accept="image/*" capture="environment" style="display:none" onchange="loadSkPhoto(this.files[0])">
 
-<div id="tab-exp" style="display:none;">
-  <div class="card">
-    <span class="slabel" style="margin-bottom:10px;">PDF 印刷・保存</span>
-    <button class="xb p" onclick="printReport()">📄 成果表 PDF（A4）</button>
-    <button class="xb" onclick="printSketch()">🗺 スケッチ PDF（A4）</button>
-    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:14px;">新しいタブが開きます。印刷ダイアログで「PDFに保存」を選択。</div>
-    <span class="slabel" style="margin-bottom:10px;">データエクスポート</span>
-    <button class="xb" onclick="expCSV()">CSV（GPS座標含む）</button>
-    <button class="xb" onclick="expTxt()">テキスト野帳形式</button>
-  </div>
-  <div class="card">
-    <span class="slabel" style="margin-bottom:8px;">テキストプレビュー</span>
-    <pre id="prev" style="font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono);white-space:pre;overflow-x:auto;line-height:1.6;"></pre>
-  </div>
-</div>
-</div>
+</div><!-- /app -->
 
 <script>
 // ===== STATE =====
-let rows=[],rowsReturn=[],rowId=0,rowIdRet=0,viewMode='out';
-let routes=[],currentRouteId=null;
-let ocrTgt=null,ptPhotoId=null,pvId=null,voiceRec=null,autoSaveTimer=null;
+let rows=[], rowsReturn=[], rowId=0, rowIdRet=0, viewMode='out';
+let routes=[], currentRouteId=null;
+let ocrTgt=null, ptPhotoId=null, pvId=null;
+let autoSaveTimer=null;
+// マイク関連
+let micStream=null, voiceRec=null, micGranted=false;
 
 function getCurRows(){return viewMode==='out'?rows:rowsReturn;}
-function setDir(d){
-  viewMode=d;
-  document.getElementById('dir-out').classList.toggle('active',d==='out');
-  document.getElementById('dir-ret').classList.toggle('active',d==='ret');
-  document.getElementById('dir-hint').textContent=d==='ret'?'終点BM→起点BMへ':'起点BM→終点BMへ';
+
+// ===== ホーム画面 =====
+function goHome(){
+  saveCurrentState();
+  saveToStorage();
+  document.getElementById('home-screen').style.display='';
+  document.getElementById('obs-screen').style.display='none';
+  renderRouteList();
+}
+
+function renderRouteList(){
+  const list=document.getElementById('route-list');
+  list.innerHTML='';
+  if(routes.length===0){
+    list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--color-text-secondary);font-size:14px;">路線がありません。下のボタンから作成してください。</div>';
+    return;
+  }
+  routes.forEach(r=>{
+    const card=document.createElement('div');
+    card.className='route-card';
+    // バッジ計算
+    const hasData=r.rows&&r.rows.some(row=>row.bs!==''||row.fs!=='');
+    const badge=hasData
+      ?'<span class="route-card-badge">観測済</span>'
+      :'<span class="route-card-badge none">未観測</span>';
+    const meta=[r.date||'日付未入力', r.worker||'担当者未入力'].join(' · ');
+    card.innerHTML=`
+      <div class="route-card-icon">📋</div>
+      <div class="route-card-body">
+        <div class="route-card-name">${r.name}</div>
+        <div class="route-card-meta">${meta}</div>
+      </div>
+      ${badge}
+      <div class="route-card-arrow">›</div>`;
+    card.addEventListener('click', ()=>openRoute(r.id));
+
+    // 長押しで操作メニュー
+    let pressTimer=null;
+    card.addEventListener('touchstart',()=>{
+      pressTimer=setTimeout(()=>showRouteMenu(r.id),600);
+    },{passive:true});
+    card.addEventListener('touchend',()=>clearTimeout(pressTimer));
+    card.addEventListener('touchmove',()=>clearTimeout(pressTimer));
+
+    list.appendChild(card);
+  });
+}
+
+function showRouteMenu(id){
+  const r=routes.find(r=>r.id===id);
+  if(!r)return;
+  const action=prompt(`「${r.name}」の操作を選んでください:\n1 → 名前を変更\n2 → 削除\nキャンセル → 閉じる`);
+  if(action==='1'){
+    const name=prompt('新しい路線名',r.name);
+    if(name){r.name=name;saveToStorage();renderRouteList();}
+  } else if(action==='2'){
+    if(routes.length<=1){alert('最後の路線は削除できません');return;}
+    if(confirm(`「${r.name}」を削除しますか？`)){
+      routes=routes.filter(x=>x.id!==id);
+      saveToStorage();renderRouteList();
+    }
+  }
+}
+
+function openRoute(id){
+  if(currentRouteId&&currentRouteId!==id) saveCurrentState();
+  currentRouteId=id;
+  loadCurrentState();
   renderTbl();
+  document.getElementById('obs-title').textContent=routes.find(r=>r.id===id)?.name||'';
+  document.getElementById('home-screen').style.display='none';
+  document.getElementById('obs-screen').style.display='';
+  showTab('obs');
+  setDir('out');
+}
+
+function createRoute(){
+  const name=prompt('路線名を入力してください','路線 '+(routes.length+1));
+  if(!name)return;
+  const id='r'+Date.now(), today=new Date().toISOString().split('T')[0];
+  const mk=(pts)=>pts.map((p,i)=>({id:i,point:p,bs:'',fs:'',is_:'',lat:null,lon:null,acc:null}));
+  routes.push({id,name,createdAt:new Date().toISOString(),proj:'',date:today,worker:'',wx:'晴',bmStart:'',bmEnd:'',kCorr:'',memo:'',
+    rows:mk(['BM.1','No.1','BM.2']),rowsReturn:mk(['BM.2','No.1','BM.1'])});
+  saveToStorage();
+  openRoute(id);
 }
 
 // ===== TABS =====
@@ -325,89 +458,142 @@ function showTab(n){
   document.getElementById('ocr').style.display='none';
 }
 
-// ===== ROUTE MANAGEMENT =====
-function createRoute(){
-  const name=prompt('路線名を入力してください','路線 '+(routes.length+1));
-  if(!name)return;
-  if(routes.length>0)saveCurrentState();
-  const id='r'+Date.now(),today=new Date().toISOString().split('T')[0];
-  const mk=(pts)=>pts.map((p,i)=>({id:i,point:p,bs:'',fs:'',is_:'',lat:null,lon:null,acc:null}));
-  routes.push({id,name,createdAt:new Date().toISOString(),proj:'',date:today,worker:'',wx:'晴',bmStart:'',bmEnd:'',kCorr:'',memo:'',
-    rows:mk(['BM1','No.1','BM2']),rowsReturn:mk(['BM2','No.1','BM1'])});
-  currentRouteId=id;updateRouteSel();loadCurrentState();renderTbl();saveToStorage();
+// ===== DIR =====
+function setDir(d){
+  viewMode=d;
+  document.getElementById('dir-out').classList.toggle('active',d==='out');
+  document.getElementById('dir-ret').classList.toggle('active',d==='ret');
+  document.getElementById('dir-hint').textContent=d==='ret'?'終点BM→起点BMへ':'起点BM→終点BMへ';
+  renderTbl();
 }
-function switchRoute(id){if(id===currentRouteId)return;saveCurrentState();currentRouteId=id;loadCurrentState();renderTbl();updateRouteSel();}
-function renameRoute(){const r=routes.find(r=>r.id===currentRouteId);if(!r)return;const name=prompt('新しい路線名',r.name);if(!name)return;r.name=name;updateRouteSel();saveToStorage();}
-function deleteCurrentRoute(){if(routes.length<=1){alert('最後の路線は削除できません');return;}if(!confirm('この路線を削除しますか？'))return;routes=routes.filter(r=>r.id!==currentRouteId);currentRouteId=routes[routes.length-1].id;updateRouteSel();loadCurrentState();renderTbl();saveToStorage();}
+
+// ===== ROUTE DATA =====
 function saveCurrentState(){
   const r=routes.find(r=>r.id===currentRouteId);if(!r)return;
-  r.rows=rows.map(r=>({...r,photo:null}));r.rowsReturn=rowsReturn.map(r=>({...r,photo:null}));
-  r.proj=document.getElementById('proj').value;r.date=document.getElementById('date').value;
-  r.worker=document.getElementById('worker').value;r.wx=document.getElementById('wx').value;
-  r.bmStart=document.getElementById('bm-s').value;r.bmEnd=document.getElementById('bm-e').value;
-  r.kCorr=document.getElementById('k-corr').value;r.memo=document.getElementById('memo').value;
+  r.rows=rows.map(r=>({...r,photo:null}));
+  r.rowsReturn=rowsReturn.map(r=>({...r,photo:null}));
+  r.proj=document.getElementById('proj').value;
+  r.date=document.getElementById('date').value;
+  r.worker=document.getElementById('worker').value;
+  r.wx=document.getElementById('wx').value;
+  r.bmStart=document.getElementById('bm-s').value;
+  r.bmEnd=document.getElementById('bm-e').value;
+  r.kCorr=document.getElementById('k-corr').value;
+  r.memo=document.getElementById('memo').value;
 }
 function loadCurrentState(){
   const r=routes.find(r=>r.id===currentRouteId);if(!r)return;
-  rows=(r.rows||[]).map(r=>({...r,photo:null}));rowsReturn=(r.rowsReturn||[]).map(r=>({...r,photo:null}));
-  rowId=rows.length>0?Math.max(...rows.map(r=>r.id))+1:0;rowIdRet=rowsReturn.length>0?Math.max(...rowsReturn.map(r=>r.id))+1:0;
-  document.getElementById('proj').value=r.proj||'';document.getElementById('date').value=r.date||'';
-  document.getElementById('worker').value=r.worker||'';document.getElementById('wx').value=r.wx||'晴';
-  document.getElementById('bm-s').value=r.bmStart||'';document.getElementById('bm-e').value=r.bmEnd||'';
-  document.getElementById('k-corr').value=r.kCorr||'';document.getElementById('memo').value=r.memo||'';
-}
-function updateRouteSel(){
-  document.getElementById('route-sel').innerHTML=routes.map(r=>`<option value="${r.id}"${r.id===currentRouteId?' selected':''}>${r.name}</option>`).join('');
+  rows=(r.rows||[]).map(r=>({...r,photo:null}));
+  rowsReturn=(r.rowsReturn||[]).map(r=>({...r,photo:null}));
+  rowId=rows.length>0?Math.max(...rows.map(r=>r.id))+1:0;
+  rowIdRet=rowsReturn.length>0?Math.max(...rowsReturn.map(r=>r.id))+1:0;
+  document.getElementById('proj').value=r.proj||'';
+  document.getElementById('date').value=r.date||'';
+  document.getElementById('worker').value=r.worker||'';
+  document.getElementById('wx').value=r.wx||'晴';
+  document.getElementById('bm-s').value=r.bmStart||'';
+  document.getElementById('bm-e').value=r.bmEnd||'';
+  document.getElementById('k-corr').value=r.kCorr||'';
+  document.getElementById('memo').value=r.memo||'';
 }
 
 // ===== STORAGE =====
 function markDirty(){
-  const ind=document.getElementById('save-ind');ind.textContent='…';ind.style.color='#d97706';
-  clearTimeout(autoSaveTimer);autoSaveTimer=setTimeout(()=>saveToStorage(),1200);
+  const ind=document.getElementById('save-ind');
+  ind.textContent='…';ind.style.color='#d97706';
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(()=>saveToStorage(),1200);
 }
 function saveToStorage(){
   saveCurrentState();
-  try{localStorage.setItem('suijun_v05',JSON.stringify({routes,currentRouteId,v:5}));
-    const ind=document.getElementById('save-ind');ind.textContent='✓';ind.style.color='';}
-  catch(e){document.getElementById('save-ind').textContent='⚠';document.getElementById('save-ind').style.color='#E24B4A';}
+  try{
+    localStorage.setItem('suijun_v06',JSON.stringify({routes,currentRouteId,v:6}));
+    const ind=document.getElementById('save-ind');ind.textContent='✓';ind.style.color='';
+  }catch(e){
+    document.getElementById('save-ind').textContent='⚠';
+    document.getElementById('save-ind').style.color='#E24B4A';
+  }
 }
 function loadFromStorage(){
-  try{const d=JSON.parse(localStorage.getItem('suijun_v05')||'null');
-    if(d&&d.routes&&d.routes.length>0){routes=d.routes;currentRouteId=d.currentRouteId||routes[0].id;return true;}}
-  catch(e){}return false;
+  try{
+    const d=JSON.parse(localStorage.getItem('suijun_v06')||localStorage.getItem('suijun_v05')||'null');
+    if(d&&d.routes&&d.routes.length>0){routes=d.routes;currentRouteId=d.currentRouteId||routes[0].id;return true;}
+  }catch(e){}return false;
 }
 
 // ===== OBSERVATION =====
-function addRow(){const isRet=viewMode==='ret';getCurRows().push({id:isRet?rowIdRet++:rowId++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null});markDirty();renderTbl();}
-function removeRow(id){if(viewMode==='out')rows=rows.filter(r=>r.id!==id);else rowsReturn=rowsReturn.filter(r=>r.id!==id);markDirty();renderTbl();}
+function addRow(){
+  const isRet=viewMode==='ret';
+  getCurRows().push({id:isRet?rowIdRet++:rowId++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null});
+  markDirty();renderTbl();
+}
+function removeRow(id){
+  if(viewMode==='out')rows=rows.filter(r=>r.id!==id);
+  else rowsReturn=rowsReturn.filter(r=>r.id!==id);
+  markDirty();renderTbl();
+}
 function updateField(idx,field,val){getCurRows()[idx][field]=val;markDirty();renderTbl();}
 
 function calcGH(arr,startGH,kM){
   let gh=startGH,ih=startGH,res=[];
   arr.forEach((r,i)=>{
-    const bsC=r.bs!==''?(parseFloat(r.bs)||0)+kM:null,fsC=r.fs!==''?(parseFloat(r.fs)||0)+kM:null,isC=r.is_!==''?(parseFloat(r.is_)||0)+kM:null;
+    const bsC=r.bs!==''?(parseFloat(r.bs)||0)+kM:null;
+    const fsC=r.fs!==''?(parseFloat(r.fs)||0)+kM:null;
+    const isC=r.is_!==''?(parseFloat(r.is_)||0)+kM:null;
     if(bsC!==null)ih=gh+bsC;
-    let ghV='';if(i===0&&bsC!==null)ghV=startGH.toFixed(3);else if(fsC!==null)ghV=(ih-fsC).toFixed(3);else if(isC!==null)ghV=(ih-isC).toFixed(3);
-    res.push({ihD:bsC!==null?ih.toFixed(3):'',ghV,isFS:r.fs!==''});if(fsC!==null)gh=parseFloat(ghV)||gh;
-  });return res;
+    let ghV='';
+    if(i===0&&bsC!==null)ghV=startGH.toFixed(3);
+    else if(fsC!==null)ghV=(ih-fsC).toFixed(3);
+    else if(isC!==null)ghV=(ih-isC).toFixed(3);
+    res.push({ihD:bsC!==null?ih.toFixed(3):'',ghV,isFS:r.fs!==''});
+    if(fsC!==null)gh=parseFloat(ghV)||gh;
+  });
+  return res;
 }
 
 function renderTbl(){
   const tb=document.getElementById('obs-tb');tb.innerHTML='';
   const arr=getCurRows(),isRet=viewMode==='ret';
   const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000;
-  const sb=parseFloat(document.getElementById('bm-s').value)||0,eb=parseFloat(document.getElementById('bm-e').value)||0;
+  const sb=parseFloat(document.getElementById('bm-s').value)||0;
+  const eb=parseFloat(document.getElementById('bm-e').value)||0;
   document.getElementById('k-ind').style.display=K?'':'none';
   const ghData=calcGH(arr,isRet?eb:sb,kM);
+
   arr.forEach((r,i)=>{
     const{ihD,ghV,isFS}=ghData[i];
     const gpsHtml=r.lat!=null
-      ?`<div style="font-size:9px;color:#16a34a;margin-top:2px;">📍${r.lat.toFixed(4)},${r.lon.toFixed(4)}<br><span style="color:var(--color-text-secondary);">±${r.acc||'?'}m</span></div>`
+      ?`<div style="font-size:9px;color:#16a34a;margin-top:2px;">📍${r.lat.toFixed(4)},${r.lon.toFixed(4)}</div>`
       :`<button onclick="getGPS(${i})" style="font-size:9px;padding:1px 4px;border:0.5px solid var(--color-border-secondary);border-radius:3px;cursor:pointer;background:none;color:var(--color-text-secondary);margin-top:2px;display:block;">📍GPS</button>`;
-    const photoCell=r.photo?`<img class="pt-thumb" src="${r.photo}" onclick="openPV(${r.id})">`:`<button class="pt-cam" onclick="openPtPhoto(${r.id})">📸</button>`;
-    const mk=(field,val)=>`<span style="display:flex;align-items:center;gap:1px;justify-content:flex-end;"><button class="ic" id="mic-${i}-${field}" onclick="startVoice(${i},'${field}')" title="音声">🎤</button><button class="ic" onclick="openOcr(${r.id},'${field}')" title="OCR">📷</button><input class="ni" type="number" step="0.001" value="${val}" placeholder="—" oninput="updateField(${i},'${field}',this.value)"></span>`;
-    const tr=document.createElement('tr');if(isFS)tr.style.color=isRet?'#d97706':'#185FA5';
-    tr.innerHTML=`<td style="vertical-align:top;min-width:62px;"><input class="pi" type="text" value="${r.point}" oninput="getCurRows()[${i}].point=this.value;markDirty()" placeholder="BM1">${gpsHtml}</td><td>${mk('bs',r.bs)}</td><td>${mk('fs',r.fs)}</td><td>${mk('is_',r.is_)}</td><td class="cc">${ihD}</td><td class="cc">${ghV!==''?parseFloat(ghV).toFixed(3):''}</td><td>${photoCell}</td><td><button class="rd" onclick="removeRow(${r.id})">✕</button></td>`;
+
+    // 写真セル — 各行に独自のfile inputを生成
+    const photoCell=r.photo
+      ?`<img class="pt-thumb" src="${r.photo}" onclick="openPV(${r.id})">`
+      :`<label style="display:block;cursor:pointer;">
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleRowPhoto(this,${r.id})">
+          <span class="pt-cam" style="display:flex;align-items:center;justify-content:center;">📸</span>
+        </label>`;
+
+    const mk=(field,val)=>`<span style="display:flex;align-items:center;gap:1px;justify-content:flex-end;">
+      <button class="ic" id="mic-${i}-${field}" onclick="startVoice(${i},'${field}')" title="音声">🎤</button>
+      <button class="ic" onclick="openOcr(${r.id},'${field}')" title="OCR">📷</button>
+      <input class="ni" type="number" step="0.001" value="${val}" placeholder="—" oninput="updateField(${i},'${field}',this.value)">
+    </span>`;
+
+    const tr=document.createElement('tr');
+    if(isFS)tr.style.color=isRet?'#d97706':'#185FA5';
+    tr.innerHTML=`
+      <td style="vertical-align:top;min-width:92px;">
+        <input class="pi" type="text" value="${r.point}" placeholder="BM.1" oninput="getCurRows()[${i}].point=this.value;markDirty()">
+        ${gpsHtml}
+      </td>
+      <td>${mk('bs',r.bs)}</td>
+      <td>${mk('fs',r.fs)}</td>
+      <td>${mk('is_',r.is_)}</td>
+      <td class="cc">${ihD}</td>
+      <td class="cc">${ghV!==''?parseFloat(ghV).toFixed(3):''}</td>
+      <td>${photoCell}</td>
+      <td><button class="rd" onclick="removeRow(${r.id})">✕</button></td>`;
     tb.appendChild(tr);
   });
 }
@@ -415,7 +601,8 @@ function renderTbl(){
 // ===== GPS =====
 function getGPS(idx){
   if(!navigator.geolocation){alert('GPSに対応していません');return;}
-  const btn=document.querySelector(`[onclick="getGPS(${idx})"]`);if(btn){btn.textContent='…';btn.disabled=true;}
+  const btn=document.querySelector(`[onclick="getGPS(${idx})"]`);
+  if(btn){btn.textContent='取得中…';btn.disabled=true;}
   navigator.geolocation.getCurrentPosition(
     pos=>{const r=getCurRows()[idx];r.lat=pos.coords.latitude;r.lon=pos.coords.longitude;r.acc=Math.round(pos.coords.accuracy);markDirty();renderTbl();},
     err=>{alert('GPS取得エラー: '+err.message);if(btn){btn.textContent='📍GPS';btn.disabled=false;}},
@@ -423,71 +610,148 @@ function getGPS(idx){
   );
 }
 
-// ===== VOICE =====
+// ===== マイク — 事前に権限を取得して保持 =====
+async function ensureMicPermission(){
+  if(micGranted)return true;
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    micGranted=true;
+    // ストリームは権限確認用なのでいったん止めない（SpeechRecognitionが使う）
+    return true;
+  }catch(e){
+    alert('マイクへのアクセスが拒否されました。設定から許可してください。');
+    return false;
+  }
+}
+
 function startVoice(idx,field){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('音声入力非対応（Chrome推奨）');return;}
+  // 録音中なら停止
   if(voiceRec){voiceRec.stop();voiceRec=null;return;}
-  voiceRec=new SR();voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
-  const btn=document.getElementById(`mic-${idx}-${field}`);if(btn){btn.textContent='⏺';btn.style.color='#E24B4A';}
-  voiceRec.onresult=e=>{const t=e.results[0][0].transcript;const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);if(m){getCurRows()[idx][field]=parseFloat(m[0]).toFixed(3);markDirty();renderTbl();}else alert(`"${t}" — 数値認識失敗`);};
-  const rst=()=>{voiceRec=null;document.querySelectorAll('.ic').forEach(b=>{if(b.textContent==='⏺'){b.textContent='🎤';b.style.color='';}});};
-  voiceRec.onerror=rst;voiceRec.onend=rst;voiceRec.start();
+
+  const btn=document.getElementById(`mic-${idx}-${field}`);
+
+  ensureMicPermission().then(ok=>{
+    if(!ok)return;
+    voiceRec=new SR();
+    voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
+    if(btn){btn.classList.add('mic-active');btn.textContent='⏺';}
+    voiceRec.onresult=e=>{
+      const t=e.results[0][0].transcript;
+      const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);
+      if(m){getCurRows()[idx][field]=parseFloat(m[0]).toFixed(3);markDirty();renderTbl();}
+      else alert(`"${t}" — 数値が認識できませんでした`);
+    };
+    const rst=()=>{
+      voiceRec=null;
+      document.querySelectorAll('.ic').forEach(b=>{
+        if(b.textContent==='⏺'){b.textContent='🎤';b.classList.remove('mic-active');}
+      });
+    };
+    voiceRec.onerror=rst;voiceRec.onend=rst;
+    voiceRec.start();
+  });
 }
 
 // ===== OCR =====
 function openOcr(id,field){
-  ocrTgt={id,field,dir:viewMode};const r=getCurRows().find(r=>r.id===id);
+  ocrTgt={id,field,dir:viewMode};
+  const r=getCurRows().find(r=>r.id===id);
   const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
   document.getElementById('ocr-lbl').textContent=`→${r?.point||''} ${lbs[field]}`;
   ['ocr-res','ocr-spin','ocr-err'].forEach(x=>document.getElementById(x).style.display='none');
-  document.getElementById('ocr-prev').style.display='none';document.getElementById('ocr-fi').value='';
-  document.getElementById('pv').style.display='none';document.getElementById('ocr').style.display='block';
+  document.getElementById('ocr-prev').style.display='none';
+  document.getElementById('ocr-fi').value='';
+  document.getElementById('pv').style.display='none';
+  document.getElementById('ocr').style.display='block';
   document.getElementById('ocr').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function closeOcr(){document.getElementById('ocr').style.display='none';ocrTgt=null;}
 function handleOcrF(file){
-  if(!file)return;const rd=new FileReader();rd.onload=e=>{
+  if(!file)return;
+  const rd=new FileReader();
+  rd.onload=e=>{
     const img=document.getElementById('ocr-prev');img.src=e.target.result;img.style.display='block';
-    document.getElementById('ocr-res').style.display='none';document.getElementById('ocr-err').style.display='none';runOcr(e.target.result);
-  };rd.readAsDataURL(file);
+    document.getElementById('ocr-res').style.display='none';
+    document.getElementById('ocr-err').style.display='none';
+    runOcr(e.target.result);
+  };
+  rd.readAsDataURL(file);
 }
 async function runOcr(du){
   document.getElementById('ocr-spin').style.display='block';
   const b64=du.split(',')[1],mt=du.split(';')[0].split(':')[1];
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:128,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:'電子レベルの液晶ディスプレイ画像です。測定値を数値のみ（例:1.234）で返してください。読み取れない場合はERRORと返してください。'}]}]})});
-    const d=await res.json();document.getElementById('ocr-spin').style.display='none';
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:128,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mt,data:b64}},
+          {type:'text',text:'電子レベルの液晶ディスプレイ画像です。測定値を数値のみ（例:1.234）で返してください。読み取れない場合はERRORと返してください。'}
+        ]}]})});
+    const d=await res.json();
+    document.getElementById('ocr-spin').style.display='none';
     if(d.error)throw new Error(d.error.message);
     const txt=(d.content||[]).map(c=>c.text||'').join('').trim();
     if(txt==='ERROR'||!txt.match(/[\d.]/)){showOcrErr('数値を読み取れませんでした');return;}
-    const m=txt.match(/-?[\d]+\.[\d]+|-?[\d]+/);if(!m){showOcrErr('数値形式取得失敗');return;}
-    document.getElementById('ocr-val').textContent=parseFloat(m[0]).toFixed(3)+' m';document.getElementById('ocr-res').style.display='block';
+    const m=txt.match(/-?[\d]+\.[\d]+|-?[\d]+/);
+    if(!m){showOcrErr('数値形式の取得に失敗しました');return;}
+    document.getElementById('ocr-val').textContent=parseFloat(m[0]).toFixed(3)+' m';
+    document.getElementById('ocr-res').style.display='block';
   }catch(e){document.getElementById('ocr-spin').style.display='none';showOcrErr('APIエラー: '+e.message);}
 }
 function showOcrErr(msg){const el=document.getElementById('ocr-err');el.textContent=msg;el.style.display='block';}
 function confirmOcr(){
-  if(!ocrTgt)return;const v=parseFloat(document.getElementById('ocr-val').textContent);if(isNaN(v))return;
-  const arr=ocrTgt.dir==='out'?rows:rowsReturn;const r=arr.find(r=>r.id===ocrTgt.id);if(r)r[ocrTgt.field]=v.toFixed(3);
+  if(!ocrTgt)return;
+  const v=parseFloat(document.getElementById('ocr-val').textContent);
+  if(isNaN(v))return;
+  const arr=ocrTgt.dir==='out'?rows:rowsReturn;
+  const r=arr.find(r=>r.id===ocrTgt.id);if(r)r[ocrTgt.field]=v.toFixed(3);
   closeOcr();markDirty();renderTbl();
 }
 
-// ===== PHOTOS =====
-function openPtPhoto(id){ptPhotoId={id,dir:viewMode};document.getElementById('pt-fi').value='';document.getElementById('pt-fi').click();}
-function handlePtPhoto(file){
-  if(!file||!ptPhotoId)return;const rd=new FileReader();rd.onload=e=>{
-    const arr=ptPhotoId.dir==='out'?rows:rowsReturn;const r=arr.find(r=>r.id===ptPhotoId.id);if(r)r.photo=e.target.result;renderTbl();ptPhotoId=null;
-  };rd.readAsDataURL(file);
+// ===== 写真 — 各行にinputを直接持たせる方式に変更 =====
+function handleRowPhoto(input,id){
+  const file=input.files[0];if(!file)return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    const arr=viewMode==='out'?rows:rowsReturn;
+    const r=arr.find(r=>r.id===id);if(r)r.photo=e.target.result;
+    renderTbl();
+  };
+  rd.readAsDataURL(file);
 }
 function openPV(id){
-  pvId={id,dir:viewMode};const arr=viewMode==='out'?rows:rowsReturn;const r=arr.find(r=>r.id===id);if(!r||!r.photo)return;
-  document.getElementById('pv-title').textContent='測点写真 — '+(r.point||'測点');document.getElementById('pv-img').src=r.photo;
-  document.getElementById('ocr').style.display='none';document.getElementById('pv').style.display='block';
+  pvId={id,dir:viewMode};
+  const arr=viewMode==='out'?rows:rowsReturn;
+  const r=arr.find(r=>r.id===id);if(!r||!r.photo)return;
+  document.getElementById('pv-title').textContent='測点写真 — '+(r.point||'測点');
+  document.getElementById('pv-img').src=r.photo;
+  document.getElementById('ocr').style.display='none';
+  document.getElementById('pv').style.display='block';
   document.getElementById('pv').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function closePV(){document.getElementById('pv').style.display='none';pvId=null;}
-function retakePhoto(){if(!pvId)return;const t=pvId;ptPhotoId={id:t.id,dir:t.dir};closePV();document.getElementById('pt-fi').value='';document.getElementById('pt-fi').click();}
+function retakePhoto(){
+  if(!pvId)return;
+  // ビューアを閉じて該当行のfile inputをクリック
+  const{id,dir}=pvId;closePV();
+  const arr=dir==='out'?rows:rowsReturn;
+  const r=arr.find(r=>r.id===id);if(!r)return;
+  // テーブルを再描画してinputを探す
+  // 簡単のため: 一時的なinputを作って起動
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='environment';
+  inp.style.display='none';
+  inp.onchange=()=>{
+    const file=inp.files[0];if(!file)return;
+    const rd=new FileReader();
+    rd.onload=e=>{r.photo=e.target.result;renderTbl();inp.remove();};
+    rd.readAsDataURL(file);
+  };
+  document.body.appendChild(inp);inp.click();
+}
 
 // ===== SKETCH =====
 const W=1000,H=750;
@@ -495,10 +759,18 @@ let pages=[],curPage=0,sk_tool='pen',sk_color='#2563eb',bsz=3,sk_draw=false,sk_t
 const bgCv=document.getElementById('bg-cv'),bgCtx=bgCv.getContext('2d');
 const drCv=document.getElementById('dr-cv'),drCtx=drCv.getContext('2d');
 bgCv.width=drCv.width=W;bgCv.height=drCv.height=H;
+
 function newSkPage(img=null){
-  const bg=document.createElement('canvas');bg.width=W;bg.height=H;const bc=bg.getContext('2d');
-  if(img){const sc=Math.min(W/img.width,H/img.height),dx=(W-img.width*sc)/2,dy=(H-img.height*sc)/2;bc.fillStyle='#1c1c1c';bc.fillRect(0,0,W,H);bc.drawImage(img,dx,dy,img.width*sc,img.height*sc);}
-  else{bc.fillStyle='#fff';bc.fillRect(0,0,W,H);bc.strokeStyle='#e5e7eb';bc.lineWidth=0.5;for(let x=0;x<W;x+=40){bc.beginPath();bc.moveTo(x,0);bc.lineTo(x,H);bc.stroke();}for(let y=0;y<H;y+=40){bc.beginPath();bc.moveTo(0,y);bc.lineTo(W,y);bc.stroke();}}
+  const bg=document.createElement('canvas');bg.width=W;bg.height=H;
+  const bc=bg.getContext('2d');
+  if(img){
+    const sc=Math.min(W/img.width,H/img.height),dx=(W-img.width*sc)/2,dy=(H-img.height*sc)/2;
+    bc.fillStyle='#1c1c1c';bc.fillRect(0,0,W,H);bc.drawImage(img,dx,dy,img.width*sc,img.height*sc);
+  }else{
+    bc.fillStyle='#fff';bc.fillRect(0,0,W,H);bc.strokeStyle='#e5e7eb';bc.lineWidth=0.5;
+    for(let x=0;x<W;x+=40){bc.beginPath();bc.moveTo(x,0);bc.lineTo(x,H);bc.stroke();}
+    for(let y=0;y<H;y+=40){bc.beginPath();bc.moveTo(0,y);bc.lineTo(W,y);bc.stroke();}
+  }
   const dr=document.createElement('canvas');dr.width=W;dr.height=H;
   pages.push({bg,dr,pins:[],hist:[],histIdx:-1});switchPg(pages.length-1);
 }
@@ -516,7 +788,8 @@ function skStart(e){e.preventDefault();const{x,y}=getXY(e);if(sk_tool==='pin'){o
 function skMove(e){e.preventDefault();if(!sk_draw)return;const{x,y}=getXY(e);drCtx.lineJoin='round';drCtx.lineCap='round';if(sk_tool==='eraser'){drCtx.globalCompositeOperation='destination-out';drCtx.lineWidth=bsz*4;}else{drCtx.globalCompositeOperation='source-over';drCtx.strokeStyle=sk_color;drCtx.lineWidth=sk_tool==='marker'?bsz*3:bsz;drCtx.globalAlpha=sk_tool==='marker'?.4:1;}drCtx.lineTo(x,y);drCtx.stroke();}
 function skEnd(e){e.preventDefault();if(!sk_draw)return;sk_draw=false;drCtx.globalAlpha=1;drCtx.globalCompositeOperation='source-over';pushH();}
 function openPin(x,y){
-  pendingPin={x,y};const all=[...rows,...rowsReturn].filter(r=>r.point);
+  pendingPin={x,y};
+  const all=[...rows,...rowsReturn].filter(r=>r.point);
   document.getElementById('pts-dl').innerHTML=[...new Set(all.map(r=>r.point))].map(p=>`<option value="${p}">`).join('');
   const pp=document.getElementById('pin-pp'),cw=document.getElementById('cw'),r=cw.getBoundingClientRect();
   const px=(x/W)*r.width,py=(y/H)*r.height;
@@ -573,14 +846,17 @@ function calcDir(arr){
   return{sBS,sFS,diff:sBS-sFS,n};
 }
 function getCalc(){
-  const sb=parseFloat(document.getElementById('bm-s').value)||0,eb=document.getElementById('bm-e').value?parseFloat(document.getElementById('bm-e').value):null;
+  const sb=parseFloat(document.getElementById('bm-s').value)||0;
+  const eb=document.getElementById('bm-e').value?parseFloat(document.getElementById('bm-e').value):null;
   const{sBS,sFS,diff,n}=calcDir(rows),ce=sb+diff,cl=eb!==null?ce-eb:null,al=0.01*Math.sqrt(n||1);
   return{sBS,sFS,diff,ce,n,cl,al,sb,eb};
 }
 function runChecks(){
   const{sBS,sFS,diff,ce,cl,al,sb,eb}=getCalc();
-  document.getElementById('c-bs').textContent=sBS.toFixed(3);document.getElementById('c-fs').textContent=sFS.toFixed(3);
-  document.getElementById('c-df').textContent=diff.toFixed(3);document.getElementById('c-en').textContent=ce.toFixed(3);
+  document.getElementById('c-bs').textContent=sBS.toFixed(3);
+  document.getElementById('c-fs').textContent=sFS.toFixed(3);
+  document.getElementById('c-df').textContent=diff.toFixed(3);
+  document.getElementById('c-en').textContent=ce.toFixed(3);
   document.getElementById('c-kn').textContent=eb!==null?eb.toFixed(3):'未入力';
   if(cl!==null){document.getElementById('c-cl').textContent=(cl*1000).toFixed(1)+' mm';document.getElementById('c-cl').className='sv '+(Math.abs(cl)<=al?'ok':'ng');}
   else{document.getElementById('c-cl').textContent='—';document.getElementById('c-cl').className='sv';}
@@ -593,16 +869,22 @@ function runChecks(){
   document.getElementById('kf-ret').textContent=hasRet?ret.diff.toFixed(4)+' m':'—';
   if(hasRet){
     const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=10*Math.sqrt(n2||1),ok2=Math.abs(korsa*1000)<=alMM,best=(out.diff-ret.diff)/2;
-    document.getElementById('kf-kor').textContent=(korsa*1000).toFixed(1)+' mm';document.getElementById('kf-allow').textContent='±'+alMM.toFixed(0)+' mm';document.getElementById('kf-best').textContent=best.toFixed(4)+' m';
+    document.getElementById('kf-kor').textContent=(korsa*1000).toFixed(1)+' mm';
+    document.getElementById('kf-allow').textContent='±'+alMM.toFixed(0)+' mm';
+    document.getElementById('kf-best').textContent=best.toFixed(4)+' m';
     document.getElementById('kf-jdg').innerHTML=`<span class="badge ${ok2?'bok':'bng'}">${ok2?'合格 ✓':'不合格 ✗'}</span>`;
-  }else{['kf-kor','kf-allow','kf-best'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('kf-jdg').innerHTML='<span class="badge bwarn">復路未入力</span>';}
+  }else{
+    ['kf-kor','kf-allow','kf-best'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('kf-jdg').innerHTML='<span class="badge bwarn">復路未入力</span>';
+  }
 }
 function setBdg(id,txt,type){const el=document.getElementById(id);el.textContent=txt;el.className='badge b'+type;}
 
 // ===== PDF =====
 function buildObsTblHTML(arr,startGH,kM,color){
   const ghData=calcGH(arr,startGH,kM);
-  return arr.map((r,i)=>{const{ihD,ghV,isFS}=ghData[i];const gps=r.lat!=null?`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`:'';
+  return arr.map((r,i)=>{
+    const{ihD,ghV,isFS}=ghData[i];const gps=r.lat!=null?`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`:'';
     return `<tr style="${isFS?`color:${color};`:''}"><td>${r.point||''}</td><td>${r.bs!==''?parseFloat(r.bs).toFixed(3):''}</td><td>${r.fs!==''?parseFloat(r.fs).toFixed(3):''}</td><td>${r.is_!==''?parseFloat(r.is_).toFixed(3):''}</td><td>${ihD}</td><td>${ghV!==''?parseFloat(ghV).toFixed(3):''}</td><td style="font-size:8.5pt;color:#555;">${gps}</td></tr>`;
   }).join('');
 }
@@ -613,33 +895,34 @@ function printReport(){
   const{sBS,sFS,diff,ce,cl,al,n}=getCalc();
   const out=calcDir(rows),ret=calcDir(rowsReturn),hasRet=rowsReturn.some(r=>r.bs!==''||r.fs!=='');
   const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=10*Math.sqrt(n2||1),best=(out.diff-ret.diff)/2;
-  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>水準測量成果表 ${proj}</title>
-<style>@page{size:A4 portrait;margin:15mm 18mm 20mm;}*{box-sizing:border-box;}body{font-family:'Hiragino Sans','Meiryo','Yu Gothic',sans-serif;font-size:10pt;color:#111;margin:0;}
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>成果表 ${proj}</title>
+<style>@page{size:A4;margin:15mm 18mm 20mm;}*{box-sizing:border-box;}body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:10pt;color:#111;margin:0;}
 h1{font-size:14pt;text-align:center;margin-bottom:8pt;border-bottom:1.5pt solid #111;padding-bottom:4pt;}h2{font-size:10.5pt;margin:10pt 0 4pt;border-left:3pt solid #555;padding-left:5pt;}
 .ig{display:grid;grid-template-columns:repeat(3,1fr);gap:4pt;margin-bottom:10pt;border:0.5pt solid #aaa;padding:7pt;}.ig .lbl{font-size:7.5pt;color:#666;}.ig .val{font-size:9.5pt;font-weight:500;}
 table{border-collapse:collapse;width:100%;margin-bottom:8pt;font-size:9pt;}th{background:#ececec;border:0.5pt solid #888;padding:3pt 4pt;text-align:center;}td{border:0.5pt solid #888;padding:2pt 4pt;text-align:right;}td:first-child{text-align:left;}
-.rg{display:grid;grid-template-columns:repeat(3,1fr);gap:5pt;margin-bottom:8pt;}.ri{border:0.5pt solid #aaa;padding:4pt 7pt;}.ri .rl{font-size:7.5pt;color:#666;}.ri .rv{font-size:11pt;font-weight:500;margin-top:2pt;}
-.ok{color:#0a5c3e;}.ng{color:#8b1a1a;}
+.rg{display:grid;grid-template-columns:repeat(3,1fr);gap:5pt;margin-bottom:8pt;}.ri{border:0.5pt solid #aaa;padding:4pt 7pt;}.ri .rl{font-size:7.5pt;color:#666;}.ri .rv{font-size:11pt;font-weight:500;margin-top:2pt;}.ok{color:#0a5c3e;}.ng{color:#8b1a1a;}
 .memo{border:0.5pt solid #aaa;padding:7pt;font-size:9.5pt;min-height:28pt;white-space:pre-wrap;}
 .sign{display:grid;grid-template-columns:repeat(3,1fr);gap:8pt;margin-top:18pt;}.sbox{border:0.5pt solid #aaa;height:38pt;padding:3pt 5pt;font-size:8pt;color:#666;}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>
 <h1>水準測量成果表</h1>
-<div class="ig"><div><div class="lbl">路線名</div><div class="val">${routeName}</div></div><div><div class="lbl">作業名</div><div class="val">${proj}</div></div><div><div class="lbl">測量日</div><div class="val">${date}</div></div><div><div class="lbl">担当者</div><div class="val">${worker}</div></div><div><div class="lbl">天候</div><div class="val">${wx}</div></div><div><div class="lbl">器差定数K</div><div class="val">${K?K.toFixed(3)+' mm':'—'}</div></div><div><div class="lbl">起点BM</div><div class="val">${sb.toFixed(3)} m</div></div><div><div class="lbl">終点BM</div><div class="val">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div><div class="lbl">測点/FS数</div><div class="val">${rows.length}/${n}</div></div></div>
+<div class="ig"><div><div class="lbl">路線名</div><div class="val">${routeName}</div></div><div><div class="lbl">作業名</div><div class="val">${proj}</div></div><div><div class="lbl">測量日</div><div class="val">${date}</div></div><div><div class="lbl">担当者</div><div class="val">${worker}</div></div><div><div class="lbl">天候</div><div class="val">${wx}</div></div><div><div class="lbl">器差K</div><div class="val">${K?K.toFixed(3)+' mm':'—'}</div></div><div><div class="lbl">起点BM</div><div class="val">${sb.toFixed(3)} m</div></div><div><div class="lbl">終点BM</div><div class="val">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div><div class="lbl">測点/FS数</div><div class="val">${rows.length}/${n}</div></div></div>
 <h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rows,sb,kM,'#185FA5')}</tbody></table>
 ${hasRet?`<h2>復路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rowsReturn,parseFloat(eb)||0,kM,'#d97706')}</tbody></table>`:''}
 <h2>集計・点検</h2><div class="rg"><div class="ri"><div class="rl">ΣBS</div><div class="rv">${sBS.toFixed(3)} m</div></div><div class="ri"><div class="rl">ΣFS</div><div class="rv">${sFS.toFixed(3)} m</div></div><div class="ri"><div class="rl">ΣBS－ΣFS</div><div class="rv">${diff.toFixed(3)} m</div></div><div class="ri"><div class="rl">実測終点BM</div><div class="rv">${ce.toFixed(3)} m</div></div><div class="ri"><div class="rl">既知終点BM</div><div class="rv">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div class="ri"><div class="rl">閉合差</div><div class="rv ${cl!==null?(Math.abs(cl)<=al?'ok':'ng'):''}">${cl!==null?((cl*1000).toFixed(1)+' mm'):'—'}</div></div></div>
-${hasRet?`<h2>往復比較</h2><table><thead><tr><th style="text-align:left;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead><tbody><tr><td>総高低差(m)</td><td>${out.diff.toFixed(4)}</td><td>${ret.diff.toFixed(4)}</td><td></td></tr><tr><td>往復較差</td><td colspan="2" style="text-align:center;font-weight:500;${Math.abs(korsa*1000)<=alMM?'color:#0a5c3e;':'color:#8b1a1a;'}">${(korsa*1000).toFixed(1)} mm</td><td style="font-weight:500;${Math.abs(korsa*1000)<=alMM?'color:#0a5c3e;':'color:#8b1a1a;'}">${Math.abs(korsa*1000)<=alMM?'合格 ✓':'不合格 ✗'}</td></tr><tr><td>許容較差</td><td colspan="2" style="text-align:center;">±${alMM.toFixed(0)} mm</td><td></td></tr><tr><td>最確値</td><td colspan="2" style="text-align:center;font-weight:500;font-size:11pt;">${best.toFixed(4)} m</td><td></td></tr></tbody></table>`:''}
+${hasRet?`<h2>往復比較</h2><table><thead><tr><th style="text-align:left;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead><tbody><tr><td>総高低差(m)</td><td>${out.diff.toFixed(4)}</td><td>${ret.diff.toFixed(4)}</td><td></td></tr><tr><td>往復較差</td><td colspan="2" style="text-align:center;font-weight:500;${Math.abs(korsa*1000)<=alMM?'color:#0a5c3e;':'color:#8b1a1a;'}">${(korsa*1000).toFixed(1)} mm</td><td style="${Math.abs(korsa*1000)<=alMM?'color:#0a5c3e;':'color:#8b1a1a;'}font-weight:500;">${Math.abs(korsa*1000)<=alMM?'合格 ✓':'不合格 ✗'}</td></tr><tr><td>許容較差</td><td colspan="2" style="text-align:center;">±${alMM.toFixed(0)} mm</td><td></td></tr><tr><td>最確値</td><td colspan="2" style="text-align:center;font-weight:500;font-size:11pt;">${best.toFixed(4)} m</td><td></td></tr></tbody></table>`:''}
 <h2>現場メモ</h2><div class="memo">${document.getElementById('memo').value||'（記録なし）'}</div>
 <div class="sign"><div class="sbox">作業者</div><div class="sbox">検査者</div><div class="sbox">承認</div></div>
 </body></html>`;
-  const w=window.open('','_blank');if(!w){alert('ポップアップを許可してください');return;}w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),700);
+  const w=window.open('','_blank');if(!w){alert('ポップアップを許可してください');return;}
+  w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),700);
 }
 function printSketch(){
   saveDr();const proj=document.getElementById('proj').value||'スケッチ';
   const imgs=pages.map(p=>{const c=document.createElement('canvas');c.width=W;c.height=H;const cx=c.getContext('2d');cx.drawImage(p.bg,0,0);cx.drawImage(p.dr,0,0);p.pins.forEach(pin=>{cx.save();cx.fillStyle='#E24B4A';cx.beginPath();cx.arc(pin.x,pin.y,11,0,Math.PI*2);cx.fill();cx.fillStyle='#fff';cx.font='bold 13px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('+',pin.x,pin.y);const tw=pin.name.length*8.5+16;cx.fillStyle='rgba(226,75,74,0.9)';cx.fillRect(pin.x+13,pin.y-13,tw,17);cx.fillStyle='#fff';cx.font='12px sans-serif';cx.textAlign='left';cx.fillText(pin.name,pin.x+18,pin.y-1);cx.restore();});return c.toDataURL('image/png');});
-  const ph=imgs.map((s,i)=>`<div ${i>0?'style="page-break-before:always;"':''}><div style="font-size:9pt;color:#666;margin-bottom:5pt;">${proj} — スケッチ ${i+1}/${imgs.length}</div><img src="${s}" style="width:100%;max-height:235mm;object-fit:contain;display:block;"></div>`).join('');
-  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>スケッチ ${proj}</title><style>@page{size:A4;margin:15mm;}body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:0;}h1{font-size:13pt;text-align:center;margin-bottom:8pt;border-bottom:1pt solid #333;padding-bottom:4pt;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body><h1>水準測量 現場スケッチ — ${proj}</h1>${ph}</body></html>`;
-  const w=window.open('','_blank');if(!w){alert('ポップアップを許可してください');return;}w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),900);
+  const ph=imgs.map((s,i)=>`<div ${i>0?'style="page-break-before:always;"':''}><p style="font-size:9pt;color:#666;margin-bottom:5pt;">${proj} — スケッチ ${i+1}/${imgs.length}</p><img src="${s}" style="width:100%;max-height:235mm;object-fit:contain;display:block;"></div>`).join('');
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>スケッチ</title><style>@page{size:A4;margin:15mm;}body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:0;}h1{font-size:13pt;text-align:center;margin-bottom:8pt;border-bottom:1pt solid #333;padding-bottom:4pt;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body><h1>現場スケッチ — ${proj}</h1>${ph}</body></html>`;
+  const w=window.open('','_blank');if(!w){alert('ポップアップを許可してください');return;}
+  w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),900);
 }
 
 // ===== EXPORT =====
@@ -650,18 +933,19 @@ function buildPrev(){
   L.push('------------------------------','測点      BS(m)   FS(m)   IS(m)   IH(m)   GH(m)');
   const ghData=calcGH(rows,sb,kM);
   rows.forEach((r,i)=>{const{ihD,ghV}=ghData[i];const gps=r.lat!=null?` [${r.lat.toFixed(5)},${r.lon.toFixed(5)}]`:'';const ph=r.photo?' [📸]':'';
-    L.push((r.point||'—').padEnd(10)+(r.bs!==''?parseFloat(r.bs).toFixed(3):'—').padStart(7)+(r.fs!==''?parseFloat(r.fs).toFixed(3):'—').padStart(8)+(r.is_!==''?parseFloat(r.is_).toFixed(3):'—').padStart(8)+(ihD||'—').padStart(8)+(ghV!==''?parseFloat(ghV).toFixed(3):'—').padStart(8)+gps+ph);
-  });
+    L.push((r.point||'—').padEnd(10)+(r.bs!==''?parseFloat(r.bs).toFixed(3):'—').padStart(7)+(r.fs!==''?parseFloat(r.fs).toFixed(3):'—').padStart(8)+(r.is_!==''?parseFloat(r.is_).toFixed(3):'—').padStart(8)+(ihD||'—').padStart(8)+(ghV!==''?parseFloat(ghV).toFixed(3):'—').padStart(8)+gps+ph);});
   L.push('------------------------------',`ΣBS=${sBS.toFixed(3)}  ΣFS=${sFS.toFixed(3)}  差=${diff.toFixed(3)}`,`実測終点BM=${ce.toFixed(3)} m`);
   if(document.getElementById('bm-e').value)L.push(`閉合差=${cl!==null?(cl*1000).toFixed(1)+' mm':'—'}`);
   if(rowsReturn.some(r=>r.bs!==''||r.fs!=='')){const out=calcDir(rows),ret=calcDir(rowsReturn);L.push(`往復較差=${((out.diff+ret.diff)*1000).toFixed(1)} mm  最確値=${((out.diff-ret.diff)/2).toFixed(4)} m`);}
-  L.push('==============================');document.getElementById('prev').textContent=L.join('\n');
+  L.push('==============================');
+  document.getElementById('prev').textContent=L.join('\n');
 }
 function expCSV(){
   const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000,sb=parseFloat(document.getElementById('bm-s').value)||0;
   let csv='方向,測点,BS(m),FS(m),IS(m),IH(m),GH(m),緯度,経度,精度(m)\n';
   const addDir=(arr,dir,startGH)=>{const ghData=calcGH(arr,startGH,kM);arr.forEach((r,i)=>{const{ihD,ghV}=ghData[i];csv+=`${dir},${r.point||''},${r.bs||''},${r.fs||''},${r.is_||''},${ihD||''},${ghV!==''?parseFloat(ghV).toFixed(3):''},${r.lat!=null?r.lat.toFixed(8):''},${r.lon!=null?r.lon.toFixed(8):''},${r.acc||''}\n`;});};
-  addDir(rows,'往路',sb);if(rowsReturn.length>0)addDir(rowsReturn,'復路',parseFloat(document.getElementById('bm-e').value)||0);
+  addDir(rows,'往路',sb);
+  if(rowsReturn.length>0)addDir(rowsReturn,'復路',parseFloat(document.getElementById('bm-e').value)||0);
   dlf('suijun_'+(document.getElementById('date').value||'data')+'.csv',csv,'text/csv');
 }
 function expTxt(){buildPrev();dlf('suijun_notebook.txt',document.getElementById('prev').textContent,'text/plain');}
@@ -669,7 +953,7 @@ function dlf(fn,txt,mime){const a=document.createElement('a');a.href=URL.createO
 
 // ===== SERVICE WORKER =====
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').then(r=>console.log('SW registered')).catch(e=>console.log('SW error',e)));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(e=>console.log('SW error',e)));
 }
 
 // ===== INIT =====
@@ -677,10 +961,14 @@ const loaded=loadFromStorage();
 if(!loaded||routes.length===0){
   const id='r'+Date.now(),today=new Date().toISOString().split('T')[0];
   const mk=(pts)=>pts.map((p,i)=>({id:i,point:p,bs:'',fs:'',is_:'',lat:null,lon:null,acc:null}));
-  routes=[{id,name:'路線 1',createdAt:new Date().toISOString(),proj:'',date:today,worker:'',wx:'晴',bmStart:'',bmEnd:'',kCorr:'',memo:'',rows:mk(['BM1','No.1','BM2']),rowsReturn:mk(['BM2','No.1','BM1'])}];
+  routes=[{id,name:'路線 1',createdAt:new Date().toISOString(),proj:'',date:today,worker:'',wx:'晴',bmStart:'',bmEnd:'',kCorr:'',memo:'',
+    rows:mk(['BM.1','No.1','BM.2']),rowsReturn:mk(['BM.2','No.1','BM.1'])}];
   currentRouteId=id;
 }
-updateRouteSel();loadCurrentState();renderTbl();newSkPage();setDir('out');
+// ホーム画面を表示
+renderRouteList();
+// スケッチ初期ページ
+newSkPage();
 </script>
 </body>
 </html>
