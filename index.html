@@ -387,7 +387,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 <div id="kb-bar">
   <span id="kb-label" style="flex:1;font-size:13px;font-weight:500;color:var(--color-text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
   <button class="kb-btn" onclick="startVoiceKb()">🎤 音声</button>
-  <button class="kb-btn" onclick="openOcrKb()">📷 OCR</button>
+  <button class="kb-btn" onclick="captureDirectKb()">📷 撮影→OCR</button>
   <button class="kb-btn p" onclick="blurKb()">完了</button>
 </div>
 
@@ -667,20 +667,65 @@ function renderTbl(){
 
 // ===== キーボードアクセサリバー =====
 let activeKb=null;
+
+function adjustKbBar(){
+  const bar=document.getElementById('kb-bar');
+  if(bar.style.display==='none'&&!activeKb)return;
+  const vv=window.visualViewport;
+  if(vv){
+    // キーボード分だけ上にずらす
+    const offsetBottom=window.innerHeight-vv.height-vv.offsetTop;
+    bar.style.bottom=Math.max(0,offsetBottom)+'px';
+    bar.style.left=vv.offsetLeft+'px';
+    bar.style.right=(window.innerWidth-vv.offsetLeft-vv.width)+'px';
+  }
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',adjustKbBar);
+  window.visualViewport.addEventListener('scroll',adjustKbBar);
+}
+
 function focusNi(idx,field,rid){
   activeKb={idx,field,rid};
   const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
   const r=getCurRows()[idx];
   document.getElementById('kb-label').textContent=(r.point||'測点')+' — '+lbs[field];
-  document.getElementById('kb-bar').style.display='flex';
+  const bar=document.getElementById('kb-bar');
+  bar.style.display='flex';
+  bar.style.bottom='0';
+  setTimeout(adjustKbBar,100);
 }
 function blurKb(){
   document.activeElement.blur();
-  document.getElementById('kb-bar').style.display='none';
+  const bar=document.getElementById('kb-bar');
+  bar.style.display='none';
+  bar.style.bottom='0';
   activeKb=null;
 }
 function startVoiceKb(){if(activeKb)startVoice(activeKb.idx,activeKb.field);}
-function openOcrKb(){if(activeKb)openOcr(activeKb.rid,activeKb.field);}
+
+// カメラを直接起動してOCR
+function captureDirectKb(){
+  if(!activeKb)return;
+  ocrTgt={id:activeKb.rid,field:activeKb.field,dir:viewMode};
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='environment';inp.style.display='none';
+  inp.onchange=()=>{
+    const file=inp.files[0];if(!file){inp.remove();return;}
+    // OCRパネルを開いて画像を処理
+    const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
+    const r=getCurRows().find(r=>r.id===activeKb?.rid)||{point:''};
+    document.getElementById('ocr-lbl').textContent=`→${r.point} ${lbs[ocrTgt.field]||''}`;
+    ['ocr-res','ocr-spin','ocr-err'].forEach(x=>document.getElementById(x).style.display='none');
+    document.getElementById('ocr-prev').style.display='none';
+    document.getElementById('pv').style.display='none';
+    document.getElementById('ocr').style.display='block';
+    document.getElementById('ocr').scrollIntoView({behavior:'smooth',block:'start'});
+    handleOcrF(file);
+    inp.remove();
+  };
+  document.body.appendChild(inp);inp.click();
+}
 
 // ===== GPS =====
 function getGPS(idx){
@@ -869,14 +914,17 @@ function pinchDist(t){return Math.hypot(t[1].clientX-t[0].clientX,t[1].clientY-t
 // cw相対座標でのピンチ中心
 function pinchMid(t,cwR){return{x:(t[0].clientX+t[1].clientX)/2-cwR.left, y:(t[0].clientY+t[1].clientY)/2-cwR.top};}
 
+let sk_pending=false,pendingX=0,pendingY=0;
+
 drCv.addEventListener('mousedown',skStart);drCv.addEventListener('mousemove',skMove);drCv.addEventListener('mouseup',skEnd);drCv.addEventListener('mouseleave',skEnd);
 drCv.addEventListener('touchstart',skStart,{passive:false});drCv.addEventListener('touchmove',skMove,{passive:false});drCv.addEventListener('touchend',skEnd,{passive:false});
 
 function skStart(e){
   e.preventDefault();
-  // 2本指 → ピンチ開始
+  // 2本指 → ピンチ開始（描画中だった場合もキャンセル）
   if(e.touches&&e.touches.length>=2){
-    sk_draw=false;
+    sk_draw=false;sk_pending=false;
+    drCtx.globalAlpha=1;drCtx.globalCompositeOperation='source-over';
     const cwR=document.getElementById('cw').getBoundingClientRect();
     pinchStart={
       dist:pinchDist(e.touches),
@@ -889,35 +937,42 @@ function skStart(e){
   const{x,y}=getXY(e);
   if(sk_tool==='pin'){openPin(x,y);return;}
   if(sk_tool==='text'){placeText(x,y);return;}
-  sk_draw=true;drCtx.beginPath();drCtx.moveTo(x,y);
+  // 1本指タッチ: まだ描画開始しない（pending状態）
+  sk_pending=true;sk_draw=false;pendingX=x;pendingY=y;
 }
 
 function skMove(e){
   e.preventDefault();
   // 2本指 → ズーム＋パン
   if(e.touches&&e.touches.length>=2&&pinchStart){
+    sk_pending=false;sk_draw=false;
     const cwR=document.getElementById('cw').getBoundingClientRect();
     const newDist=pinchDist(e.touches);
     const newMid=pinchMid(e.touches,cwR);
     const s0=pinchStart.scale,s1=Math.max(0.3,Math.min(10,s0*newDist/pinchStart.dist));
-    // ピンチ中心がズーム前後で同じキャンバス点を指すように ox/oy を計算
     vp.scale=s1;
     vp.ox=newMid.x-(pinchStart.mid.x-pinchStart.ox)*s1/s0;
     vp.oy=newMid.y-(pinchStart.mid.y-pinchStart.oy)*s1/s0;
     applyVP();
     return;
   }
-  if(!sk_draw)return;
   const{x,y}=getXY(e);
-  drCtx.lineJoin='round';drCtx.lineCap='round';
-  if(sk_tool==='eraser'){drCtx.globalCompositeOperation='destination-out';drCtx.lineWidth=bsz*4;}
-  else{drCtx.globalCompositeOperation='source-over';drCtx.strokeStyle=sk_color;drCtx.lineWidth=sk_tool==='marker'?bsz*3:bsz;drCtx.globalAlpha=sk_tool==='marker'?.4:1;}
+  // pending → 初めて動いたので描画開始
+  if(sk_pending&&!sk_draw){
+    sk_pending=false;sk_draw=true;
+    drCtx.lineJoin='round';drCtx.lineCap='round';
+    if(sk_tool==='eraser'){drCtx.globalCompositeOperation='destination-out';drCtx.lineWidth=bsz*4;}
+    else{drCtx.globalCompositeOperation='source-over';drCtx.strokeStyle=sk_color;drCtx.lineWidth=sk_tool==='marker'?bsz*3:bsz;drCtx.globalAlpha=sk_tool==='marker'?.4:1;}
+    drCtx.beginPath();drCtx.moveTo(pendingX,pendingY);
+  }
+  if(!sk_draw)return;
   drCtx.lineTo(x,y);drCtx.stroke();
 }
 
 function skEnd(e){
   e.preventDefault();
-  if(e.touches&&e.touches.length<2) pinchStart=null;
+  if(e.touches&&e.touches.length<2)pinchStart=null;
+  sk_pending=false;
   if(!sk_draw)return;
   sk_draw=false;drCtx.globalAlpha=1;drCtx.globalCompositeOperation='source-over';pushH();
 }
