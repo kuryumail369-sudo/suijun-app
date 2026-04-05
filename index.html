@@ -430,7 +430,7 @@ let routes=[], currentRouteId=null;
 let ocrTgt=null, ptPhotoId=null, pvId=null;
 let autoSaveTimer=null;
 // マイク関連
-let micStream=null, voiceRec=null, micGranted=false;
+let voiceRec=null;
 
 function getCurRows(){return viewMode==='out'?rows:rowsReturn;}
 
@@ -816,61 +816,60 @@ function captureForCell(rid,field){
 // 測点名の音声入力
 function startVoicePoint(idx){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('音声入力非対応（Chrome推奨）');return;}
-  ensureMicPermission().then(ok=>{
-    if(!ok)return;
-    const rec=new SR();
-    rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
-    const btn=event.target;
-    btn.textContent='⏺';btn.style.background='#FCEBEB';
-    rec.onresult=e=>{
-      let t=e.results[0][0].transcript.trim();
-      // 変換ルール
-      t=t.replace(/ナンバー/g,'No.').replace(/番号/g,'No.')
-         .replace(/ビーエム/g,'BM').replace(/ベンチマーク/g,'BM')
-         .replace(/アイピー/g,'IP').replace(/ケイピー/g,'KP')
-         .replace(/の/g,'-')
-         .replace(/\s+/g,'');
-      // 数字の全角→半角
-      t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
-      // 「No.-」になってしまう場合を修正（No.の直後の-は除去）
-      t=t.replace(/No\.-/g,'No.');
-      getCurRows()[idx].point=t;
-      markDirty();renderTbl();
-    };
-    const rst=()=>{btn.textContent='🎤';btn.style.background='none';};
-    rec.onerror=rst;rec.onend=rst;
-    rec.start();
-  });
+  if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
+  const rec=new SR();
+  rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
+  const btn=event.target;
+  btn.textContent='⏺';btn.style.background='#FCEBEB';
+  rec.onresult=e=>{
+    let t=e.results[0][0].transcript.trim();
+    t=t.replace(/ナンバー/g,'No.').replace(/番号/g,'No.')
+       .replace(/ビーエム/g,'BM').replace(/ベンチマーク/g,'BM')
+       .replace(/アイピー/g,'IP').replace(/ケイピー/g,'KP')
+       .replace(/の/g,'-')
+       .replace(/\s+/g,'');
+    t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+    t=t.replace(/No\.-/g,'No.');
+    getCurRows()[idx].point=t;
+    markDirty();renderTbl();
+  };
+  const rst=()=>{btn.textContent='🎤';btn.style.background='none';};
+  rec.onerror=e=>{
+    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
+    rst();
+  };
+  rec.onend=rst;
+  rec.start();
 }
 
 // 任意フィールドへの音声入力
 function startVoiceField(fieldId, allowNegative=true){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('音声入力非対応（Chrome推奨）');return;}
+  if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
   const el=document.getElementById(fieldId);
   if(!el)return;
-  ensureMicPermission().then(ok=>{
-    if(!ok)return;
-    const rec=new SR();
-    rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
-    const btn=event.target;
-    const orig=btn.textContent;
-    btn.textContent='⏺';btn.style.color='#E24B4A';btn.style.background='#FCEBEB';
-    rec.onresult=e=>{
-      const t=e.results[0][0].transcript;
-      const v=voiceToNum(t);
-      if(v!==null){
-        el.value=v.toFixed(3);
-        el.dispatchEvent(new Event('input',{bubbles:true}));
-      } else {
-        alert(`"${t}" — 数値が認識できませんでした`);
-      }
-    };
-    const rst=()=>{btn.textContent=orig;btn.style.color='#E24B4A';btn.style.background='none';};
-    rec.onerror=rst;rec.onend=rst;
-    rec.start();
-  });
+  const rec=new SR();
+  rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
+  const btn=event.target;
+  const orig=btn.textContent;
+  btn.textContent='⏺';btn.style.color='#E24B4A';btn.style.background='#FCEBEB';
+  rec.onresult=e=>{
+    const t=e.results[0][0].transcript;
+    const v=voiceToNum(t);
+    if(v!==null){
+      el.value=v.toFixed(3);
+      el.dispatchEvent(new Event('input',{bubbles:true}));
+    } else {
+      alert(`"${t}" — 数値が認識できませんでした`);
+    }
+  };
+  const rst=()=>{btn.textContent=orig;btn.style.color='#E24B4A';btn.style.background='none';};
+  rec.onerror=e=>{
+    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
+    rst();
+  };
+  rec.onend=rst;
+  rec.start();
 }
 
 // ===== 観測者名管理 =====
@@ -1052,24 +1051,41 @@ function getGPS(idx){
   );
 }
 
-// ===== マイク — 事前に権限を取得して保持 =====
-async function ensureMicPermission(){
-  if(micGranted)return true;
-  try{
-    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    micGranted=true;
-    // ストリームは権限確認用なのでいったん止めない（SpeechRecognitionが使う）
-    return true;
-  }catch(e){
-    alert('マイクへのアクセスが拒否されました。設定から許可してください。');
-    return false;
-  }
+// ===== マイク =====
+function startVoice(idx,field){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
+  if(voiceRec){voiceRec.stop();voiceRec=null;return;}
+
+  const btn=document.getElementById(`mic-${idx}-${field}`);
+
+  voiceRec=new SR();
+  voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
+  if(btn){btn.classList.add('mic-active');btn.textContent='⏺';}
+
+  voiceRec.onresult=e=>{
+    const t=e.results[0][0].transcript;
+    const v=voiceToNum(t);
+    if(v!==null){getCurRows()[idx][field]=v.toFixed(3);markDirty();renderTbl();}
+    else alert(`"${t}" — 数値が認識できませんでした`);
+  };
+  const rst=()=>{
+    voiceRec=null;
+    document.querySelectorAll('.ic').forEach(b=>{
+      if(b.textContent==='⏺'){b.textContent='🎤';b.classList.remove('mic-active');}
+    });
+  };
+  voiceRec.onerror=e=>{
+    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
+    else if(e.error==='network')alert('音声認識にはインターネット接続が必要です。');
+    rst();
+  };
+  voiceRec.onend=rst;
+  voiceRec.start();
 }
 
 function voiceToNum(t){
-  // 「マイナス」「マイナ」「minus」→ マイナス符号
   t=t.replace(/マイナス|マイナ|minus/gi,'-');
-  // 全角数字→半角
   t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
   const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);
   return m?parseFloat(m[0]):null;
@@ -1077,32 +1093,30 @@ function voiceToNum(t){
 
 function startVoice(idx,field){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('音声入力非対応（Chrome推奨）');return;}
-  // 録音中なら停止
+  if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
   if(voiceRec){voiceRec.stop();voiceRec=null;return;}
-
   const btn=document.getElementById(`mic-${idx}-${field}`);
-
-  ensureMicPermission().then(ok=>{
-    if(!ok)return;
-    voiceRec=new SR();
-    voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
-    if(btn){btn.classList.add('mic-active');btn.textContent='⏺';}
-    voiceRec.onresult=e=>{
-      const t=e.results[0][0].transcript;
-      const v=voiceToNum(t);
-      if(v!==null){getCurRows()[idx][field]=v.toFixed(3);markDirty();renderTbl();}
-      else alert(`"${t}" — 数値が認識できませんでした`);
-    };
-    const rst=()=>{
-      voiceRec=null;
-      document.querySelectorAll('.ic').forEach(b=>{
-        if(b.textContent==='⏺'){b.textContent='🎤';b.classList.remove('mic-active');}
-      });
-    };
-    voiceRec.onerror=rst;voiceRec.onend=rst;
-    voiceRec.start();
-  });
+  voiceRec=new SR();
+  voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
+  if(btn){btn.classList.add('mic-active');btn.textContent='⏺';}
+  voiceRec.onresult=e=>{
+    const t=e.results[0][0].transcript;
+    const v=voiceToNum(t);
+    if(v!==null){getCurRows()[idx][field]=v.toFixed(3);markDirty();renderTbl();}
+    else alert(`"${t}" — 数値が認識できませんでした`);
+  };
+  const rst=()=>{
+    voiceRec=null;
+    document.querySelectorAll('.ic').forEach(b=>{
+      if(b.textContent==='⏺'){b.textContent='🎤';b.classList.remove('mic-active');}
+    });
+  };
+  voiceRec.onerror=e=>{
+    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
+    rst();
+  };
+  voiceRec.onend=rst;
+  voiceRec.start();
 }
 
 // ===== OCR =====
