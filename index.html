@@ -241,12 +241,14 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="g2">
         <div class="mi"><label>作業名</label><input type="text" id="proj" placeholder="○○道路測量" oninput="markDirty()"></div>
         <div class="mi"><label>測量日</label><input type="date" id="date" oninput="markDirty()"></div>
-        <div class="mi" style="grid-column:1/-1;"><label>観測者名</label>
+        <div class="mi"><label>観測者名</label>
           <div style="display:flex;gap:4px;align-items:center;">
-            <input type="text" id="worker" placeholder="観測者名を入力または下から選択" oninput="markDirty()" style="flex:1;">
-            <button onclick="saveWorkerName()" style="padding:6px 10px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-secondary);white-space:nowrap;">＋登録</button>
+            <select id="worker" onchange="markDirty()" style="flex:1;">
+              <option value="">-- 選択してください --</option>
+            </select>
+            <button onclick="addNewWorker()" style="padding:6px 10px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-secondary);white-space:nowrap;">＋追加</button>
+            <button onclick="deleteCurrentWorker()" style="padding:6px 8px;font-size:12px;border:0.5px solid #E24B4A;border-radius:var(--border-radius-md);cursor:pointer;background:none;color:#E24B4A;white-space:nowrap;">削除</button>
           </div>
-          <div id="worker-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>
         </div>
         <div class="mi"><label>天候</label><select id="wx" onchange="markDirty()"><option>晴</option><option>曇</option><option>雨</option><option>雪</option></select></div>
       </div>
@@ -566,6 +568,7 @@ function loadCurrentState(){
   rowIdRet=rowsReturn.length>0?Math.max(...rowsReturn.map(r=>r.id))+1:0;
   document.getElementById('proj').value=r.proj||'';
   document.getElementById('date').value=r.date||'';
+  updateWorkerDatalist();
   document.getElementById('worker').value=r.worker||'';
   document.getElementById('wx').value=r.wx||'晴';
   document.getElementById('bm-s').value=r.bmStart||'';
@@ -807,7 +810,14 @@ function startVoicePoint(idx){
     const btn=event.target;
     btn.textContent='⏺';btn.style.background='#FCEBEB';
     rec.onresult=e=>{
-      const t=e.results[0][0].transcript.trim();
+      let t=e.results[0][0].transcript.trim();
+      // 変換ルール
+      t=t.replace(/ナンバー/g,'No.').replace(/番号/g,'No.')
+         .replace(/ビーエム/g,'BM').replace(/ベンチマーク/g,'BM')
+         .replace(/アイピー/g,'IP').replace(/けいかてん/g,'KP')
+         .replace(/ケイピー/g,'KP').replace(/の/g,'.').replace(/\s+/g,'');
+      // 数字の全角→半角
+      t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
       getCurRows()[idx].point=t;
       markDirty();renderTbl();
     };
@@ -851,40 +861,36 @@ function loadWorkerNames(){
   try{return JSON.parse(localStorage.getItem('suijun_workers')||'[]');}
   catch(e){return[];}
 }
-function saveWorkerName(){
-  const name=document.getElementById('worker').value.trim();
-  if(!name){alert('観測者名を入力してください');return;}
+function addNewWorker(){
+  const name=prompt('新しい観測者名を入力してください');
+  if(!name||!name.trim())return;
+  const n=name.trim();
   const names=loadWorkerNames();
-  if(names.includes(name)){alert(`「${name}」はすでに登録されています`);return;}
-  names.push(name);
+  if(names.includes(n)){alert(`「${n}」はすでに登録されています`);return;}
+  names.push(n);
   localStorage.setItem('suijun_workers',JSON.stringify(names));
   updateWorkerDatalist();
+  document.getElementById('worker').value=n;
+  markDirty();
 }
-function deleteWorkerName(name){
+function deleteCurrentWorker(){
+  const sel=document.getElementById('worker');
+  const name=sel.value;
+  if(!name){alert('削除する観測者を選択してください');return;}
   if(!confirm(`「${name}」を削除しますか？`))return;
   const names=loadWorkerNames().filter(n=>n!==name);
   localStorage.setItem('suijun_workers',JSON.stringify(names));
   updateWorkerDatalist();
-}
-function selectWorker(name){
-  document.getElementById('worker').value=name;
   markDirty();
 }
+function saveWorkerName(){addNewWorker();}
 function updateWorkerDatalist(){
-  const chips=document.getElementById('worker-chips');
-  if(!chips)return;
+  const sel=document.getElementById('worker');
+  if(!sel)return;
+  const current=sel.value;
   const names=loadWorkerNames();
-  if(names.length===0){
-    chips.innerHTML='<span style="font-size:11px;color:var(--color-text-secondary);">登録者なし（名前を入力して＋登録）</span>';
-  }else{
-    chips.innerHTML=names.map(n=>`
-      <button onclick="selectWorker('${n}')"
-        style="padding:4px 10px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:20px;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary);display:flex;align-items:center;gap:5px;">
-        ${n}
-        <span onclick="event.stopPropagation();deleteWorkerName('${n}')"
-          style="color:var(--color-text-secondary);font-size:10px;padding:0 2px;">✕</span>
-      </button>`).join('');
-  }
+  sel.innerHTML='<option value="">-- 選択してください --</option>'+
+    names.map(n=>`<option value="${n}"${n===current?' selected':''}>${n}</option>`).join('');
 }
 
 // ===== 写真付きHTMLレポート =====
@@ -958,9 +964,10 @@ td:first-child{font-weight:500;}
 async function shareData(){
   const proj=document.getElementById('proj').value||'水準測量';
   const date=document.getElementById('date').value||new Date().toISOString().split('T')[0];
-  // CSVを生成
   const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000;
   const sb=parseFloat(document.getElementById('bm-s').value)||0;
+
+  // CSVを生成
   let csv='方向,測点,BS(m),FS(m),IS(m),IH(m),GH(m),緯度,経度,精度(m)\n';
   const addDir=(arr,dir,startGH)=>{
     const ghData=calcGH(arr,startGH,kM);
@@ -972,17 +979,47 @@ async function shareData(){
   addDir(rows,'往路',sb);
   if(rowsReturn.length>0)addDir(rowsReturn,'復路',parseFloat(document.getElementById('bm-e').value)||0);
 
+  // 写真HTMLを生成
+  const routeName=routes.find(r=>r.id===currentRouteId)?.name||'';
+  const worker=document.getElementById('worker').value||'';
+  const ghData=calcGH(rows,sb,kM);
+  const photoRows=rows.filter(r=>r.photo);
+  const photoSection=photoRows.length===0?'<p style="color:#666;font-size:13px;">写真なし</p>':
+    photoRows.map(r=>{
+      const gh=ghData[rows.indexOf(r)]?.ghV||'';
+      return `<div style="margin-bottom:1rem;padding:10px;border:1px solid #e5e5ea;border-radius:8px;">
+        <div style="font-weight:500;font-size:14px;margin-bottom:6px;">📍 ${r.point||'—'} GH: ${gh||'—'} m</div>
+        <img src="${r.photo}" style="max-width:100%;border-radius:6px;border:1px solid #ddd;">
+      </div>`;
+    }).join('');
+  const obsRows=rows.map((r,i)=>{const{ihD,ghV}=ghData[i];const bv=safeNum(r.bs),fv=safeNum(r.fs),iv=safeNum(r.is_);return `<tr style="${r.fs!==''?'color:#185FA5;':''}"><td>${r.point||''}</td><td style="text-align:right;">${bv!==null?bv.toFixed(3):''}</td><td style="text-align:right;">${fv!==null?fv.toFixed(3):''}</td><td style="text-align:right;">${iv!==null?iv.toFixed(3):''}</td><td style="text-align:right;">${ihD}</td><td style="text-align:right;">${ghV!==''?parseFloat(ghV).toFixed(3):''}</td></tr>`;}).join('');
+  const htmlContent=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>観測記録 ${proj}</title><style>body{font-family:-apple-system,'Hiragino Sans',sans-serif;padding:16px;max-width:720px;margin:0 auto;color:#1d1d1f;}h1{font-size:18px;border-bottom:2px solid #185FA5;padding-bottom:6px;margin-bottom:12px;}h2{font-size:14px;color:#555;margin:16px 0 8px;border-left:3px solid #185FA5;padding-left:8px;}.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:13px;}.ml{color:#666;}.mv{font-weight:500;}table{border-collapse:collapse;width:100%;font-size:13px;margin-bottom:16px;}th{background:#f0f4fa;border:1px solid #d2d2d7;padding:5px 8px;text-align:right;}th:first-child{text-align:left;}td{border:1px solid #d2d2d7;padding:4px 8px;}</style></head><body><h1>水準測量 観測記録</h1><div class="meta"><div><span class="ml">路線名</span>&nbsp;<span class="mv">${routeName}</span></div><div><span class="ml">作業名</span>&nbsp;<span class="mv">${proj}</span></div><div><span class="ml">測量日</span>&nbsp;<span class="mv">${date}</span></div><div><span class="ml">観測者</span>&nbsp;<span class="mv">${worker}</span></div><div><span class="ml">起点BM</span>&nbsp;<span class="mv">${sb.toFixed(3)} m</span></div><div><span class="ml">器差K</span>&nbsp;<span class="mv">${K?K.toFixed(3)+' mm':'—'}</span></div></div><h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th></tr></thead><tbody>${obsRows}</tbody></table><h2>測点写真</h2>${photoSection}</body></html>`;
+
   if(navigator.share){
     try{
-      const file=new File([csv],`suijun_${date}.csv`,{type:'text/csv'});
-      await navigator.share({title:`水準測量記録 ${proj}`,text:`${proj} ${date} の観測データ`,files:[file]});
+      const files=[
+        new File([csv],`suijun_${date}.csv`,{type:'text/csv'}),
+        new File([htmlContent],`suijun_${date}_photos.html`,{type:'text/html'})
+      ];
+      // canShare確認
+      if(navigator.canShare&&navigator.canShare({files})){
+        await navigator.share({title:`水準測量記録 ${proj}`,text:`${proj} ${date} の観測データ`,files});
+      }else{
+        // ファイル共有非対応ならCSVのみ
+        const f=[new File([csv],`suijun_${date}.csv`,{type:'text/csv'})];
+        await navigator.share({title:`水準測量記録 ${proj}`,text:`${proj} ${date} の観測データ`,files:f});
+      }
     }catch(e){
-      if(e.name!=='AbortError') expCSV(); // フォールバック
+      if(e.name!=='AbortError'){
+        // フォールバック: ダウンロード
+        dlf(`suijun_${date}.csv`,csv,'text/csv');
+        dlf(`suijun_${date}_photos.html`,htmlContent,'text/html');
+      }
     }
-  } else {
-    // Web Share API非対応 → mailto
-    const body=encodeURIComponent(`${proj} ${date} の観測データを添付します。\n\n${csv.substring(0,1000)}...`);
-    window.location.href=`mailto:?subject=${encodeURIComponent('水準測量記録 '+proj)}&body=${body}`;
+  }else{
+    // Web Share API非対応 → 両ファイルをダウンロード
+    dlf(`suijun_${date}.csv`,csv,'text/csv');
+    dlf(`suijun_${date}_photos.html`,htmlContent,'text/html');
   }
 }
 
