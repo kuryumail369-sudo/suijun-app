@@ -842,9 +842,9 @@ function startVoiceField(fieldId, allowNegative=true){
     btn.textContent='⏺';btn.style.color='#E24B4A';btn.style.background='#FCEBEB';
     rec.onresult=e=>{
       const t=e.results[0][0].transcript;
-      const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);
-      if(m){
-        el.value=parseFloat(m[0]).toFixed(3);
+      const v=voiceToNum(t);
+      if(v!==null){
+        el.value=v.toFixed(3);
         el.dispatchEvent(new Event('input',{bubbles:true}));
       } else {
         alert(`"${t}" — 数値が認識できませんでした`);
@@ -1049,6 +1049,15 @@ async function ensureMicPermission(){
   }
 }
 
+function voiceToNum(t){
+  // 「マイナス」「マイナ」「minus」→ マイナス符号
+  t=t.replace(/マイナス|マイナ|minus/gi,'-');
+  // 全角数字→半角
+  t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+  const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);
+  return m?parseFloat(m[0]):null;
+}
+
 function startVoice(idx,field){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('音声入力非対応（Chrome推奨）');return;}
@@ -1064,8 +1073,8 @@ function startVoice(idx,field){
     if(btn){btn.classList.add('mic-active');btn.textContent='⏺';}
     voiceRec.onresult=e=>{
       const t=e.results[0][0].transcript;
-      const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);
-      if(m){getCurRows()[idx][field]=parseFloat(m[0]).toFixed(3);markDirty();renderTbl();}
+      const v=voiceToNum(t);
+      if(v!==null){getCurRows()[idx][field]=v.toFixed(3);markDirty();renderTbl();}
       else alert(`"${t}" — 数値が認識できませんでした`);
     };
     const rst=()=>{
