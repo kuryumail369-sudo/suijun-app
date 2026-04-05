@@ -828,10 +828,13 @@ function startVoicePoint(idx){
       // 変換ルール
       t=t.replace(/ナンバー/g,'No.').replace(/番号/g,'No.')
          .replace(/ビーエム/g,'BM').replace(/ベンチマーク/g,'BM')
-         .replace(/アイピー/g,'IP').replace(/けいかてん/g,'KP')
-         .replace(/ケイピー/g,'KP').replace(/の/g,'.').replace(/\s+/g,'');
+         .replace(/アイピー/g,'IP').replace(/ケイピー/g,'KP')
+         .replace(/の/g,'-')
+         .replace(/\s+/g,'');
       // 数字の全角→半角
       t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+      // 「No.-」になってしまう場合を修正（No.の直後の-は除去）
+      t=t.replace(/No\.-/g,'No.');
       getCurRows()[idx].point=t;
       markDirty();renderTbl();
     };
