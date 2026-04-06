@@ -644,20 +644,30 @@ function calcGH(arr,startGH,kM){
     const bsC=bsV!==null ? bsV+kM : null;
     const fsC=fsV!==null ? fsV+kM : null;
     const isC=isV!==null ? isV+kM : null;
-    // BSがあればIH更新（マイナスBSも正しく計算）
-    if(bsC!==null) ih = gh + bsC;
+
     let ghV='';
+    const prevIh=ih; // BSを適用する前のIH（FS計算に使う）
+
     if(i===0 && bsC!==null){
-      // 1行目：GH=起点BM（この行はBM柱）
-      ghV = startGH.toFixed(3);
-    } else if(fsC!==null){
-      ghV = (ih - fsC).toFixed(3);
-    } else if(isC!==null){
-      ghV = (ih - isC).toFixed(3);
+      // 1行目（起点BM）: GH=起点BM、IHを更新
+      ghV=startGH.toFixed(3);
+      ih=gh+bsC;
+    } else {
+      // FSがある場合: 移器前のIH（prevIh）でGHを計算
+      if(fsC!==null){
+        ghV=(prevIh-fsC).toFixed(3);
+        gh=parseFloat(ghV);
+      } else if(isC!==null){
+        ghV=(prevIh-isC).toFixed(3);
+      }
+      // BSがある場合: FSのGH（またはprevGH）を基にIH更新
+      if(bsC!==null){
+        const baseGh = ghV!=='' ? parseFloat(ghV) : gh;
+        ih=baseGh+bsC;
+      }
     }
-    res.push({ihD: bsC!==null ? ih.toFixed(3) : '', ghV, isFS: r.fs!==''});
-    // GH更新：||ではなくnullチェックで0も正しく処理
-    if(fsC!==null && ghV!=='') gh = parseFloat(ghV);
+
+    res.push({ihD:bsC!==null?ih.toFixed(3):'', ghV, isFS:r.fs!==''});
   });
   return res;
 }
