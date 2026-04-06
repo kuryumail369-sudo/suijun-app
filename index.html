@@ -1350,11 +1350,11 @@ function openPin(x,y){
   const all=[...rows,...rowsReturn].filter(r=>r.point);
   document.getElementById('pts-dl').innerHTML=[...new Set(all.map(r=>r.point))].map(p=>`<option value="${p}">`).join('');
   const pp=document.getElementById('pin-pp');
-  // ピンのcw内スクリーン位置を計算（vpを考慮）
   const cwR=document.getElementById('cw').getBoundingClientRect();
-  const baseW=cwR.width; // 変換前のcanvas表示幅
+  const baseW=cwR.width;
+  // CSS高さ=baseW（正方形）なのでyもbaseWで換算
   const screenX=vp.ox+(x/W)*baseW*vp.scale;
-  const screenY=vp.oy+(y/H)*(baseW*H/W)*vp.scale;
+  const screenY=vp.oy+(y/H)*baseW*vp.scale;
   pp.style.left=Math.min(screenX+8, cwR.width-165)+'px';
   pp.style.top=Math.max(screenY-85, 4)+'px';
   pp.style.display='block';
@@ -1365,14 +1365,14 @@ function cancelPin(){document.getElementById('pin-pp').style.display='none';pend
 document.getElementById('pin-name').addEventListener('keydown',e=>{if(e.key==='Enter')confirmPin();if(e.key==='Escape')cancelPin();});
 
 function renderPins(){
-  // cv-ui は sk-vp 内にあり CSS transform が適用されているので
-  // SVG座標はキャンバスのCSS基底サイズ（変換前）で計算する
   const ui=document.getElementById('cv-ui');
   const cwR=document.getElementById('cw').getBoundingClientRect();
-  const baseW=cwR.width, baseH=baseW*H/W;
-  const sx=baseW/W, sy=baseH/H;
+  // CSSキャンバスサイズは正方形（padding-bottom:100%）
+  // sx: canvas座標→CSS座標のX変換, sy: Y変換（CSS高=CSS幅=baseW）
+  const baseW=cwR.width;
+  const sx=baseW/W, sy=baseW/H;
   const pins=pages[curPage]?pages[curPage].pins:[];
-  let svg=`<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:${baseW}px;height:${baseH}px;pointer-events:none;overflow:visible;">`;
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:${baseW}px;height:${baseW}px;pointer-events:none;overflow:visible;">`;
   pins.forEach(p=>{
     const px=p.x*sx, py=p.y*sy, tw=p.name.length*7.5+14;
     svg+=`<g><circle cx="${px}" cy="${py}" r="9" fill="#E24B4A" stroke="#fff" stroke-width="1.5"/>
