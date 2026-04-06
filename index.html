@@ -274,6 +274,55 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
           </div>
         </div>
       </div>
+      <!-- 許容閉合差係数 -->
+      <div style="margin-top:10px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div class="mi" style="flex:0 0 auto;">
+          <label>許容閉合差係数 <span style="font-size:10px;color:var(--color-text-secondary);">±C√n mm</span></label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="number" id="tol-coef" step="1" min="1" max="100" value="10" placeholder="10"
+              oninput="markDirty()" onchange="markDirty()"
+              style="width:70px;padding:6px 8px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);">
+            <span style="font-size:12px;color:var(--color-text-secondary);">mm</span>
+          </div>
+        </div>
+        <!-- 等級参照表（折りたたみ） -->
+        <div style="flex:1;min-width:200px;">
+          <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
+            style="font-size:11px;padding:2px 8px;border:0.5px solid var(--color-border-secondary);border-radius:4px;cursor:pointer;background:none;color:var(--color-text-secondary);margin-top:18px;">
+            📋 等級参照
+          </button>
+          <div style="display:none;margin-top:4px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px;font-size:11px;">
+            <table style="border-collapse:collapse;width:100%;">
+              <tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+                <th style="text-align:left;padding:3px 6px;color:var(--color-text-secondary);font-weight:500;">等級</th>
+                <th style="text-align:center;padding:3px 6px;color:var(--color-text-secondary);font-weight:500;">係数C</th>
+                <th style="text-align:left;padding:3px 6px;color:var(--color-text-secondary);font-weight:500;">主な用途</th>
+              </tr>
+              <tr onclick="setTolCoef(2)" style="cursor:pointer;" onmouseover="this.style.background='var(--color-background-primary)'" onmouseout="this.style.background=''">
+                <td style="padding:3px 6px;color:var(--color-text-primary);">1級</td>
+                <td style="text-align:center;padding:3px 6px;font-weight:500;color:#185FA5;">2</td>
+                <td style="padding:3px 6px;color:var(--color-text-secondary);">精密基準点・ダム</td>
+              </tr>
+              <tr onclick="setTolCoef(5)" style="cursor:pointer;" onmouseover="this.style.background='var(--color-background-primary)'" onmouseout="this.style.background=''">
+                <td style="padding:3px 6px;color:var(--color-text-primary);">2級</td>
+                <td style="text-align:center;padding:3px 6px;font-weight:500;color:#185FA5;">5</td>
+                <td style="padding:3px 6px;color:var(--color-text-secondary);">公共測量・縦断</td>
+              </tr>
+              <tr onclick="setTolCoef(10)" style="cursor:pointer;background:var(--color-background-primary);" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background='var(--color-background-primary)'">
+                <td style="padding:3px 6px;color:var(--color-text-primary);font-weight:500;">3級 ★</td>
+                <td style="text-align:center;padding:3px 6px;font-weight:500;color:#185FA5;">10</td>
+                <td style="padding:3px 6px;color:var(--color-text-secondary);">一般土木・道路</td>
+              </tr>
+              <tr onclick="setTolCoef(20)" style="cursor:pointer;" onmouseover="this.style.background='var(--color-background-primary)'" onmouseout="this.style.background=''">
+                <td style="padding:3px 6px;color:var(--color-text-primary);">4級</td>
+                <td style="text-align:center;padding:3px 6px;font-weight:500;color:#185FA5;">20</td>
+                <td style="padding:3px 6px;color:var(--color-text-secondary);">概略測量・造成</td>
+              </tr>
+            </table>
+            <div style="font-size:10px;color:var(--color-text-secondary);margin-top:4px;padding:0 6px;">行をタップすると係数を自動入力</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="card">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -560,6 +609,7 @@ function saveCurrentState(){
   r.bmStart=document.getElementById('bm-s').value;
   r.bmEnd=document.getElementById('bm-e').value;
   r.kCorr=document.getElementById('k-corr').value;
+  r.tolCoef=document.getElementById('tol-coef').value||'10';
   r.memo=document.getElementById('memo').value;
 }
 function loadCurrentState(){
@@ -576,6 +626,7 @@ function loadCurrentState(){
   document.getElementById('bm-s').value=r.bmStart||'';
   document.getElementById('bm-e').value=r.bmEnd||'';
   document.getElementById('k-corr').value=r.kCorr||'';
+  document.getElementById('tol-coef').value=r.tolCoef||'10';
   document.getElementById('memo').value=r.memo||'';
 }
 
@@ -1265,25 +1316,27 @@ let sk_pending=false,pendingX=0,pendingY=0;
 drCv.addEventListener('mousedown',skStart);drCv.addEventListener('mousemove',skMove);drCv.addEventListener('mouseup',skEnd);drCv.addEventListener('mouseleave',skEnd);
 drCv.addEventListener('touchstart',skStart,{passive:false});drCv.addEventListener('touchmove',skMove,{passive:false});drCv.addEventListener('touchend',skEnd,{passive:false});
 
+let pinTouchStart=null; // ピンツール用タッチ開始位置
+
 function skStart(e){
   e.preventDefault();
-  // 2本指 → ピンチ開始（描画中だった場合もキャンセル）
+  // 2本指 → ピンチ開始
   if(e.touches&&e.touches.length>=2){
-    sk_draw=false;sk_pending=false;
+    sk_draw=false;sk_pending=false;pinTouchStart=null;
     drCtx.globalAlpha=1;drCtx.globalCompositeOperation='source-over';
     const cwR=document.getElementById('cw').getBoundingClientRect();
-    pinchStart={
-      dist:pinchDist(e.touches),
-      mid:pinchMid(e.touches,cwR),
-      ox:vp.ox, oy:vp.oy, scale:vp.scale
-    };
+    pinchStart={dist:pinchDist(e.touches),mid:pinchMid(e.touches,cwR),ox:vp.ox,oy:vp.oy,scale:vp.scale};
     return;
   }
   pinchStart=null;
   const{x,y}=getXY(e);
-  if(sk_tool==='pin'){openPin(x,y);return;}
+  if(sk_tool==='pin'){
+    // ピンはtouchendで確定するので開始位置だけ記録
+    pinTouchStart={x,y};
+    return;
+  }
+  pinTouchStart=null;
   if(sk_tool==='text'){placeText(x,y);return;}
-  // 1本指タッチ: まだ描画開始しない（pending状態）
   sk_pending=true;sk_draw=false;pendingX=x;pendingY=y;
 }
 
@@ -1318,6 +1371,18 @@ function skMove(e){
 function skEnd(e){
   e.preventDefault();
   if(e.touches&&e.touches.length<2)pinchStart=null;
+  // ピンツール: 指を離した位置に設置（ズーム操作と区別）
+  if(sk_tool==='pin'&&pinTouchStart){
+    const{x,y}=e.changedTouches
+      ?{x:getXY({touches:e.changedTouches}).x, y:getXY({touches:e.changedTouches}).y}
+      :getXY(e);
+    const moved=Math.hypot(x-pinTouchStart.x, y-pinTouchStart.y);
+    // 大きく動いていなければピン確定（ズーム操作は除外）
+    if(moved<30)openPin(pinTouchStart.x, pinTouchStart.y);
+    pinTouchStart=null;
+    return;
+  }
+  pinTouchStart=null;
   sk_pending=false;
   if(!sk_draw)return;
   sk_draw=false;drCtx.globalAlpha=1;drCtx.globalCompositeOperation='source-over';pushH();
@@ -1471,9 +1536,9 @@ function renderPointComparison(){
     return;
   }
 
-  // 許容較差は全FS数から計算（簡易）
   const nFS=rows.filter(r=>r.fs!=='').length;
-  const allowMM=10*Math.sqrt(nFS||1);
+  const C=getTolCoef();
+  const allowMM=C*Math.sqrt(nFS||1);
 
   let hasWarn=false;
   const rows_html=allPoints.map(pt=>{
@@ -1517,11 +1582,15 @@ function calcDir(arr){
   });
   return{sBS,sFS,diff:sBS-sFS,n};
 }
+function getTolCoef(){return Math.max(1,parseFloat(document.getElementById('tol-coef')?.value)||10);}
+function setTolCoef(v){const el=document.getElementById('tol-coef');if(el){el.value=v;markDirty();}}
+
 function getCalc(){
   const sb=parseFloat(document.getElementById('bm-s').value)||0;
   const eb=document.getElementById('bm-e').value?parseFloat(document.getElementById('bm-e').value):null;
-  const{sBS,sFS,diff,n}=calcDir(rows),ce=sb+diff,cl=eb!==null?ce-eb:null,al=0.01*Math.sqrt(n||1);
-  return{sBS,sFS,diff,ce,n,cl,al,sb,eb};
+  const C=getTolCoef();
+  const{sBS,sFS,diff,n}=calcDir(rows),ce=sb+diff,cl=eb!==null?ce-eb:null,al=C*0.001*Math.sqrt(n||1);
+  return{sBS,sFS,diff,ce,n,cl,al,sb,eb,C};
 }
 function runChecks(){
   const{sBS,sFS,diff,ce,cl,al,sb,eb}=getCalc();
@@ -1540,7 +1609,8 @@ function runChecks(){
   document.getElementById('kf-out').textContent=out.diff.toFixed(4)+' m';
   document.getElementById('kf-ret').textContent=hasRet?ret.diff.toFixed(4)+' m':'—';
   if(hasRet){
-    const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=10*Math.sqrt(n2||1),ok2=Math.abs(korsa*1000)<=alMM,best=(out.diff-ret.diff)/2;
+    const C=getTolCoef();
+    const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=C*Math.sqrt(n2||1),ok2=Math.abs(korsa*1000)<=alMM,best=(out.diff-ret.diff)/2;
     document.getElementById('kf-kor').textContent=(korsa*1000).toFixed(1)+' mm';
     document.getElementById('kf-allow').textContent='±'+alMM.toFixed(0)+' mm';
     document.getElementById('kf-best').textContent=best.toFixed(4)+' m';
