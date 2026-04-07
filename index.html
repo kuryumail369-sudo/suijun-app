@@ -274,55 +274,6 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
           </div>
         </div>
       </div>
-      <!-- 許容閉合差係数 -->
-      <div style="margin-top:10px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-        <div class="mi" style="flex:0 0 auto;">
-          <label>許容閉合差係数 <span style="font-size:10px;color:var(--color-text-secondary);">±C√n mm</span></label>
-          <div style="display:flex;gap:4px;align-items:center;">
-            <input type="number" id="tol-coef" step="1" min="1" max="100" value="10" placeholder="10"
-              oninput="markDirty()" onchange="markDirty()"
-              style="width:70px;padding:6px 8px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);">
-            <span style="font-size:12px;color:var(--color-text-secondary);">mm</span>
-          </div>
-        </div>
-        <!-- 等級参照表（折りたたみ） -->
-        <div style="flex:1;min-width:200px;">
-          <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
-            style="font-size:11px;padding:2px 8px;border:0.5px solid var(--color-border-secondary);border-radius:4px;cursor:pointer;background:none;color:var(--color-text-secondary);margin-top:18px;">
-            📋 等級参照
-          </button>
-          <div style="display:none;margin-top:4px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px;font-size:11px;">
-            <table style="border-collapse:collapse;width:100%;">
-              <tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
-                <th style="text-align:left;padding:3px 6px;color:var(--color-text-secondary);font-weight:500;">等級</th>
-                <th style="text-align:center;padding:3px 6px;color:var(--color-text-secondary);font-weight:500;">係数C</th>
-                <th style="text-align:left;padding:3px 6px;color:var(--color-text-secondary);font-weight:500;">主な用途</th>
-              </tr>
-              <tr onclick="setTolCoef(2)" style="cursor:pointer;" onmouseover="this.style.background='var(--color-background-primary)'" onmouseout="this.style.background=''">
-                <td style="padding:3px 6px;color:var(--color-text-primary);">1級</td>
-                <td style="text-align:center;padding:3px 6px;font-weight:500;color:#185FA5;">2</td>
-                <td style="padding:3px 6px;color:var(--color-text-secondary);">精密基準点・ダム</td>
-              </tr>
-              <tr onclick="setTolCoef(5)" style="cursor:pointer;" onmouseover="this.style.background='var(--color-background-primary)'" onmouseout="this.style.background=''">
-                <td style="padding:3px 6px;color:var(--color-text-primary);">2級</td>
-                <td style="text-align:center;padding:3px 6px;font-weight:500;color:#185FA5;">5</td>
-                <td style="padding:3px 6px;color:var(--color-text-secondary);">公共測量・縦断</td>
-              </tr>
-              <tr onclick="setTolCoef(10)" style="cursor:pointer;background:var(--color-background-primary);" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background='var(--color-background-primary)'">
-                <td style="padding:3px 6px;color:var(--color-text-primary);font-weight:500;">3級 ★</td>
-                <td style="text-align:center;padding:3px 6px;font-weight:500;color:#185FA5;">10</td>
-                <td style="padding:3px 6px;color:var(--color-text-secondary);">一般土木・道路</td>
-              </tr>
-              <tr onclick="setTolCoef(20)" style="cursor:pointer;" onmouseover="this.style.background='var(--color-background-primary)'" onmouseout="this.style.background=''">
-                <td style="padding:3px 6px;color:var(--color-text-primary);">4級</td>
-                <td style="text-align:center;padding:3px 6px;font-weight:500;color:#185FA5;">20</td>
-                <td style="padding:3px 6px;color:var(--color-text-secondary);">概略測量・造成</td>
-              </tr>
-            </table>
-            <div style="font-size:10px;color:var(--color-text-secondary);margin-top:4px;padding:0 6px;">行をタップすると係数を自動入力</div>
-          </div>
-        </div>
-      </div>
     </div>
     <div class="card">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -401,6 +352,76 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 
   <!-- 点検 -->
   <div id="tab-chk" style="display:none;">
+    <!-- 許容閉合差係数 -->
+    <div class="card" style="padding:12px 16px;">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;">▸ 許容閉合差の設定</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <!-- 係数式 -->
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;color:var(--color-text-secondary);">式:</span>
+          <span style="font-size:12px;color:var(--color-text-secondary);">±</span>
+          <input type="number" id="tol-coef" step="1" min="1" placeholder="C"
+            oninput="markDirty();syncTolDirect();runChecks()" onchange="markDirty();syncTolDirect();runChecks()"
+            style="width:52px;padding:5px 6px;font-size:13px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);text-align:right;">
+          <span style="font-size:12px;color:var(--color-text-secondary);">√n mm</span>
+        </div>
+        <span style="font-size:12px;color:var(--color-text-secondary);">または</span>
+        <!-- 直接mm入力 -->
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;color:var(--color-text-secondary);">直接:</span>
+          <span style="font-size:12px;color:var(--color-text-secondary);">±</span>
+          <input type="number" id="tol-direct" step="1" min="1" placeholder="mm"
+            oninput="markDirty();clearTolCoef();runChecks()" onchange="markDirty();clearTolCoef();runChecks()"
+            style="width:64px;padding:5px 6px;font-size:13px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);text-align:right;">
+          <span style="font-size:12px;color:var(--color-text-secondary);">mm</span>
+        </div>
+        <button onclick="clearTolAll()"
+          style="font-size:11px;padding:3px 8px;border:0.5px solid var(--color-border-secondary);border-radius:20px;cursor:pointer;background:none;color:var(--color-text-secondary);">
+          クリア
+        </button>
+      </div>
+      <!-- 等級参照（折りたたみ） -->
+      <button onclick="document.getElementById('grade-tbl').style.display=document.getElementById('grade-tbl').style.display==='none'?'block':'none'"
+        style="font-size:11px;padding:3px 10px;border:0.5px solid var(--color-border-secondary);border-radius:20px;cursor:pointer;background:none;color:var(--color-text-secondary);">
+        📋 等級参照
+      </button>
+      <div id="grade-tbl" style="display:none;margin-top:10px;border-top:0.5px solid var(--color-border-tertiary);padding-top:10px;">
+        <table style="border-collapse:collapse;width:100%;font-size:12px;">
+          <tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+            <th style="text-align:left;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">等級</th>
+            <th style="text-align:center;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">係数C</th>
+            <th style="text-align:center;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">例 (n=4)</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">主な用途</th>
+          </tr>
+          <tr onclick="setTolCoef(2)" style="cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary);" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
+            <td style="padding:5px 8px;color:var(--color-text-primary);">1級</td>
+            <td style="text-align:center;padding:5px 8px;font-weight:600;color:#185FA5;">2</td>
+            <td style="text-align:center;padding:5px 8px;color:var(--color-text-secondary);">±4 mm</td>
+            <td style="padding:5px 8px;color:var(--color-text-secondary);">精密基準点・ダム</td>
+          </tr>
+          <tr onclick="setTolCoef(5)" style="cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary);" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
+            <td style="padding:5px 8px;color:var(--color-text-primary);">2級</td>
+            <td style="text-align:center;padding:5px 8px;font-weight:600;color:#185FA5;">5</td>
+            <td style="text-align:center;padding:5px 8px;color:var(--color-text-secondary);">±10 mm</td>
+            <td style="padding:5px 8px;color:var(--color-text-secondary);">公共測量・縦断</td>
+          </tr>
+          <tr onclick="setTolCoef(10)" style="cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary);" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
+            <td style="padding:5px 8px;color:var(--color-text-primary);">3級</td>
+            <td style="text-align:center;padding:5px 8px;font-weight:600;color:#185FA5;">10</td>
+            <td style="text-align:center;padding:5px 8px;color:var(--color-text-secondary);">±20 mm</td>
+            <td style="padding:5px 8px;color:var(--color-text-secondary);">一般土木・道路</td>
+          </tr>
+          <tr onclick="setTolCoef(20)" style="cursor:pointer;" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
+            <td style="padding:5px 8px;color:var(--color-text-primary);">4級</td>
+            <td style="text-align:center;padding:5px 8px;font-weight:600;color:#185FA5;">20</td>
+            <td style="text-align:center;padding:5px 8px;color:var(--color-text-secondary);">±40 mm</td>
+            <td style="padding:5px 8px;color:var(--color-text-secondary);">概略測量・造成</td>
+          </tr>
+        </table>
+        <div style="font-size:10px;color:var(--color-text-secondary);margin-top:6px;">行をタップすると係数Cが自動入力されます</div>
+      </div>
+    </div>
+
     <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 往路</div>
     <div class="sgrid">
       <div class="sc"><div class="sl">ΣBS</div><div class="sv" id="c-bs">—</div></div>
@@ -414,7 +435,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     </div>
     <div class="card">
       <div class="crow"><span style="flex:1;">計算チェック</span><span class="badge" id="ck-c">—</span></div>
-      <div class="crow"><span style="flex:1;">閉合差 (±10√n mm)</span><span class="badge" id="ck-cl">—</span></div>
+      <div class="crow"><span style="flex:1;" id="ck-cl-label">閉合差 (±C√n mm)</span><span class="badge" id="ck-cl">—</span></div>
       <div class="crow" style="border:none;"><span style="flex:1;">データ完整性</span><span class="badge" id="ck-d">—</span></div>
     </div>
     <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 往復比較（路線全体）</div>
@@ -609,7 +630,8 @@ function saveCurrentState(){
   r.bmStart=document.getElementById('bm-s').value;
   r.bmEnd=document.getElementById('bm-e').value;
   r.kCorr=document.getElementById('k-corr').value;
-  r.tolCoef=document.getElementById('tol-coef').value||'10';
+  r.tolCoef=document.getElementById('tol-coef').value||'';
+  r.tolDirect=document.getElementById('tol-direct').value||'';
   r.memo=document.getElementById('memo').value;
 }
 function loadCurrentState(){
@@ -626,7 +648,8 @@ function loadCurrentState(){
   document.getElementById('bm-s').value=r.bmStart||'';
   document.getElementById('bm-e').value=r.bmEnd||'';
   document.getElementById('k-corr').value=r.kCorr||'';
-  document.getElementById('tol-coef').value=r.tolCoef||'10';
+  document.getElementById('tol-coef').value=r.tolCoef||'';
+  document.getElementById('tol-direct').value=r.tolDirect||'';
   document.getElementById('memo').value=r.memo||'';
 }
 
@@ -1537,8 +1560,7 @@ function renderPointComparison(){
   }
 
   const nFS=rows.filter(r=>r.fs!=='').length;
-  const C=getTolCoef();
-  const allowMM=C*Math.sqrt(nFS||1);
+  const allowMM=getTolMM(nFS)||10*Math.sqrt(nFS||1);
 
   let hasWarn=false;
   const rows_html=allPoints.map(pt=>{
@@ -1582,15 +1604,42 @@ function calcDir(arr){
   });
   return{sBS,sFS,diff:sBS-sFS,n};
 }
-function getTolCoef(){return Math.max(1,parseFloat(document.getElementById('tol-coef')?.value)||10);}
-function setTolCoef(v){const el=document.getElementById('tol-coef');if(el){el.value=v;markDirty();}}
+function getTolCoef(){
+  const v=parseFloat(document.getElementById('tol-coef')?.value);
+  return isNaN(v)||v<=0 ? null : v;
+}
+function getTolMM(n){
+  // 直接mm入力を優先、なければ係数式
+  const direct=parseFloat(document.getElementById('tol-direct')?.value);
+  if(!isNaN(direct)&&direct>0) return direct;
+  const C=getTolCoef();
+  return C!==null ? C*Math.sqrt(n||1) : null;
+}
+function syncTolDirect(){
+  // 係数を入力したら直接mm欄をクリア
+  document.getElementById('tol-direct').value='';
+}
+function clearTolCoef(){
+  // 直接mm入力したら係数欄をクリア
+  document.getElementById('tol-coef').value='';
+}
+function clearTolAll(){
+  document.getElementById('tol-coef').value='';
+  document.getElementById('tol-direct').value='';
+  markDirty();runChecks();
+}
+function setTolCoef(v){
+  const el=document.getElementById('tol-coef');
+  if(el){el.value=v;document.getElementById('tol-direct').value='';markDirty();runChecks();}
+}
 
 function getCalc(){
   const sb=parseFloat(document.getElementById('bm-s').value)||0;
   const eb=document.getElementById('bm-e').value?parseFloat(document.getElementById('bm-e').value):null;
-  const C=getTolCoef();
-  const{sBS,sFS,diff,n}=calcDir(rows),ce=sb+diff,cl=eb!==null?ce-eb:null,al=C*0.001*Math.sqrt(n||1);
-  return{sBS,sFS,diff,ce,n,cl,al,sb,eb,C};
+  const{sBS,sFS,diff,n}=calcDir(rows),ce=sb+diff,cl=eb!==null?ce-eb:null;
+  const alMM=getTolMM(n); // mm単位（nullなら未設定）
+  const al=alMM!==null?alMM*0.001:null; // m単位
+  return{sBS,sFS,diff,ce,n,cl,al,alMM,sb,eb};
 }
 function runChecks(){
   const{sBS,sFS,diff,ce,cl,al,sb,eb}=getCalc();
@@ -1602,19 +1651,36 @@ function runChecks(){
   if(cl!==null){document.getElementById('c-cl').textContent=(cl*1000).toFixed(1)+' mm';document.getElementById('c-cl').className='sv '+(Math.abs(cl)<=al?'ok':'ng');}
   else{document.getElementById('c-cl').textContent='—';document.getElementById('c-cl').className='sv';}
   setBdg('ck-c',Math.abs(diff-(ce-sb))<.0001?'OK':'NG',Math.abs(diff-(ce-sb))<.0001?'ok':'ng');
-  if(cl!==null){const ok=Math.abs(cl)<=al;setBdg('ck-cl',ok?`OK (±${(al*1000).toFixed(0)}mm以内)`:`NG (${(Math.abs(cl)*1000).toFixed(1)}mm)`,ok?'ok':'ng');}
-  else setBdg('ck-cl','終点BM未入力','warn');
+  // 閉合差判定ラベルを動的更新
+  const lbl=document.getElementById('ck-cl-label');
+  const directV=parseFloat(document.getElementById('tol-direct')?.value);
+  const C=getTolCoef();
+  if(lbl){
+    if(!isNaN(directV)&&directV>0) lbl.textContent=`閉合差 (±${directV} mm固定)`;
+    else if(C!==null) lbl.textContent=`閉合差 (±${C}√n mm)`;
+    else lbl.textContent='閉合差判定';
+  }
+  if(cl!==null&&al!==null){
+    const ok=Math.abs(cl)<=al;
+    setBdg('ck-cl',ok?`OK (±${(al*1000).toFixed(0)}mm以内)`:`NG (${(Math.abs(cl)*1000).toFixed(1)}mm)`,ok?'ok':'ng');
+  } else if(cl!==null&&al===null){
+    setBdg('ck-cl','許容値未入力','warn');
+  } else setBdg('ck-cl','終点BM未入力','warn');
   setBdg('ck-d',rows.some(r=>r.bs!=='')&&rows.some(r=>r.fs!=='')?'問題なし':'BS/FSが未入力',rows.some(r=>r.bs!=='')&&rows.some(r=>r.fs!=='')?'ok':'warn');
   const out=calcDir(rows),ret=calcDir(rowsReturn),hasRet=rowsReturn.some(r=>r.bs!==''||r.fs!=='');
   document.getElementById('kf-out').textContent=out.diff.toFixed(4)+' m';
   document.getElementById('kf-ret').textContent=hasRet?ret.diff.toFixed(4)+' m':'—';
   if(hasRet){
-    const C=getTolCoef();
-    const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=C*Math.sqrt(n2||1),ok2=Math.abs(korsa*1000)<=alMM,best=(out.diff-ret.diff)/2;
+    const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n);
+    const alMM=getTolMM(n2);
+    const ok2=alMM!==null?Math.abs(korsa*1000)<=alMM:null;
+    const best=(out.diff-ret.diff)/2;
     document.getElementById('kf-kor').textContent=(korsa*1000).toFixed(1)+' mm';
-    document.getElementById('kf-allow').textContent='±'+alMM.toFixed(0)+' mm';
+    document.getElementById('kf-allow').textContent=alMM!==null?'±'+alMM.toFixed(0)+' mm':'許容値未入力';
     document.getElementById('kf-best').textContent=best.toFixed(4)+' m';
-    document.getElementById('kf-jdg').innerHTML=`<span class="badge ${ok2?'bok':'bng'}">${ok2?'合格 ✓':'不合格 ✗'}</span>`;
+    document.getElementById('kf-jdg').innerHTML=ok2===null
+      ?'<span class="badge bwarn">許容値未入力</span>'
+      :`<span class="badge ${ok2?'bok':'bng'}">${ok2?'合格 ✓':'不合格 ✗'}</span>`;
   }else{
     ['kf-kor','kf-allow','kf-best'].forEach(id=>document.getElementById(id).textContent='—');
     document.getElementById('kf-jdg').innerHTML='<span class="badge bwarn">復路未入力</span>';
