@@ -1568,12 +1568,12 @@ function renderPointComparison(){
     if(og===undefined||rg===undefined){
       return `<tr><td>${pt}</td><td>${og!==undefined?og.toFixed(3):'—'}</td><td>${rg!==undefined?rg.toFixed(3):'—'}</td><td>—</td><td></td></tr>`;
     }
-    const diffMM=(og-rg)*1000;
+    const diffMM=Math.round((og-rg)*10000)/10; // 0.1mm単位で丸めて判定（表示と一致）
     const cls=Math.abs(diffMM)>allowMM?'ng':Math.abs(diffMM)>allowMM*0.7?'warn':'';
     if(cls==='ng'||cls==='warn')hasWarn=true;
     const badge=cls==='ng'?'<span class="badge bng">要再測</span>':cls==='warn'?'<span class="badge bwarn">注意</span>':'<span class="badge bok">OK</span>';
     const remeasBtn=cls==='ng'?`<button class="remeas-btn" onclick="addReMeasure('${pt}')">再測追加</button>`:'';
-    return `<tr class="${cls}"><td>${pt}</td><td>${og.toFixed(3)}</td><td>${rg.toFixed(3)}</td><td style="text-align:center;">${(diffMM).toFixed(1)}mm</td><td>${badge}${remeasBtn}</td></tr>`;
+    return `<tr class="${cls}"><td>${pt}</td><td>${og.toFixed(3)}</td><td>${rg.toFixed(3)}</td><td style="text-align:center;">${diffMM.toFixed(1)}mm</td><td>${badge}${remeasBtn}</td></tr>`;
   }).join('');
 
   card.innerHTML=`
