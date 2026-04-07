@@ -281,6 +281,24 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
         <button class="dir-btn" id="dir-ret" onclick="setDir('ret')">↙ 復路</button>
         <span id="dir-hint" style="font-size:11px;color:var(--color-text-secondary);"></span>
       </div>
+      <!-- 復路インポートバナー -->
+      <div id="ret-import-bar" style="display:none;background:#EEF4FF;border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:500;color:#1a3da8;margin-bottom:8px;">往路の測点名をインポートしますか？</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button onclick="importReturnPoints('reverse')" style="padding:7px 12px;font-size:12px;text-align:left;background:#fff;border:0.5px solid #185FA5;border-radius:var(--border-radius-md);cursor:pointer;color:#185FA5;">
+            ↩ 逆順（BM2→...→BM1）　通常の往復観測
+          </button>
+          <button onclick="importReturnPoints('same')" style="padding:7px 12px;font-size:12px;text-align:left;background:#fff;border:0.5px solid #185FA5;border-radius:var(--border-radius-md);cursor:pointer;color:#185FA5;">
+            ↻ 同順（BM1→...→BM2）　ループ観測・もう一周
+          </button>
+          <button onclick="importReturnPoints('suggest')" style="padding:7px 12px;font-size:12px;text-align:left;background:#fff;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;color:var(--color-text-primary);">
+            ✏️ 測点名を候補として表示　順序を自分で決める
+          </button>
+          <button onclick="document.getElementById('ret-import-bar').style.display='none'" style="padding:5px;font-size:11px;border:none;cursor:pointer;background:none;color:var(--color-text-secondary);text-align:left;">
+            後で（手動入力）
+          </button>
+        </div>
+      </div>
       <div class="tbl-wrap">
         <table class="otbl">
           <thead><tr>
@@ -615,7 +633,70 @@ function setDir(d){
   document.getElementById('dir-out').classList.toggle('active',d==='out');
   document.getElementById('dir-ret').classList.toggle('active',d==='ret');
   document.getElementById('dir-hint').textContent=d==='ret'?'終点BM→起点BMへ':'起点BM→終点BMへ';
+  // 復路に切り替え・復路が空・往路に測点が入っている場合にバナーを表示
+  const bar=document.getElementById('ret-import-bar');
+  if(d==='ret'){
+    const hasOutPts=rows.some(r=>r.point);
+    const retEmpty=rowsReturn.every(r=>r.bs===''&&r.fs===''&&r.is_===''&&!r.point);
+    if(hasOutPts&&retEmpty) bar.style.display='flex';
+    else bar.style.display='none';
+  } else {
+    bar.style.display='none';
+  }
   renderTbl();
+}
+
+// 往路の測点名を復路にインポート
+function importReturnPoints(mode){
+  const pts=rows.map(r=>r.point).filter(p=>p);
+  if(pts.length===0){
+    document.getElementById('ret-import-bar').style.display='none';
+    return;
+  }
+
+  if(mode==='reverse'){
+    // 逆順：BM2→...→BM1
+    const ordered=[...pts].reverse();
+    applyReturnPoints(ordered);
+  } else if(mode==='same'){
+    // 同順：BM1→...→BM2（ループ観測）
+    applyReturnPoints([...pts]);
+  } else if(mode==='suggest'){
+    // 候補表示モード：行を往路と同数追加して測点名は空、datalistで候補を出す
+    const uniq=[...new Set(pts)];
+    // 復路の既存行をクリアして往路と同数の空行を用意
+    rowsReturn=[];
+    rowIdRet=0;
+    for(let i=0;i<pts.length;i++){
+      rowsReturn.push({id:rowIdRet++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null});
+    }
+    // 測点名datalistを往路の全測点で更新（renderTbl内のpi inputのlistに流用）
+    markDirty();renderTbl();
+    // 各測点入力にdatalistをセット
+    setTimeout(()=>{
+      const inputs=document.querySelectorAll('#obs-tb .pi');
+      inputs.forEach(inp=>{
+        inp.setAttribute('list','out-pts-dl');
+      });
+      // datalistを生成
+      let dl=document.getElementById('out-pts-dl');
+      if(!dl){dl=document.createElement('datalist');dl.id='out-pts-dl';document.body.appendChild(dl);}
+      dl.innerHTML=uniq.map(p=>`<option value="${p}">`).join('');
+    },50);
+    document.getElementById('ret-import-bar').style.display='none';
+    return;
+  }
+
+  document.getElementById('ret-import-bar').style.display='none';
+}
+
+function applyReturnPoints(pts){
+  // 既存の復路行に測点名をセット、足りなければ追加
+  while(rowsReturn.length<pts.length){
+    rowsReturn.push({id:rowIdRet++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null});
+  }
+  pts.forEach((pt,i)=>{ rowsReturn[i].point=pt; });
+  markDirty();renderTbl();
 }
 
 // ===== ROUTE DATA =====
