@@ -1,7 +1,7 @@
 {
-  "name": "水準測量 現場野帳",
-  "short_name": "水準野帳",
-  "description": "水準測量の現場野帳アプリ。観測入力・液晶OCR・GPS・スケッチ・往復比較・PDF出力対応。",
+  "name": "SiteLogger",
+  "short_name": "SiteLogger",
+  "description": "水準測量現場野帳アプリ。観測入力・液晶OCR・GPS・スケッチ・往復比較・PDF出力対応。",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",

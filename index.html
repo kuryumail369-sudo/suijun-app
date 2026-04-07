@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="水準野帳">
+<meta name="apple-mobile-web-app-title" content="SiteLogger">
 <meta name="theme-color" content="#185FA5">
-<title>水準測量 現場野帳</title>
+<title>SiteLogger</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
@@ -178,7 +178,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 <div id="home-screen">
   <div class="home-header">
     <div>
-      <div class="home-title">水準測量 現場野帳</div>
+      <div class="home-title">SiteLogger</div>
       <div class="home-sub">路線を選択して観測を開始</div>
     </div>
     <div style="font-size:11px;color:var(--color-text-secondary);">v0.6</div>
@@ -1911,7 +1911,7 @@ function printSketch(){
 // ===== EXPORT =====
 function buildPrev(){
   const{sBS,sFS,diff,ce,cl}=getCalc(),K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000,sb=parseFloat(document.getElementById('bm-s').value)||0;
-  let L=['==============================','  水準測量野帳','==============================',`作業名: ${document.getElementById('proj').value||''}`,`測量日: ${document.getElementById('date').value||''}`,`担当者: ${document.getElementById('worker').value||''}  天候: ${document.getElementById('wx').value}`];
+  let L=['==============================','  SiteLogger','==============================',`作業名: ${document.getElementById('proj').value||''}`,`測量日: ${document.getElementById('date').value||''}`,`担当者: ${document.getElementById('worker').value||''}  天候: ${document.getElementById('wx').value}`];
   if(K)L.push(`器差定数: ${K.toFixed(3)} mm`);
   L.push('------------------------------','測点      BS(m)   FS(m)   IS(m)   IH(m)   GH(m)');
   const ghData=calcGH(rows,sb,kM);
