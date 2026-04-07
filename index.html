@@ -780,6 +780,16 @@ function removeRow(id){
 }
 function updateField(idx,field,val){getCurRows()[idx][field]=val;markDirty();updateCalcCells();}
 
+function insertRowAfter(id){
+  const arr=getCurRows();
+  const idx=arr.findIndex(r=>r.id===id);
+  if(idx<0)return;
+  const isRet=viewMode==='ret';
+  const newRow={id:isRet?rowIdRet++:rowId++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null};
+  arr.splice(idx+1,0,newRow);
+  markDirty();renderTbl();
+}
+
 function updateCalcCells(){
   const arr=getCurRows(),isRet=viewMode==='ret';
   const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000;
@@ -865,6 +875,7 @@ function renderTbl(){
           onfocus="focusNi(${i},'${field}',${r.id})"
           oninput="updateField(${i},'${field}',this.value)"
           onchange="updateField(${i},'${field}',this.value)"
+          onkeydown="if(event.key==='Enter'){blurKb();this.blur();}"
           onblur="if(this.value!==''){const n=parseFloat(this.value);if(!isNaN(n)){this.value=n.toFixed(3);updateField(${i},'${field}',this.value);}}">
         <div style="display:flex;gap:3px;margin-top:2px;">
           <button id="mic-${i}-${field}" onclick="startVoice(${i},'${field}')"
@@ -880,7 +891,9 @@ function renderTbl(){
     tr.innerHTML=`
       <td style="vertical-align:top;min-width:92px;">
         <div style="display:flex;align-items:center;gap:2px;">
-          <input class="pi" type="text" value="${r.point}" placeholder="BM.1" oninput="getCurRows()[${i}].point=this.value;markDirty()">
+          <input class="pi" type="text" value="${r.point}" placeholder="BM.1"
+            oninput="getCurRows()[${i}].point=this.value;markDirty()"
+            onkeydown="if(event.key==='Enter'){this.blur();}">
           ${remeasBadge}
         </div>
         <div style="display:flex;gap:3px;margin-top:2px;">
@@ -894,7 +907,8 @@ function renderTbl(){
       <td class="cc" id="ih-${r.id}">${ihD}</td>
       <td class="cc" id="gh-${r.id}">${ghV!==''?parseFloat(ghV).toFixed(3):''}</td>
       <td>${photoCell}</td>
-      <td><button class="rd" onclick="removeRow(${r.id})">✕</button></td>`;
+      <td><button class="rd" onclick="removeRow(${r.id})" title="削除">✕</button>
+          <button class="rd" onclick="insertRowAfter(${r.id})" title="下に行を挿入" style="margin-top:3px;background:none;color:#185FA5;border-color:#185FA5;font-size:13px;">＋</button></td>`;
     tb.appendChild(tr);
   });
 }
