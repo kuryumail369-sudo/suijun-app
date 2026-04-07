@@ -1644,46 +1644,116 @@ function getGHByPoint(arr,startGH,kM){
   return result;
 }
 
+// 再測行のGHを測点名（「(再)」除去）でまとめる
+function getRemeasGHByPoint(kM){
+  const sb=parseFloat(document.getElementById('bm-s').value)||0;
+  const remRows=rows.filter(r=>r.remeasure&&r.point);
+  if(remRows.length===0)return{};
+  const ghData=calcGH(rows,sb,kM);
+  const map={};
+  rows.forEach((r,i)=>{
+    if(!r.remeasure||!r.point)return;
+    const ghV=ghData[i].ghV;
+    if(ghV==='')return;
+    const basePt=r.point.replace(/[\(（]再[\)）].*/,'').trim();
+    map[basePt]=(map[basePt]||[]);
+    map[basePt].push(parseFloat(ghV));
+  });
+  // 複数再測ある場合は最後の値
+  const result={};
+  Object.keys(map).forEach(k=>{result[k]=map[k][map[k].length-1];});
+  return result;
+}
+
 function renderPointComparison(){
   const card=document.getElementById('ptcmp-card');
   const hasRet=rowsReturn.some(r=>r.bs!==''||r.fs!=='');
-  if(!hasRet){
-    card.innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);">復路を入力すると測点ごとの比較が表示されます</div>';
+  const hasRemeas=rows.some(r=>r.remeasure);
+
+  if(!hasRet&&!hasRemeas){
+    card.innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);">復路または再測を入力すると測点ごとの比較が表示されます</div>';
     return;
   }
+
   const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000;
   const sb=parseFloat(document.getElementById('bm-s').value)||0;
   const eb=parseFloat(document.getElementById('bm-e').value)||0;
-  const outMap=getGHByPoint(rows,sb,kM);
-  const retMap=getGHByPoint(rowsReturn,eb,kM);
-  const allPoints=[...new Set([...Object.keys(outMap),...Object.keys(retMap)])];
+  const outMap=getGHByPoint(rows.filter(r=>!r.remeasure),sb,kM);
+  const retMap=hasRet?getGHByPoint(rowsReturn,eb,kM):{};
+  const remMap=hasRemeas?getRemeasGHByPoint(kM):{};
 
+  const allPoints=[...new Set([...Object.keys(outMap),...Object.keys(retMap),...Object.keys(remMap)])];
   if(allPoints.length===0){
     card.innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);">GH計算できる測点がありません</div>';
     return;
   }
 
-  const nFS=rows.filter(r=>r.fs!=='').length;
+  const nFS=rows.filter(r=>r.fs!==''&&!r.remeasure).length;
   const allowMM=getTolMM(nFS)||10*Math.sqrt(nFS||1);
 
-  let hasWarn=false;
   const rows_html=allPoints.map(pt=>{
-    const og=outMap[pt],rg=retMap[pt];
-    if(og===undefined||rg===undefined){
-      return `<tr><td>${pt}</td><td>${og!==undefined?og.toFixed(3):'—'}</td><td>${rg!==undefined?rg.toFixed(3):'—'}</td><td>—</td><td></td></tr>`;
+    const og=outMap[pt],rg=retMap[pt],rmg=remMap[pt];
+
+    // 往路・復路の差
+    let diffMM=null,cls='',badge='',remeasBtn='';
+    if(og!==undefined&&rg!==undefined){
+      diffMM=Math.round((og-rg)*10000)/10;
+      cls=Math.abs(diffMM)>allowMM?'ng':Math.abs(diffMM)>allowMM*0.7?'warn':'';
+      badge=cls==='ng'?'<span class="badge bng">要再測</span>':cls==='warn'?'<span class="badge bwarn">注意</span>':'<span class="badge bok">OK</span>';
+      if(cls==='ng'&&!rmg) remeasBtn=`<button class="remeas-btn" onclick="addReMeasure('${pt}')">再測追加</button>`;
+    } else if(og===undefined||rg===undefined){
+      badge='<span class="badge" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">片道のみ</span>';
     }
-    const diffMM=Math.round((og-rg)*10000)/10; // 0.1mm単位で丸めて判定（表示と一致）
-    const cls=Math.abs(diffMM)>allowMM?'ng':Math.abs(diffMM)>allowMM*0.7?'warn':'';
-    if(cls==='ng'||cls==='warn')hasWarn=true;
-    const badge=cls==='ng'?'<span class="badge bng">要再測</span>':cls==='warn'?'<span class="badge bwarn">注意</span>':'<span class="badge bok">OK</span>';
-    const remeasBtn=cls==='ng'?`<button class="remeas-btn" onclick="addReMeasure('${pt}')">再測追加</button>`:'';
-    return `<tr class="${cls}"><td>${pt}</td><td>${og.toFixed(3)}</td><td>${rg.toFixed(3)}</td><td style="text-align:center;">${diffMM.toFixed(1)}mm</td><td>${badge}${remeasBtn}</td></tr>`;
+
+    // 再測列＋採用推奨
+    let remCell='—', adoptCell='';
+    if(rmg!==undefined){
+      remCell=rmg.toFixed(3);
+      if(og!==undefined&&rg!==undefined){
+        const dOut=Math.abs(rmg-og)*1000;
+        const dRet=Math.abs(rmg-rg)*1000;
+        if(dOut<dRet){
+          adoptCell=`<span class="badge bok">往路採用推奨</span>`;
+        } else if(dRet<dOut){
+          adoptCell=`<span class="badge" style="background:#E6F1FB;color:#0C447C;">復路採用推奨</span>`;
+        } else {
+          adoptCell=`<span class="badge" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">差なし</span>`;
+        }
+      } else {
+        adoptCell=`<span class="badge bok">再測済</span>`;
+      }
+    } else if(cls==='ng'){
+      adoptCell=remeasBtn;
+    }
+
+    const diffCell=diffMM!==null?`${diffMM.toFixed(1)}mm`:'—';
+
+    return `<tr class="${cls}">
+      <td>${pt}</td>
+      <td>${og!==undefined?og.toFixed(3):'—'}</td>
+      <td>${rg!==undefined?rg.toFixed(3):'—'}</td>
+      <td style="color:${rmg!==undefined?'#1D9E75':'var(--color-text-secondary)'};">${remCell}</td>
+      <td style="text-align:center;">${diffCell}</td>
+      <td>${badge}</td>
+      <td>${adoptCell}</td>
+    </tr>`;
   }).join('');
 
+  const remHead=hasRemeas?'<th>再測GH(m)</th>':'';
+  const adoptHead=hasRemeas?'<th>採用推奨</th>':'';
+
   card.innerHTML=`
-    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:6px;">許容較差: ±${allowMM.toFixed(0)}mm　赤=要再測 橙=注意</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:6px;">許容較差: ±${allowMM.toFixed(0)}mm　赤=要再測 橙=注意 緑=再測済</div>
     <table class="ptcmp-tbl">
-      <thead><tr><th style="text-align:left;">測点</th><th>往路GH(m)</th><th>復路GH(m)</th><th>差(mm)</th><th>判定</th></tr></thead>
+      <thead><tr>
+        <th style="text-align:left;">測点</th>
+        <th>往路GH(m)</th>
+        <th>復路GH(m)</th>
+        ${hasRemeas?'<th style="color:#1D9E75;">再測GH(m)</th>':''}
+        <th>差(mm)</th>
+        <th>判定</th>
+        ${hasRemeas?'<th>採用推奨</th>':''}
+      </tr></thead>
       <tbody>${rows_html}</tbody>
     </table>`;
 }
