@@ -819,37 +819,50 @@ function safeNum(v){
   return isNaN(n)?null:n;
 }
 
+// 転点・閉合点かどうか判定
+function isTurningPoint(r){
+  if(safeNum(r.bs)!==null && safeNum(r.fs)!==null) return true; // BS+FS同一行=転点
+  const pt=(r.point||'').toUpperCase();
+  return /^(BM|KP|TP|IP)/.test(pt) || /[^A-Z0-9](BM|KP|TP|IP)/.test(pt);
+}
+
 function calcGH(arr,startGH,kM){
   let gh=startGH, ih=startGH, res=[];
   arr.forEach((r,i)=>{
     const bsV=safeNum(r.bs), fsV=safeNum(r.fs), isV=safeNum(r.is_);
     const bsC=bsV!==null ? bsV+kM : null;
-    const fsC=fsV!==null ? fsV+kM : null;
-    const isC=isV!==null ? isV+kM : null;
+    const isTP=isTurningPoint(r);
+
+    // FSがある場合: 転点・閉合点ならFS、それ以外は自動IS扱い
+    // 手動IS欄入力がある場合は常に優先
+    let fsC=null, isC=null;
+    if(fsV!==null){
+      if(isTP) fsC=fsV+kM;
+      else isC=fsV+kM;
+    }
+    if(isV!==null) isC=isV+kM;
 
     let ghV='';
-    const prevIh=ih; // BSを適用する前のIH（FS計算に使う）
+    const prevIh=ih;
 
     if(i===0 && bsC!==null){
-      // 1行目（起点BM）: GH=起点BM、IHを更新
       ghV=startGH.toFixed(3);
       ih=gh+bsC;
     } else {
-      // FSがある場合: 移器前のIH（prevIh）でGHを計算
       if(fsC!==null){
         ghV=(prevIh-fsC).toFixed(3);
         gh=parseFloat(ghV);
       } else if(isC!==null){
         ghV=(prevIh-isC).toFixed(3);
       }
-      // BSがある場合: FSのGH（またはprevGH）を基にIH更新
       if(bsC!==null){
-        const baseGh = ghV!=='' ? parseFloat(ghV) : gh;
+        const baseGh=ghV!==''?parseFloat(ghV):gh;
         ih=baseGh+bsC;
       }
     }
 
-    res.push({ihD:bsC!==null?ih.toFixed(3):'', ghV, isFS:r.fs!==''});
+    // isFS: 転点・閉合点のFSのみ青色表示
+    res.push({ihD:bsC!==null?ih.toFixed(3):'', ghV, isFS:fsC!==null});
   });
   return res;
 }
@@ -1781,8 +1794,9 @@ function calcDir(arr){
   let sBS=0,sFS=0,n=0;
   arr.forEach(r=>{
     const bv=safeNum(r.bs),fv=safeNum(r.fs);
-    if(bv!==null)sBS+=bv+kM;
-    if(fv!==null){sFS+=fv+kM;n++;}
+    if(bv!==null) sBS+=bv+kM;
+    // FSは転点・閉合点のみΣFSに加算（自動IS扱い行は除外）
+    if(fv!==null && isTurningPoint(r)){sFS+=fv+kM;n++;}
   });
   return{sBS,sFS,diff:sBS-sFS,n};
 }
