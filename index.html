@@ -228,9 +228,12 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <div id="ocr-spin" style="display:none;text-align:center;padding:10px;font-size:13px;color:var(--color-text-secondary);">🔍 解析中...</div>
     <div id="ocr-err" style="display:none;font-size:12px;color:#A32D2D;margin-top:6px;"></div>
     <div id="ocr-res" class="ocr-res">
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">読み取り値</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">✓ 入力しました</div>
       <div style="font-size:26px;font-weight:500;color:#1D9E75;" id="ocr-val">—</div>
-      <button class="pb p" style="margin-top:8px;width:100%;" onclick="confirmOcr()">この値を入力する</button>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="pb p" style="flex:1;" onclick="retryOcr()">📷 再撮影</button>
+        <button class="pb" style="flex:1;" onclick="closeOcr()">閉じる</button>
+      </div>
     </div>
   </div>
 
@@ -1370,11 +1373,25 @@ async function runOcr(du){
     if(txt==='ERROR'||!txt.match(/[\d.]/)){showOcrErr('数値を読み取れませんでした');return;}
     const m=txt.match(/-?[\d]+\.[\d]+|-?[\d]+/);
     if(!m){showOcrErr('数値形式の取得に失敗しました');return;}
-    document.getElementById('ocr-val').textContent=parseFloat(m[0]).toFixed(3)+' m';
+    const val=parseFloat(m[0]).toFixed(3);
+    // 自動入力
+    if(ocrTgt){
+      const arr=ocrTgt.dir==='out'?rows:rowsReturn;
+      const r=arr.find(r=>r.id===ocrTgt.id);
+      if(r){r[ocrTgt.field]=val;markDirty();renderTbl();}
+    }
+    document.getElementById('ocr-val').textContent=val+' m';
     document.getElementById('ocr-res').style.display='block';
   }catch(e){document.getElementById('ocr-spin').style.display='none';showOcrErr('APIエラー: '+e.message);}
 }
 function showOcrErr(msg){const el=document.getElementById('ocr-err');el.textContent=msg;el.style.display='block';}
+function retryOcr(){
+  // 再撮影：結果を隠してカメラを再起動
+  ['ocr-res','ocr-err'].forEach(x=>document.getElementById(x).style.display='none');
+  document.getElementById('ocr-prev').style.display='none';
+  const fi=document.getElementById('ocr-fi');
+  fi.value='';fi.click();
+}
 function confirmOcr(){
   if(!ocrTgt)return;
   const v=parseFloat(document.getElementById('ocr-val').textContent);
