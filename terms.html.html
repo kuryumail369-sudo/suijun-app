@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SiteLogger — 利用規約・プライバシーポリシー</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --blue: #185FA5;
+    --blue-light: #EEF4FB;
+    --border: #E2E6ED;
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --text: #1A1E2A;
+    --text-sub: #6B7280;
+    --red: #B91C1C;
+    --red-light: #FEF2F2;
+    --amber-light: #FFFBEB;
+    --amber-border: #F59E0B;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(24,95,165,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.85;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #0D3F73 0%, #185FA5 60%, #2A7FD4 100%);
+    color: white;
+    padding: 44px 24px 36px;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 3px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .hero h1 { font-size: clamp(22px,5vw,32px); font-weight: 700; margin-bottom: 6px; }
+  .hero-sub { font-size: 13px; opacity: 0.7; }
+
+  /* タブナビ */
+  .tab-nav {
+    display: flex;
+    max-width: 760px;
+    margin: 24px auto 0;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-sub);
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--blue);
+    color: white;
+    border-color: var(--blue);
+  }
+
+  .content {
+    max-width: 760px;
+    margin: 16px auto 60px;
+    padding: 0 16px;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* 警告バナー */
+  .warn-banner {
+    background: var(--red-light);
+    border: 1.5px solid #FCA5A5;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--red);
+    font-weight: 500;
+    line-height: 1.7;
+  }
+  .warn-banner strong { font-weight: 700; display: block; margin-bottom: 4px; }
+
+  /* セクション */
+  .section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--blue-light);
+  }
+  .section-num {
+    background: var(--blue);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 14px; font-weight: 700; color: var(--blue); }
+  .section-body { padding: 18px 20px; }
+
+  .section-body p { margin-bottom: 10px; font-size: 13px; color: var(--text); }
+  .section-body p:last-child { margin-bottom: 0; }
+
+  .section-body ol, .section-body ul {
+    padding-left: 20px;
+    margin: 8px 0 12px;
+  }
+  .section-body li { font-size: 13px; margin-bottom: 5px; line-height: 1.7; }
+
+  .emph {
+    background: var(--amber-light);
+    border-left: 3px solid var(--amber-border);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 13px;
+    color: #78350F;
+    font-weight: 500;
+  }
+
+  .strong-box {
+    background: var(--red-light);
+    border: 1px solid #FCA5A5;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 13px;
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  /* 更新日 */
+  .meta {
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-bottom: 12px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 28px 16px;
+    font-size: 12px;
+    color: var(--text-sub);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">法的文書</div>
+  <h1>📐 SiteLogger</h1>
+  <div class="hero-sub">利用規約・プライバシーポリシー</div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('terms',this)">利用規約</button>
+  <button class="tab-btn" onclick="switchTab('privacy',this)">プライバシーポリシー</button>
+</div>
+
+<div class="content">
+
+  <!-- ===== 利用規約 ===== -->
+  <div id="tab-terms" class="tab-panel active">
+
+    <div class="meta">制定日：2026年4月　最終更新：2026年4月</div>
+
+    <div class="warn-banner">
+      <strong>⚠️ 重要：ご利用前に必ずお読みください</strong>
+      本アプリはβ版（試験運用中）です。本規約に同意いただいた方のみご利用ください。アプリの利用開始をもって本規約に同意したものとみなします。
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">1</div><h2>総則・定義</h2></div>
+      <div class="section-body">
+        <p>本利用規約（以下「本規約」）は、SiteLogger（以下「本アプリ」）の利用条件を定めるものです。</p>
+        <ul>
+          <li><strong>「開発者」</strong>：本アプリを開発・提供する個人</li>
+          <li><strong>「ユーザー」</strong>：本アプリを利用するすべての方</li>
+          <li><strong>「本サービス」</strong>：本アプリが提供するすべての機能</li>
+        </ul>
+        <p>本規約は予告なく変更される場合があります。変更後も継続して本アプリを利用した場合、改定後の規約に同意したものとみなします。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">2</div><h2>β版に関する特別条項</h2></div>
+      <div class="section-body">
+        <p>本アプリは現在β版（試験運用段階）として提供されています。以下の点をあらかじめご了承のうえご利用ください。</p>
+        <ol>
+          <li>機能・仕様・デザインは予告なく変更または削除される場合があります。</li>
+          <li>サービスを予告なく一時停止または終了する場合があります。</li>
+          <li>不具合・バグが存在する可能性があります。</li>
+          <li>β版の利用によって生じたいかなる損害についても、開発者は責任を負いません。</li>
+        </ol>
+        <div class="emph">
+          β版のご利用は、上記リスクをすべて理解・承諾したうえで、自己責任において行ってください。
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">3</div><h2>データ保存・消失に関する免責</h2></div>
+      <div class="section-body">
+        <p>本アプリの観測データはユーザーの端末上のブラウザ（ローカルストレージ）にのみ保存されます。開発者のサーバーには保存されません。</p>
+        <p>以下の操作・事象により、保存されたデータが<strong>完全かつ不可逆的に消失する可能性</strong>があります。</p>
+        <ul>
+          <li>ブラウザの「閲覧データ消去」「キャッシュ削除」の実行</li>
+          <li>アプリ（ブラウザ）のアンインストール・再インストール</li>
+          <li>OS・ブラウザのアップデート</li>
+          <li>端末の初期化・機種変更</li>
+          <li>ストレージ容量不足による自動削除</li>
+          <li>その他予期しない端末障害・ソフトウェア不具合</li>
+        </ul>
+        <div class="strong-box">
+          ⚠️ データ消失に関して、開発者は一切の責任を負いません。観測終了後は必ずCSV・PDFレポートを出力してバックアップを取得してください。重要なデータは紙の野帳との併用を強く推奨します。
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">4</div><h2>免責事項</h2></div>
+      <div class="section-body">
+        <p>開発者は、以下の事項について一切の責任を負いません。</p>
+        <ol>
+          <li><strong>計算結果の正確性：</strong>本アプリが自動計算するIH・GH・閉合差等の数値は参考値です。重要な測量業務においては、必ず別途検算・確認を行ってください。</li>
+          <li><strong>OCR読み取り精度：</strong>液晶OCR機能による数値読み取りは100%の精度を保証しません。必ず読み取り値を目視確認してください。</li>
+          <li><strong>音声認識精度：</strong>音声入力機能による数値・測点名の認識は環境により精度が変動します。入力値を必ず確認してください。</li>
+          <li><strong>GPS精度：</strong>GPS取得座標は端末の性能・電波状況により誤差が生じます。精密な座標取得には専用測量機器を使用してください。</li>
+          <li><strong>通信障害・サービス停止：</strong>サーバー障害・通信障害によりOCR等のオンライン機能が利用できない場合があります。</li>
+          <li><strong>間接損害：</strong>本アプリの利用または利用不能により生じた直接・間接・特別・派生的損害（業務上の損失・機会損失・データ損失を含む）。</li>
+          <li><strong>第三者サービス：</strong>Google Analytics・Anthropic API・Cloudflare Workers等の第三者サービスに起因する障害・損害。</li>
+        </ol>
+        <div class="emph">
+          本アプリは業務補助ツールです。測量成果の最終確認・責任はユーザー自身および所属組織に帰属します。
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">5</div><h2>禁止事項</h2></div>
+      <div class="section-body">
+        <p>ユーザーは以下の行為を行ってはなりません。</p>
+        <ol>
+          <li>本アプリのソースコード・デザイン・機能を無断で複製・改変・再配布すること</li>
+          <li>本アプリを通じて第三者・開発者に損害を与える行為</li>
+          <li>本アプリのサーバーに過度な負荷をかける行為</li>
+          <li>本アプリを商業目的で無断利用・再販すること</li>
+          <li>法令または公序良俗に反する行為</li>
+          <li>その他、開発者が不適切と判断する行為</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">6</div><h2>知的財産権</h2></div>
+      <div class="section-body">
+        <p>本アプリに関するすべての著作権・商標権・その他の知的財産権は開発者に帰属します。本規約に基づく利用許諾は、これらの権利の譲渡を意味するものではありません。</p>
+        <p>ユーザーが本アプリを用いて作成した測量データ・PDF・CSV等の成果物の権利はユーザーに帰属します。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">7</div><h2>サービスの変更・終了</h2></div>
+      <div class="section-body">
+        <p>開発者は以下の権利を留保します。</p>
+        <ul>
+          <li>本サービスの内容を予告なく変更・追加・削除する権利</li>
+          <li>本サービスを一時停止・終了する権利</li>
+          <li>β版ユーザーへのアクセスを制限する権利</li>
+        </ul>
+        <p>これらの変更・停止によってユーザーに生じた損害について、開発者は責任を負いません。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">8</div><h2>準拠法・管轄裁判所</h2></div>
+      <div class="section-body">
+        <p>本規約は日本法に準拠するものとします。本規約に関する紛争については、開発者の所在地を管轄する日本の裁判所を専属的合意管轄裁判所とします。</p>
+      </div>
+    </div>
+
+  </div><!-- /terms -->
+
+
+  <!-- ===== プライバシーポリシー ===== -->
+  <div id="tab-privacy" class="tab-panel">
+
+    <div class="meta">制定日：2026年4月　最終更新：2026年4月</div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">1</div><h2>基本方針</h2></div>
+      <div class="section-body">
+        <p>SiteLogger（以下「本アプリ」）は、ユーザーのプライバシーを尊重し、個人情報の適切な取り扱いに努めます。本ポリシーは、本アプリが収集する情報・利用目的・第三者提供の有無について説明します。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">2</div><h2>収集する情報</h2></div>
+      <div class="section-body">
+        <p>本アプリは以下の情報を収集・利用します。</p>
+
+        <p><strong>① 端末内にのみ保存される情報（開発者には送信されません）</strong></p>
+        <ul>
+          <li>観測データ（測点名・BS・FS・IH・GH等）</li>
+          <li>測量情報（作業名・測量日・観測者名・BM値等）</li>
+          <li>測点写真（端末内にBase64形式で保存）</li>
+          <li>スケッチデータ</li>
+          <li>路線情報・アプリ設定</li>
+        </ul>
+        <div class="emph">上記のデータは外部サーバーに送信されず、ユーザーの端末内にのみ保存されます。</div>
+
+        <p><strong>② OCR機能利用時に送信される情報</strong></p>
+        <p>液晶OCR機能をご利用の場合、撮影した画像データがCloudflare Workers経由でAnthropic社のAPIに送信されます。送信される情報は画像データのみで、測点名・観測者名等の個人情報は含まれません。</p>
+        <ul>
+          <li>送信先：Cloudflare Workers（<code>sitelogger-ocr.kuryumail-369.workers.dev</code>）</li>
+          <li>処理先：Anthropic社 Claude API</li>
+          <li>保存期間：APIレスポンス生成後、開発者側での画像保存は行いません</li>
+        </ul>
+
+        <p><strong>③ Google Analyticsによるアクセス情報</strong></p>
+        <p>本アプリはGoogle Analytics（G-FD9VDMW9MP）を使用してアクセス状況を分析しています。収集される情報は以下のとおりです。</p>
+        <ul>
+          <li>ページビュー数・滞在時間・画面遷移</li>
+          <li>端末の種類・OSの種類・ブラウザの種類</li>
+          <li>おおよその地域情報（市区町村レベル）</li>
+          <li>アプリ内での操作イベント</li>
+        </ul>
+        <p>これらはCookieを用いて収集されます。個人を特定する情報（氏名・メールアドレス・観測データ等）は収集されません。Google Analyticsのデータ収集を拒否する場合は、<a href="https://tools.google.com/dlpage/gaoptout" target="_blank" style="color:var(--blue);">Google Analyticsオプトアウトアドオン</a>をご利用ください。</p>
+
+        <p><strong>④ GPS情報（任意取得）</strong></p>
+        <p>ユーザーが「📍GPS取得」ボタンを押した場合のみ、端末のGPS機能から位置情報を取得します。取得した座標はその測点データとともに端末内に保存され、CSV出力時に含まれます。開発者のサーバーには送信されません。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">3</div><h2>情報の利用目的</h2></div>
+      <div class="section-body">
+        <ul>
+          <li>本アプリの機能提供（計算・表示・出力）</li>
+          <li>アクセス状況の分析・機能改善</li>
+          <li>不具合の検知・修正</li>
+        </ul>
+        <p>収集した情報を上記以外の目的に利用することはありません。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">4</div><h2>第三者への提供</h2></div>
+      <div class="section-body">
+        <p>開発者は、以下の場合を除き、ユーザーの情報を第三者に提供しません。</p>
+        <ol>
+          <li><strong>法令に基づく場合：</strong>裁判所・警察等の公的機関から法的根拠に基づく開示要求があった場合</li>
+          <li><strong>OCR機能利用時：</strong>前述のとおり、画像データがAnthropic社のAPIに送信されます。Anthropic社のプライバシーポリシーは<a href="https://www.anthropic.com/privacy" target="_blank" style="color:var(--blue);">こちら</a>をご参照ください。</li>
+          <li><strong>Google Analytics：</strong>前述のとおり、アクセス情報がGoogle社に送信されます。</li>
+        </ol>
+        <div class="emph">観測データ・測量情報・写真等のユーザーデータを第三者に販売・提供することは一切ありません。</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">5</div><h2>Cookieの使用</h2></div>
+      <div class="section-body">
+        <p>本アプリはGoogle Analyticsの動作のためCookieを使用します。ブラウザの設定からCookieを無効にすることができますが、一部機能に影響が出る場合があります。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">6</div><h2>データの管理・削除</h2></div>
+      <div class="section-body">
+        <p>本アプリのユーザーデータはすべてユーザーの端末内に保存されています。データを削除する場合は、ブラウザの「閲覧データを消去」またはローカルストレージの削除操作によりご自身で削除できます。</p>
+        <div class="strong-box">⚠️ 一度削除されたデータを開発者が復元することはできません。</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">7</div><h2>セキュリティ</h2></div>
+      <div class="section-body">
+        <p>本アプリはHTTPS（TLS暗号化通信）により提供されます。OCR機能利用時のAPIキーはCloudflare Workersの環境変数として安全に管理されており、ユーザーの端末やアプリのソースコードに含まれません。ただし、インターネット通信の性質上、完全なセキュリティを保証することはできません。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">8</div><h2>未成年者の利用</h2></div>
+      <div class="section-body">
+        <p>本アプリは業務用途を想定しており、18歳未満の方の単独利用は想定していません。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">9</div><h2>ポリシーの変更</h2></div>
+      <div class="section-body">
+        <p>本ポリシーは法令の改正・サービス内容の変更に応じて改定される場合があります。重要な変更がある場合は本ページにて告知します。継続して本アプリを利用した場合、改定後のポリシーに同意したものとみなします。</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-num">10</div><h2>お問い合わせ</h2></div>
+      <div class="section-body">
+        <p>本ポリシーに関するお問い合わせは、本アプリを通じてご連絡ください。</p>
+      </div>
+    </div>
+
+  </div><!-- /privacy -->
+
+</div><!-- /content -->
+
+<footer>
+  SiteLogger 利用規約・プライバシーポリシー &nbsp;|&nbsp; 2026年4月制定
+</footer>
+
+<script>
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else document.querySelectorAll('.tab-btn')[tab==='terms'?0:1].classList.add('active');
+}
+// URLハッシュでプライバシーポリシータブを直接開く
+window.addEventListener('DOMContentLoaded', () => {
+  if(location.hash === '#tab-privacy') switchTab('privacy');
+});
+</script>
+</body>
+</html>
