@@ -313,7 +313,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
         <table class="otbl">
           <thead><tr>
             <th style="text-align:left;min-width:90px;">測点</th>
-            <th>後視 BS</th><th>前視 FS</th><th>中間視 IS</th>
+            <th>後視 BS</th><th>前視 FS</th>
             <th id="ih-hd">IH (m)</th><th id="gh-hd">GH (m)</th><th>📸</th><th></th>
           </tr></thead>
           <tbody id="obs-tb"></tbody>
@@ -924,7 +924,6 @@ function renderTbl(){
       </td>
       <td>${mk('bs',r.bs)}</td>
       <td>${mk('fs',r.fs)}</td>
-      <td>${mk('is_',r.is_)}</td>
       <td class="cc" id="ih-${r.id}">${ihD}</td>
       <td class="cc" id="gh-${r.id}">${ghV!==''?parseFloat(ghV).toFixed(3):''}</td>
       <td>${photoCell}</td>
@@ -1357,7 +1356,7 @@ async function runOcr(du){
   document.getElementById('ocr-spin').style.display='block';
   const b64=du.split(',')[1],mt=du.split(';')[0].split(':')[1];
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    const res=await fetch('https://sitelogger-ocr.kuryumail-369.workers.dev/',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:128,
         messages:[{role:'user',content:[
@@ -1946,11 +1945,46 @@ function buildPrev(){
   document.getElementById('prev').textContent=L.join('\n');
 }
 function expCSV(){
-  const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000,sb=parseFloat(document.getElementById('bm-s').value)||0;
-  let csv='方向,測点,BS(m),FS(m),IS(m),IH(m),GH(m),緯度,経度,精度(m)\n';
-  const addDir=(arr,dir,startGH)=>{const ghData=calcGH(arr,startGH,kM);arr.forEach((r,i)=>{const{ihD,ghV}=ghData[i];csv+=`${dir},${r.point||''},${r.bs||''},${r.fs||''},${r.is_||''},${ihD||''},${ghV!==''?parseFloat(ghV).toFixed(3):''},${r.lat!=null?r.lat.toFixed(8):''},${r.lon!=null?r.lon.toFixed(8):''},${r.acc||''}\n`;});};
+  const K=parseFloat(document.getElementById('k-corr').value)||0;
+  const sb=parseFloat(document.getElementById('bm-s').value)||0;
+  const eb=parseFloat(document.getElementById('bm-e').value)||0;
+  // CSVフィールドエスケープ（数式・カンマ・引用符を安全に処理）
+  const cf=v=>{
+    if(v===null||v===undefined||v==='')return '';
+    const s=String(v);
+    if(s.includes(',')||s.includes('"')||s.includes('\n')||s.startsWith('='))
+      return '"'+s.replace(/"/g,'""')+'"';
+    return s;
+  };
+  const proj=document.getElementById('proj').value||'水準測量';
+  const date=document.getElementById('date').value||'';
+  const worker=document.getElementById('worker').value||'';
+  let csv=`# 作業名: ${proj}  測量日: ${date}  観測者: ${worker}  器差K: ${K}mm\n`;
+  csv+='方向,測点,BS(m),FS(m),IS(m),IH(m),GH(m),緯度,経度,精度(m)\n';
+  let rowNum=3; // 1行目=メタ情報、2行目=ヘッダー、3行目からデータ
+  const addDir=(arr,dir,startGH)=>{
+    arr.forEach((r,i)=>{
+      const bsVal=r.bs!==''?r.bs:'';
+      const fsVal=r.fs!==''?r.fs:'';
+      const isVal=r.is_!==''?r.is_:'';
+      // IH・GH列をExcel数式で出力
+      // 列: A=方向 B=測点 C=BS D=FS E=IS F=IH G=GH
+      let ghFormula,ihFormula;
+      if(i===0){
+        ghFormula=startGH.toFixed(3); // 起点BMは固定値
+        ihFormula=bsVal!==''?`=G${rowNum}+C${rowNum}`:'';
+      } else {
+        // GH: FSあれば前行IH-FS、ISあれば前行IH-IS
+        ghFormula=`=IF(D${rowNum}<>"",F${rowNum-1}-D${rowNum},IF(E${rowNum}<>"",F${rowNum-1}-E${rowNum},""))`;
+        ihFormula=bsVal!==''?`=G${rowNum}+C${rowNum}`:'';
+      }
+      csv+=`${cf(dir)},${cf(r.point||'')},${cf(bsVal)},${cf(fsVal)},${cf(isVal)},${cf(ihFormula)},${cf(ghFormula)},${r.lat!=null?r.lat.toFixed(8):''},${r.lon!=null?r.lon.toFixed(8):''},${r.acc||''}\n`;
+      rowNum++;
+    });
+    rowNum++; // 往路・復路の区切り
+  };
   addDir(rows,'往路',sb);
-  if(rowsReturn.length>0)addDir(rowsReturn,'復路',parseFloat(document.getElementById('bm-e').value)||0);
+  if(rowsReturn.length>0)addDir(rowsReturn,'復路',eb);
   dlf('suijun_'+(document.getElementById('date').value||'data')+'.csv',csv,'text/csv');
 }
 function expTxt(){buildPrev();dlf('suijun_notebook.txt',document.getElementById('prev').textContent,'text/plain');}
