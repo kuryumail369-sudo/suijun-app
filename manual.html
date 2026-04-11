@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SiteLogger 取扱説明書 β版</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --blue: #185FA5;
+    --blue-light: #EEF4FB;
+    --blue-mid: #3B7FCB;
+    --green: #1D9E75;
+    --green-light: #E8F7F2;
+    --red: #E24B4A;
+    --amber: #D97706;
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --border: #E2E6ED;
+    --text: #1A1E2A;
+    --text-sub: #6B7280;
+    --text-hint: #9CA3AF;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(24,95,165,0.08);
+    --shadow-md: 0 4px 24px rgba(24,95,165,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ヘッダー */
+  .hero {
+    background: linear-gradient(135deg, #0D3F73 0%, #185FA5 50%, #2A7FD4 100%);
+    color: white;
+    padding: 48px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.9);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 6vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .hero-sub {
+    font-size: 14px;
+    opacity: 0.75;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+  }
+
+  /* TOC */
+  .toc-wrap {
+    max-width: 760px;
+    margin: 32px auto 0;
+    padding: 0 16px;
+  }
+  .toc {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+  }
+  .toc-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 4px 16px;
+  }
+  .toc a {
+    color: var(--blue);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 3px 0;
+    display: block;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .toc a:hover { border-bottom-color: var(--blue); }
+
+  /* メインコンテンツ */
+  .content {
+    max-width: 760px;
+    margin: 24px auto 60px;
+    padding: 0 16px;
+  }
+
+  /* セクション */
+  .section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 18px 24px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-num {
+    background: var(--blue);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .section-body { padding: 20px 24px; }
+
+  /* ステップ */
+  .steps { counter-reset: step; }
+  .step {
+    counter-increment: step;
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .step::before {
+    content: counter(step);
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-content { flex: 1; }
+  .step-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .step-desc { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+
+  /* Tips */
+  .tip {
+    background: var(--blue-light);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 13px;
+    color: var(--blue);
+  }
+  .tip-green {
+    background: var(--green-light);
+    border-left-color: var(--green);
+    color: #0D5C42;
+  }
+  .tip-amber {
+    background: #FEF3C7;
+    border-left-color: var(--amber);
+    color: #78350F;
+  }
+  .tip strong { font-weight: 600; }
+
+  /* テーブル */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0;
+  }
+  th {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  /* コード風インライン */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: #F0F4F8;
+    color: var(--blue);
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* バッジ */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    vertical-align: middle;
+  }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-red { background: #FEE2E2; color: var(--red); }
+  .badge-amber { background: #FEF3C7; color: var(--amber); }
+
+  /* フロー図 */
+  .flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  .flow-box {
+    background: var(--blue-light);
+    border: 1px solid #C5D9EF;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--blue);
+    font-weight: 500;
+  }
+  .flow-arrow { color: var(--text-hint); font-size: 16px; }
+
+  /* グリッド */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 500px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .card-icon { font-size: 20px; margin-bottom: 4px; }
+  .card-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+  .card-desc { font-size: 12px; color: var(--text-sub); }
+
+  /* フッター */
+  footer {
+    text-align: center;
+    padding: 32px 16px;
+    font-size: 12px;
+    color: var(--text-hint);
+    border-top: 1px solid var(--border);
+    margin-top: 16px;
+  }
+
+  /* 区切り */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  /* アンカー用オフセット */
+  .anchor { scroll-margin-top: 16px; }
+
+  p { margin-bottom: 8px; }
+  p:last-child { margin-bottom: 0; }
+  ul { padding-left: 18px; margin: 8px 0; }
+  li { margin-bottom: 4px; font-size: 13px; color: var(--text-sub); }
+  li strong { color: var(--text); }
+  .hero-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    margin-bottom: 16px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .disclaimer {
+    background: #FFF8EC;
+    border: 1.5px solid #F59E0B;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #78350F;
+    line-height: 1.7;
+  }
+  .disclaimer-title {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ヒーロー -->
+<div class="hero">
+  <div style="max-width:760px;margin:0 auto;text-align:left;margin-bottom:12px;">
+    <button onclick="window.close();if(document.referrer)history.back();" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:white;font-size:12px;padding:5px 14px;border-radius:20px;cursor:pointer;font-family:inherit;">← アプリに戻る</button>
+  </div>
+  <div class="hero-badge">β版 取扱説明書</div>
+  <h1>📐 SiteLogger</h1>
+  <div class="hero-sub">水準測量 現場野帳アプリ — スマートフォン対応 PWA</div>
+</div>
+
+<!-- 目次 -->
+<div class="toc-wrap">
+  <div class="toc">
+    <div class="toc-title">目次</div>
+    <div class="toc-grid">
+      <a href="#s1">1. アプリの概要</a>
+      <a href="#s2">2. 起動・インストール</a>
+      <a href="#s3">3. 路線の管理</a>
+      <a href="#s4">4. 測量情報の入力</a>
+      <a href="#s5">5. 観測入力</a>
+      <a href="#s6">6. 音声入力</a>
+      <a href="#s7">7. 液晶OCR</a>
+      <a href="#s8">8. GPS・写真</a>
+      <a href="#s9">9. 往路・復路</a>
+      <a href="#s10">10. スケッチ</a>
+      <a href="#s11">11. 点検タブ</a>
+      <a href="#s12">12. 出力・共有</a>
+      <a href="#s13">13. 計算の仕組み</a>
+      <a href="#s14">14. よくある質問</a>
+    </div>
+  </div>
+</div>
+
+<!-- コンテンツ -->
+<div class="content">
+
+  <!-- β版注意喚起 -->
+  <div class="disclaimer">
+    <div class="disclaimer-title">⚠️ β版をご利用の方へ：データ保存に関する注意事項</div>
+    <p>本アプリは現在<strong>β版（試験運用中）</strong>です。予告なく仕様変更・サービス停止が行われる場合があります。</p>
+    <ul style="padding-left:18px;margin-top:6px;">
+      <li>観測データはお使いの端末のブラウザ内にのみ保存されます。</li>
+      <li>ブラウザの「閲覧データ消去」「キャッシュ削除」「アプリの再インストール」を行うと<strong>データが完全に消去</strong>されます。</li>
+      <li>OS・ブラウザのアップデートにより、稀にデータが消失する場合があります。</li>
+      <li>本アプリの使用により生じたデータ消失・損害について、開発者は一切の責任を負いかねます。</li>
+    </ul>
+    <p style="margin-top:8px;font-weight:600;">📤 観測終了後は必ずCSVまたは写真レポートを出力してバックアップをお取りください。</p>
+  </div>
+
+  <!-- 1. 概要 -->
+  <div class="section anchor" id="s1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>アプリの概要</h2>
+    </div>
+    <div class="section-body">
+      <p>SiteLoggerは、水準測量の現場作業をスマートフォンだけで完結できる野帳アプリです。紙の野帳・電卓・デジカメを一台に集約し、測量後すぐにPDF成果表やCSVを出力できます。</p>
+
+      <div class="grid2" style="margin-top:16px;">
+        <div class="card">
+          <div class="card-icon">📱</div>
+          <div class="card-title">オフライン対応PWA</div>
+          <div class="card-desc">インターネット不要で動作。ホーム画面に追加してアプリ感覚で使用できます（OCR機能のみオンライン必須）。</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔒</div>
+          <div class="card-title">データはスマホ内保存</div>
+          <div class="card-desc">観測データはすべて端末内（ブラウザのローカルストレージ）に保存。サーバーには送信されません。</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📐</div>
+          <div class="card-title">自動計算</div>
+          <div class="card-desc">IH・GH・ΣBS・ΣFS・閉合差をリアルタイムで自動計算。入力するだけで点検まで完了します。</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🤖</div>
+          <div class="card-title">AI液晶OCR</div>
+          <div class="card-desc">電子レベルの液晶をカメラで撮影すると、AIが自動で数値を読み取り入力します。</div>
+        </div>
+      </div>
+
+      <div class="tip tip-green" style="margin-top:16px;">
+        <strong>対応URL：</strong> <code>https://kuryumail369-sudo.github.io/suijun-app/</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 起動・インストール -->
+  <div class="section anchor" id="s2">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>起動・ホーム画面へのインストール</h2>
+    </div>
+    <div class="section-body">
+      <p>ブラウザで上記URLにアクセスするだけで使用できます。ホーム画面に追加するとアプリのように使えて便利です。</p>
+
+      <table>
+        <tr><th>端末</th><th>ホーム画面への追加手順</th></tr>
+        <tr>
+          <td><strong>iPhone / iPad</strong></td>
+          <td>Safariで開く → 下部の共有ボタン（□↑）→「ホーム画面に追加」→「追加」</td>
+        </tr>
+        <tr>
+          <td><strong>Android</strong></td>
+          <td>Chromeで開く → 右上メニュー（⋮）→「ホーム画面に追加」または「アプリをインストール」</td>
+        </tr>
+      </table>
+
+      <div class="tip">
+        <strong>推奨ブラウザ：</strong> iPhone はSafari、Android はChrome。他のブラウザでは一部機能（カメラ・音声）が動作しない場合があります。
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 路線管理 -->
+  <div class="section anchor" id="s3">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>路線の管理</h2>
+    </div>
+    <div class="section-body">
+      <p>アプリ起動直後に路線一覧画面が表示されます。複数の路線を同時に保存・管理できます。</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-content">
+            <div class="step-title">新規路線を作成する</div>
+            <div class="step-desc">「＋ 新規路線を作成」をタップ → 路線名を入力して「✓」で確定。路線名は後から変更できます。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <div class="step-title">路線を選択する</div>
+            <div class="step-desc">一覧から路線名をタップして観測画面に入ります。「◀ 路線一覧」ボタンでホームに戻れます。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <div class="step-title">データは自動保存</div>
+            <div class="step-desc">入力のたびに端末内に自動保存されます。アプリを閉じても再度開けばデータが残っています。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 測量情報 -->
+  <div class="section anchor" id="s4">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>測量情報の入力</h2>
+    </div>
+    <div class="section-body">
+      <p>観測画面上部の「測量情報」エリアに路線の基本情報を入力します。</p>
+      <table>
+        <tr><th>項目</th><th>内容</th><th>備考</th></tr>
+        <tr><td><strong>作業名</strong></td><td>路線・工事名</td><td>PDF・CSVのファイル名に反映</td></tr>
+        <tr><td><strong>測量日</strong></td><td>観測日</td><td>起動時に自動で当日日付が入る</td></tr>
+        <tr><td><strong>観測者名</strong></td><td>担当者氏名</td><td>「＋」で新規追加、過去名を再利用可能</td></tr>
+        <tr><td><strong>天候</strong></td><td>晴/曇/雨/雪</td><td>選択式</td></tr>
+        <tr><td><strong>起点BM</strong></td><td>既知点標高（m）</td><td>GH計算の基準値。🎤音声入力対応</td></tr>
+        <tr><td><strong>終点BM</strong></td><td>既知終点標高（m）</td><td>閉合差計算に使用。🎤音声入力対応</td></tr>
+        <tr><td><strong>器差K</strong></td><td>レベルの器差（mm）</td><td>補正量。🎤音声入力対応。入力すると「●」インジケーター点灯</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. 観測入力 -->
+  <div class="section anchor" id="s5">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>観測入力</h2>
+    </div>
+    <div class="section-body">
+      <p>「📋 観測入力」タブがメインの入力画面です。表形式で測点ごとにデータを入力します。</p>
+
+      <table>
+        <tr><th>列</th><th>内容</th></tr>
+        <tr><td><strong>測点</strong></td><td>測点名（BM.1、No.1、TP.1 など）。🎤音声入力・📍GPS取得ボタン付き</td></tr>
+        <tr><td><strong>後視 BS</strong></td><td>後視読定値（m）。🎤音声・📷OCRボタン付き</td></tr>
+        <tr><td><strong>前視 FS</strong></td><td>前視読定値（m）。転点では FS、中間点でも FS 欄に入力するだけでOK（自動判定）</td></tr>
+        <tr><td><strong>IH（自動）</strong></td><td>器械高。自動計算、編集不可</td></tr>
+        <tr><td><strong>GH（自動）</strong></td><td>地盤高。自動計算、編集不可</td></tr>
+        <tr><td><strong>📸</strong></td><td>測点写真。タップして撮影</td></tr>
+      </table>
+
+      <div class="tip tip-green">
+        <strong>IS（中間視）は自動判定：</strong> 測点名がBM・KP・TP・IPで始まらない場合、FSに入力した値は自動的に中間視（IS）として扱われ、ΣFSには加算されません。入力列はBS・FSの2列だけ使えばOKです。
+      </div>
+
+      <hr class="divider">
+
+      <p><strong>行の操作</strong></p>
+      <ul>
+        <li><strong>行を追加：</strong>「＋ 測点を追加」ボタン、または各行の「＋」ボタンで直下に挿入</li>
+        <li><strong>行を削除：</strong>各行右端の「✕」ボタン</li>
+        <li><strong>行を挿入：</strong>各行右端の「＋」ボタンで任意の位置に挿入可能</li>
+      </ul>
+
+      <div class="tip tip-amber">
+        <strong>再測：</strong> 測点を長押しするか、点検タブの「再測」機能から特定測点に「再測」バッジを付けて管理できます。
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. 音声入力 -->
+  <div class="section anchor" id="s6">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>🎤 音声入力</h2>
+    </div>
+    <div class="section-body">
+      <p>読み上げるだけで数値・測点名を入力できます。レベルから目を離さず入力できるのが最大のメリットです。</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-content">
+            <div class="step-title">🎤 ボタンをタップ</div>
+            <div class="step-desc">各セルのマイクアイコン、または画面下部「🎤 音声入力」ボタンをタップ。マイク許可を求められたら「許可」を選択。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <div class="step-title">数値を読み上げる</div>
+            <div class="step-desc">「いち てん に さん よん」→「1.234」のように変換されます。測点名はそのまま読み上げてください（「BM いち」「No いち」など）。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <div class="step-title">「完了」で確定</div>
+            <div class="step-desc">認識後、画面下部の「完了」をタップして確定。次のセルに移動して続けて入力できます。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>ポイント：</strong> 静かな環境でゆっくり明瞭に話すと認識精度が上がります。風の強い屋外では精度が下がることがあります。
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. OCR -->
+  <div class="section anchor" id="s7">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>📷 液晶OCR（AI自動読み取り）</h2>
+    </div>
+    <div class="section-body">
+      <p>電子レベルの液晶ディスプレイをカメラで撮影すると、AIが数値を認識してセルに自動入力します。</p>
+
+      <div class="flow">
+        <div class="flow-box">📷 タップ</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">カメラ起動</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">撮影</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">🔍 AI解析</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">✓ 自動入力</div>
+      </div>
+
+      <p>解析後、数値が自動でセルに入力されます。値が正しければそのまま「閉じる」、NG なら「📷 再撮影」をタップしてください。</p>
+
+      <div class="tip tip-amber">
+        <strong>OCRはオンライン必須：</strong> AI解析にインターネット接続が必要です。オフライン時は使用できません。音声入力で代用してください。
+      </div>
+      <div class="tip">
+        <strong>撮影のコツ：</strong> 液晶全体が画面内に収まるように近づいて撮影。逆光・強い反射を避けると認識精度が上がります。
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. GPS・写真 -->
+  <div class="section anchor" id="s8">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>📍 GPS取得・測点写真</h2>
+    </div>
+    <div class="section-body">
+      <div class="grid2">
+        <div>
+          <p><strong>GPS取得</strong></p>
+          <p style="font-size:13px;color:var(--text-sub);">各行の「📍GPS」ボタンをタップすると現在地（緯度・経度・精度）を測点に記録します。CSV出力時にも含まれます。</p>
+          <div class="tip" style="margin-top:8px;font-size:12px;">屋外・空が開けた場所で精度が向上します（精度は数字が小さいほど正確）。</div>
+        </div>
+        <div>
+          <p><strong>測点写真</strong></p>
+          <p style="font-size:13px;color:var(--text-sub);">各行の「📸」セルをタップしてカメラ起動。測点の状況写真を記録できます。写真付きHTMLレポートに自動掲載されます。</p>
+          <div class="tip" style="margin-top:8px;font-size:12px;">写真はローカルに保存されます。データをバックアップする場合はHTMLレポートを出力してください。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. 往路・復路 -->
+  <div class="section anchor" id="s9">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <h2>往路・復路の切替</h2>
+    </div>
+    <div class="section-body">
+      <p>画面上部の「↗ 往路」「↙ 復路」ボタンで切り替えます。往路・復路はそれぞれ独立したデータとして管理されます。</p>
+
+      <hr class="divider">
+
+      <p><strong>↩ 測点再インポート（復路入力を楽にする機能）</strong></p>
+      <p style="font-size:13px;color:var(--text-sub);margin-bottom:10px;">往路入力完了後、復路タブで「↩ 測点再インポート」をタップすると往路の測点名を自動で取り込めます。</p>
+
+      <table>
+        <tr><th>モード</th><th>用途</th></tr>
+        <tr><td>↩ 逆順（BM2→…→BM1）</td><td>通常の往復観測（往路と逆順で帰ってくる場合）</td></tr>
+        <tr><td>↻ 同順（BM1→…→BM2）</td><td>ループ観測・同一方向でもう一周する場合</td></tr>
+        <tr><td>✏️ 自由入力</td><td>測点名を候補として表示し、自分で順序を決めたい場合</td></tr>
+      </table>
+
+      <div class="tip">インポート後は測点名を自由に編集できます（TP位置の変更など）。</div>
+    </div>
+  </div>
+
+  <!-- 10. スケッチ -->
+  <div class="section anchor" id="s10">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <h2>🗺 スケッチ機能</h2>
+    </div>
+    <div class="section-body">
+      <p>「🗺 スケッチ」タブで現場の略図や注記を手書き入力できます。</p>
+
+      <table>
+        <tr><th>操作</th><th>動作</th></tr>
+        <tr><td>1本指でドラッグ</td><td>描画（フリーハンド）</td></tr>
+        <tr><td>2本指でピンチ</td><td>ズーム・スクロール</td></tr>
+        <tr><td>✏️ 鉛筆</td><td>フリーハンド描画</td></tr>
+        <tr><td>🖊 ペン</td><td>直線・図形描画</td></tr>
+        <tr><td>T テキスト</td><td>文字入力</td></tr>
+        <tr><td>📍 ピン</td><td>地点マーカー追加</td></tr>
+        <tr><td>3↩ 元に戻す</td><td>直前の操作を取り消し</td></tr>
+        <tr><td>🗑 消しゴム</td><td>全消去</td></tr>
+        <tr><td>📷 写真読込</td><td>地図・写真を下地として取り込む</td></tr>
+        <tr><td>💾 PNG</td><td>スケッチを画像として保存</td></tr>
+      </table>
+
+      <div class="tip tip-green">スケッチはPDF出力（「🗺 スケッチ PDF」）でA4縦で印刷・保存できます。</div>
+    </div>
+  </div>
+
+  <!-- 11. 点検 -->
+  <div class="section anchor" id="s11">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <h2>✓ 点検タブ</h2>
+    </div>
+    <div class="section-body">
+      <p>「✓ 点検」タブで閉合差・往復比較・測点別比較を確認できます。</p>
+
+      <hr class="divider">
+      <p><strong>許容閉合差の設定</strong></p>
+      <table>
+        <tr><th>等級</th><th>係数C</th><th>例（n=4）</th><th>主な用途</th></tr>
+        <tr><td>1級</td><td>2</td><td>±4mm</td><td>精密基準点・ダム</td></tr>
+        <tr><td>2級</td><td>5</td><td>±10mm</td><td>公共測量・縦断</td></tr>
+        <tr><td>3級</td><td>10</td><td>±20mm</td><td>一般土木・道路</td></tr>
+        <tr><td>4級</td><td>20</td><td>±40mm</td><td>概略測量・造成</td></tr>
+      </table>
+      <p style="font-size:13px;color:var(--text-sub);">等級行をタップすると係数Cが自動入力されます。式は <code>±C√n mm</code>（n = 転点数）。直接mm値で入力することも可能です。</p>
+
+      <hr class="divider">
+      <p><strong>確認できる内容</strong></p>
+      <ul>
+        <li><strong>往路点検：</strong> ΣBS・ΣFS・閉合差・許容閉合差との判定</li>
+        <li><strong>往復比較：</strong> 往路・復路の総高低差・往復較差・最確値</li>
+        <li><strong>測点別比較：</strong> 各測点のGH往路値vs復路値の差</li>
+      </ul>
+
+      <div class="tip tip-green">
+        <strong>合格 ✓ / 不合格 ✗</strong> が自動表示されます。不合格の場合は再測管理機能で該当測点を記録してください。
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. 出力 -->
+  <div class="section anchor" id="s12">
+    <div class="section-header">
+      <div class="section-num">12</div>
+      <h2>📤 出力・共有</h2>
+    </div>
+    <div class="section-body">
+      <p>「📤 出力」タブから各種形式でデータを出力できます。</p>
+
+      <table>
+        <tr><th>出力形式</th><th>内容</th></tr>
+        <tr>
+          <td><span class="badge badge-blue">📄 成果表 PDF</span></td>
+          <td>A4縦の観測記録PDF。往路・復路・集計・点検結果を含む。新規タブで開き「PDFに保存」で保存。</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">🗺 スケッチ PDF</span></td>
+          <td>スケッチをA4縦でPDF出力。</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">📊 CSV</span></td>
+          <td>測点・BS・FS・IS・IH・GH・GPS座標を含むCSVファイル。<strong>IH・GH列にExcel数式入り</strong>のため、BS・FSを修正すると自動再計算されます。</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">🖼 写真レポート</span></td>
+          <td>観測記録＋測点写真をHTMLファイルで出力。写真バックアップにも利用可能。</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-amber">📤 メール共有</span></td>
+          <td>CSV・写真レポートをメール・AirDrop・LINEなどで共有。</td>
+        </tr>
+      </table>
+
+      <div class="tip">
+        <strong>CSVの数式について：</strong> ExcelまたはNumbersで開いてください。IH・GH列に <code>=G3+C3</code> などの数式が入っているため、BSやFSを修正すると即座に再計算されます。
+      </div>
+    </div>
+  </div>
+
+  <!-- 13. 計算の仕組み -->
+  <div class="section anchor" id="s13">
+    <div class="section-header">
+      <div class="section-num">13</div>
+      <h2>計算の仕組み</h2>
+    </div>
+    <div class="section-body">
+      <table>
+        <tr><th>計算式</th><th>内容</th></tr>
+        <tr><td><code>IH = GH_prev + BS</code></td><td>器械高 = 前測点GH + 後視読定値（器差K補正済み）</td></tr>
+        <tr><td><code>GH = IH_prev - FS</code></td><td>地盤高 = 前器械高 - 前視読定値（転点・閉合点の場合）</td></tr>
+        <tr><td><code>GH = IH_prev - IS</code></td><td>地盤高 = 前器械高 - 中間視（中間点の場合）</td></tr>
+        <tr><td><code>閉合差 = 実測終点BM - 既知終点BM</code></td><td>（ΣBS - ΣFS の誤差）</td></tr>
+        <tr><td><code>許容閉合差 = ±C√n mm</code></td><td>n = 転点数（ΣFSに加算された行数）</td></tr>
+      </table>
+
+      <div class="tip tip-amber">
+        <strong>IS自動判定ルール：</strong> 測点名がBM・KP・TP・IPで始まらない場合 かつ BS・FSが同一行に入っていない場合、FSは中間視として扱われΣFSに加算されません。
+      </div>
+    </div>
+  </div>
+
+  <!-- 14. FAQ -->
+  <div class="section anchor" id="s14">
+    <div class="section-header">
+      <div class="section-num">14</div>
+      <h2>よくある質問</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="tip" style="margin-bottom:12px;">
+        <strong>Q. データが消えてしまった</strong><br>
+        ブラウザの「閲覧データを消去」を実行するとデータが削除されます。定期的にCSVまたは写真レポートでバックアップを取ることをおすすめします。
+      </div>
+
+      <div class="tip" style="margin-bottom:12px;">
+        <strong>Q. OCRがエラーになる</strong><br>
+        ① インターネット接続を確認 ② 液晶が画面全体に映るよう近づいて再撮影 ③ 反射・逆光を避ける。それでもエラーの場合は音声入力を使用してください。
+      </div>
+
+      <div class="tip" style="margin-bottom:12px;">
+        <strong>Q. GH・IHが正しく計算されない</strong><br>
+        起点BMが正しく入力されているか確認してください。最初の行にBSを入力するとIHが計算され、以降のFSからGHが連鎖計算されます。
+      </div>
+
+      <div class="tip" style="margin-bottom:12px;">
+        <strong>Q. 転点なのにISになってしまう</strong><br>
+        測点名がBM・KP・TP・IPで始まるように変更してください。例：「TP.1」「KP-1」。または同一行にBS・FSを両方入力してください。
+      </div>
+
+      <div class="tip">
+        <strong>Q. 音声入力で数値が認識されない</strong><br>
+        ① マイクの許可を確認（設定→Safariorプライバシー→マイク）② 「いち てん に さん よん」のようにゆっくり読み上げ ③ 周囲の騒音が少ない環境で試してください。
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<footer>
+  SiteLogger β版 取扱説明書 &nbsp;|&nbsp; 2026年4月 &nbsp;|&nbsp; お気づきの点はフィードバックをお知らせください
+</footer>
+
+</body>
+</html>
