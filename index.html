@@ -189,10 +189,14 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="home-title">SiteLogger</div>
       <div class="home-sub">路線を選択して観測を開始</div>
     </div>
-    <div style="font-size:11px;color:var(--color-text-secondary);">v0.6</div>
+    <a href="terms.html" target="_blank" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;">v0.6</a>
   </div>
   <div class="route-list" id="route-list"></div>
   <button class="new-route-btn" onclick="createRoute()">＋ 新規路線を作成</button>
+  <div style="text-align:center;margin-top:20px;padding-bottom:8px;">
+    <a href="terms.html" target="_blank" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">利用規約</a>
+    <a href="terms.html#tab-privacy" target="_blank" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">プライバシーポリシー</a>
+  </div>
 </div>
 
 <!-- ===== 観測画面 ===== -->
@@ -498,6 +502,10 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <button class="xb" onclick="expCSV()">📊 CSV（GPS座標含む）をダウンロード</button>
       <button class="xb" onclick="expPhotoReport()">🖼 写真付き観測記録（HTML）</button>
       <button class="xb" style="background:#25D366;color:#fff;border-color:#25D366;" onclick="shareData()">📤 メール・アプリで共有</button>
+    </div>
+    <div style="text-align:center;margin-top:16px;padding-bottom:4px;">
+      <a href="terms.html" target="_blank" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">利用規約</a>
+      <a href="terms.html" target="_blank" onclick="event.preventDefault();window.open('terms.html#tab-privacy')" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">プライバシーポリシー</a>
     </div>
   </div>
 </div><!-- /obs-screen -->
