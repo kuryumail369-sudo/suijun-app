@@ -273,19 +273,19 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="g3" style="margin-top:10px;">
         <div class="mi"><label>起点BM (m)</label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="bm-s" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
+            <input type="number" id="bm-s" onfocus="this.select()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
             <button onclick="startVoiceField('bm-s',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
           </div>
         </div>
         <div class="mi"><label>終点BM (m)</label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="bm-e" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
+            <input type="number" id="bm-e" onfocus="this.select()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
             <button onclick="startVoiceField('bm-e',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
           </div>
         </div>
         <div class="mi"><label>器差K (mm) <span id="k-ind" style="display:none;color:#d97706;font-size:10px;">●</span></label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="k-corr" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
+            <input type="number" id="k-corr" onfocus="this.select()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
             <button onclick="startVoiceField('k-corr',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
           </div>
         </div>
@@ -473,6 +473,20 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="crow"><span style="flex:1;">計算チェック</span><span class="badge" id="ck-c">—</span></div>
       <div class="crow"><span style="flex:1;" id="ck-cl-label">閉合差 (±C√n mm)</span><span class="badge" id="ck-cl">—</span></div>
       <div class="crow" style="border:none;"><span style="flex:1;">データ完整性</span><span class="badge" id="ck-d">—</span></div>
+    </div>
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 復路</div>
+    <div class="sgrid">
+      <div class="sc"><div class="sl">ΣBS</div><div class="sv" id="r-bs">—</div></div>
+      <div class="sc"><div class="sl">ΣFS</div><div class="sv" id="r-fs">—</div></div>
+      <div class="sc"><div class="sl">ΣBS－ΣFS</div><div class="sv" id="r-df">—</div></div>
+    </div>
+    <div class="sgrid">
+      <div class="sc"><div class="sl">実測終点BM</div><div class="sv" id="r-en">—</div></div>
+      <div class="sc"><div class="sl">既知終点BM</div><div class="sv" id="r-kn">—</div></div>
+      <div class="sc"><div class="sl">閉合差</div><div class="sv" id="r-cl">—</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="crow" style="border:none;"><span style="flex:1;" id="rk-cl-label">閉合差 (±C√n mm)</span><span class="badge" id="rk-cl">—</span></div>
     </div>
     <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 往復比較（路線全体）</div>
     <div class="card">
@@ -833,10 +847,13 @@ function safeNum(v){
 }
 
 // 転点・閉合点かどうか判定
-function isTurningPoint(r){
+function isTurningPoint(r, arr, idx){
   if(safeNum(r.bs)!==null && safeNum(r.fs)!==null) return true; // BS+FS同一行=転点
   const pt=(r.point||'').toUpperCase();
-  return /^(BM|KP|TP|IP)/.test(pt) || /[^A-Z0-9](BM|KP|TP|IP)/.test(pt);
+  if(/^(BM|KP|TP|IP)/.test(pt) || /[^A-Z0-9](BM|KP|TP|IP)/.test(pt)) return true;
+  // 配列末尾でFSのみの行 = 閉合点として必ず転点扱い
+  if(arr && idx===arr.length-1 && safeNum(r.bs)===null && safeNum(r.fs)!==null) return true;
+  return false;
 }
 
 function calcGH(arr,startGH,kM){
@@ -844,7 +861,7 @@ function calcGH(arr,startGH,kM){
   arr.forEach((r,i)=>{
     const bsV=safeNum(r.bs), fsV=safeNum(r.fs), isV=safeNum(r.is_);
     const bsC=bsV!==null ? bsV+kM : null;
-    const isTP=isTurningPoint(r);
+    const isTP=isTurningPoint(r,arr,i);
 
     // FSがある場合: 転点・閉合点ならFS、それ以外は自動IS扱い
     // 手動IS欄入力がある場合は常に優先
@@ -906,7 +923,7 @@ function renderTbl(){
     const mk=(field,val)=>`
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
         <input class="ni" type="number" step="0.001" value="${val}" placeholder="—"
-          onfocus="focusNi(${i},'${field}',${r.id})"
+          onfocus="this.select();focusNi(${i},'${field}',${r.id})"
           oninput="updateField(${i},'${field}',this.value)"
           onchange="updateField(${i},'${field}',this.value)"
           onkeydown="if(event.key==='Enter'){blurKb();this.blur();}"
@@ -1818,11 +1835,11 @@ function addReMeasure(pointName){
 function calcDir(arr){
   const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000;
   let sBS=0,sFS=0,n=0;
-  arr.forEach(r=>{
+  arr.forEach((r,idx)=>{
     const bv=safeNum(r.bs),fv=safeNum(r.fs);
     if(bv!==null) sBS+=bv+kM;
-    // FSは転点・閉合点のみΣFSに加算（自動IS扱い行は除外）
-    if(fv!==null && isTurningPoint(r)){sFS+=fv+kM;n++;}
+    // FSは転点・閉合点のみΣFSに加算（末尾閉合点含む）
+    if(fv!==null && isTurningPoint(r,arr,idx)){sFS+=fv+kM;n++;}
   });
   return{sBS,sFS,diff:sBS-sFS,n};
 }
@@ -1907,6 +1924,44 @@ function runChecks(){
     ['kf-kor','kf-allow','kf-best'].forEach(id=>document.getElementById(id).textContent='—');
     document.getElementById('kf-jdg').innerHTML='<span class="badge bwarn">復路未入力</span>';
   }
+  // 復路閉合差
+  const hasRetData=rowsReturn.some(r=>r.bs!==''||r.fs!=='');
+  const retEl=id=>document.getElementById(id);
+  if(hasRetData){
+    const retC=calcDir(rowsReturn);
+    const ebV=eb!==null?eb:0;
+    const sbV=parseFloat(document.getElementById('bm-s').value)||0;
+    // 復路: 起点=eb, 実測終点BM = eb + (ΣBS_ret - ΣFS_ret)
+    const rEn=ebV+retC.diff;
+    const rCl=rEn-sbV; // 既知終点BM(sb)との差
+    const alMMr=getTolMM(retC.n);
+    retEl('r-bs').textContent=retC.sBS.toFixed(3);
+    retEl('r-fs').textContent=retC.sFS.toFixed(3);
+    retEl('r-df').textContent=retC.diff.toFixed(3);
+    retEl('r-en').textContent=rEn.toFixed(3);
+    retEl('r-kn').textContent=sbV.toFixed(3);
+    retEl('r-cl').textContent=(rCl*1000).toFixed(1)+' mm';
+    retEl('r-cl').className='sv '+(alMMr!==null?(Math.abs(rCl*1000)<=alMMr?'ok':'ng'):'');
+    const lbl2=retEl('rk-cl-label');
+    const C2=getTolCoef();
+    const dv2=parseFloat(document.getElementById('tol-direct')?.value);
+    if(lbl2){
+      if(!isNaN(dv2)&&dv2>0) lbl2.textContent=`閉合差 (±${dv2} mm固定)`;
+      else if(C2!==null) lbl2.textContent=`閉合差 (±${C2}√n mm)`;
+      else lbl2.textContent='閉合差判定';
+    }
+    if(alMMr!==null){
+      const ok2=Math.abs(rCl*1000)<=alMMr;
+      setBdg('rk-cl',ok2?`OK (±${alMMr.toFixed(0)}mm以内)`:`NG (${(Math.abs(rCl)*1000).toFixed(1)}mm)`,ok2?'ok':'ng');
+    } else {
+      setBdg('rk-cl','許容値未入力','warn');
+    }
+  } else {
+    ['r-bs','r-fs','r-df','r-en','r-kn','r-cl'].forEach(id=>{
+      const el=retEl(id); if(el){el.textContent='—';el.className='sv';}
+    });
+    setBdg('rk-cl','復路未入力','warn');
+  }
   renderPointComparison();
 }
 function setBdg(id,txt,type){const el=document.getElementById(id);el.textContent=txt;el.className='badge b'+type;}
@@ -1927,7 +1982,15 @@ function printReport(){
   const out=calcDir(rows),ret=calcDir(rowsReturn),hasRet=rowsReturn.some(r=>r.bs!==''||r.fs!=='');
   const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=10*Math.sqrt(n2||1),best=(out.diff-ret.diff)/2;
   const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>成果表 ${proj}</title>
-<style>@page{size:A4;margin:15mm 18mm 20mm;}*{box-sizing:border-box;}body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:10pt;color:#111;margin:0;}
+<style>@page{size:A4;margin:15mm 18mm 20mm;}
+.sl-toolbar{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(24,95,165,0.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px rgba(0,0,0,0.2);}
+.sl-toolbar button{border:none;border-radius:8px;font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:8px 16px;-webkit-tap-highlight-color:transparent;}
+.sl-btn-back{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4)!important;}
+.sl-btn-print{background:#fff;color:#185FA5;}
+.sl-title{flex:1;color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sl-toolbar-spacer{height:52px;}
+@media print{.sl-toolbar,.sl-toolbar-spacer{display:none!important;}}
+*{box-sizing:border-box;}body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:10pt;color:#111;margin:0;}
 h1{font-size:14pt;text-align:center;margin-bottom:8pt;border-bottom:1.5pt solid #111;padding-bottom:4pt;}h2{font-size:10.5pt;margin:10pt 0 4pt;border-left:3pt solid #555;padding-left:5pt;}
 .ig{display:grid;grid-template-columns:repeat(3,1fr);gap:4pt;margin-bottom:10pt;border:0.5pt solid #aaa;padding:7pt;}.ig .lbl{font-size:7.5pt;color:#666;}.ig .val{font-size:9.5pt;font-weight:500;}
 table{border-collapse:collapse;width:100%;margin-bottom:8pt;font-size:9pt;}th{background:#ececec;border:0.5pt solid #888;padding:3pt 4pt;text-align:center;}td{border:0.5pt solid #888;padding:2pt 4pt;text-align:right;}td:first-child{text-align:left;}
@@ -1935,6 +1998,12 @@ table{border-collapse:collapse;width:100%;margin-bottom:8pt;font-size:9pt;}th{ba
 .memo{border:0.5pt solid #aaa;padding:7pt;font-size:9.5pt;min-height:28pt;white-space:pre-wrap;}
 .sign{display:grid;grid-template-columns:repeat(3,1fr);gap:8pt;margin-top:18pt;}.sbox{border:0.5pt solid #aaa;height:38pt;padding:3pt 5pt;font-size:8pt;color:#666;}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>
+<div class="sl-toolbar">
+  <button class="sl-btn-back" onclick="window.close()">← 戻る</button>
+  <span class="sl-title">📄 成果表 PDF</span>
+  <button class="sl-btn-print" onclick="window.print()">🖨 印刷・PDF保存</button>
+</div>
+<div class="sl-toolbar-spacer"></div>
 <h1>水準測量成果表</h1>
 <div class="ig"><div><div class="lbl">路線名</div><div class="val">${routeName}</div></div><div><div class="lbl">作業名</div><div class="val">${proj}</div></div><div><div class="lbl">測量日</div><div class="val">${date}</div></div><div><div class="lbl">担当者</div><div class="val">${worker}</div></div><div><div class="lbl">天候</div><div class="val">${wx}</div></div><div><div class="lbl">器差K</div><div class="val">${K?K.toFixed(3)+' mm':'—'}</div></div><div><div class="lbl">起点BM</div><div class="val">${sb.toFixed(3)} m</div></div><div><div class="lbl">終点BM</div><div class="val">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div><div class="lbl">測点/FS数</div><div class="val">${rows.length}/${n}</div></div></div>
 <h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rows,sb,kM,'#185FA5')}</tbody></table>
@@ -1951,7 +2020,21 @@ function printSketch(){
   saveDr();const proj=document.getElementById('proj').value||'スケッチ';
   const imgs=pages.map(p=>{const c=document.createElement('canvas');c.width=W;c.height=H;const cx=c.getContext('2d');cx.drawImage(p.bg,0,0);cx.drawImage(p.dr,0,0);p.pins.forEach(pin=>{cx.save();cx.fillStyle='#E24B4A';cx.beginPath();cx.arc(pin.x,pin.y,11,0,Math.PI*2);cx.fill();cx.fillStyle='#fff';cx.font='bold 13px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('+',pin.x,pin.y);const tw=pin.name.length*8.5+16;cx.fillStyle='rgba(226,75,74,0.9)';cx.fillRect(pin.x+13,pin.y-13,tw,17);cx.fillStyle='#fff';cx.font='12px sans-serif';cx.textAlign='left';cx.fillText(pin.name,pin.x+18,pin.y-1);cx.restore();});return c.toDataURL('image/png');});
   const ph=imgs.map((s,i)=>`<div ${i>0?'style="page-break-before:always;"':''}><p style="font-size:9pt;color:#666;margin-bottom:5pt;">${proj} — スケッチ ${i+1}/${imgs.length}</p><img src="${s}" style="width:100%;max-height:235mm;object-fit:contain;display:block;"></div>`).join('');
-  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>スケッチ</title><style>@page{size:A4;margin:15mm;}body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:0;}h1{font-size:13pt;text-align:center;margin-bottom:8pt;border-bottom:1pt solid #333;padding-bottom:4pt;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body><h1>現場スケッチ — ${proj}</h1>${ph}</body></html>`;
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>スケッチ</title><style>@page{size:A4;margin:15mm;}body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:0;}h1{font-size:13pt;text-align:center;margin-bottom:8pt;border-bottom:1pt solid #333;padding-bottom:4pt;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+.sl-toolbar{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(24,95,165,0.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px rgba(0,0,0,0.2);}
+.sl-toolbar button{border:none;border-radius:8px;font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:8px 16px;-webkit-tap-highlight-color:transparent;}
+.sl-btn-back{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4)!important;}
+.sl-btn-print{background:#fff;color:#185FA5;}
+.sl-title{flex:1;color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sl-toolbar-spacer{height:52px;}
+@media print{.sl-toolbar,.sl-toolbar-spacer{display:none!important;}}
+</style></head><body><div class="sl-toolbar">
+  <button class="sl-btn-back" onclick="window.close()">← 戻る</button>
+  <span class="sl-title">🗺 スケッチ PDF</span>
+  <button class="sl-btn-print" onclick="window.print()">🖨 印刷・PDF保存</button>
+</div>
+<div class="sl-toolbar-spacer"></div>
+<h1>現場スケッチ — ${proj}</h1>${ph}</body></html>`;
   const w=window.open('','_blank');if(!w){alert('ポップアップを許可してください');return;}
   w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),900);
 }
