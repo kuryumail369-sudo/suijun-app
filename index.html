@@ -1252,7 +1252,7 @@ async function shareData(){
   if(navigator.share){
     try{
       const files=[
-        new File([csv],`suijun_${date}.csv`,{type:'text/csv'}),
+        new File(['\uFEFF'+csv],`suijun_${date}.csv`,{type:'text/csv;charset=utf-8'}),
         new File([htmlContent],`suijun_${date}_photos.html`,{type:'text/html'})
       ];
       // canShare確認
@@ -1260,7 +1260,7 @@ async function shareData(){
         await navigator.share({title:`水準測量記録 ${proj}`,text:`${proj} ${date} の観測データ`,files});
       }else{
         // ファイル共有非対応ならCSVのみ
-        const f=[new File([csv],`suijun_${date}.csv`,{type:'text/csv'})];
+        const f=[new File(['\uFEFF'+csv],`suijun_${date}.csv`,{type:'text/csv;charset=utf-8'})];
         await navigator.share({title:`水準測量記録 ${proj}`,text:`${proj} ${date} の観測データ`,files:f});
       }
     }catch(e){
@@ -2098,7 +2098,7 @@ function expCSV(){
   dlf('suijun_'+(document.getElementById('date').value||'data')+'.csv',csv,'text/csv');
 }
 function expTxt(){buildPrev();dlf('suijun_notebook.txt',document.getElementById('prev').textContent,'text/plain');}
-function dlf(fn,txt,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:mime}));a.download=fn;a.click();}
+function dlf(fn,txt,mime){const bom=mime==='text/csv'?'\uFEFF':'';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bom+txt],{type:mime+';charset=utf-8'}));a.download=fn;a.click();}
 
 // ===== SERVICE WORKER =====
 if('serviceWorker' in navigator){
