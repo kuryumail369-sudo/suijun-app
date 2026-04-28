@@ -124,10 +124,10 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .sc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.7rem 1rem;}
 .sc .sl{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;}
 .sc .sv{font-size:17px;font-weight:500;}
-.sv.ok{color:#1D9E75;}.sv.ng{color:#E24B4A;}
+.sv.ok{color:#1D9E75;}.sv.ng{color:#E24B4A;}@media(prefers-color-scheme:dark){.sv.ng{color:#FF6B6B;}}
 .crow{display:flex;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
 .badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;}
-.bok{background:#E1F5EE;color:#0F6E56;}.bng{background:#FCEBEB;color:#A32D2D;}.bwarn{background:#FAEEDA;color:#854F0B;}
+.bok{background:#E1F5EE;color:#0F6E56;}.bng{background:#E24B4A;color:#fff;}.bwarn{background:#D97706;color:#fff;}
 .kftbl{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px;}
 .kftbl th{font-size:11px;font-weight:500;padding:4px 8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);text-align:center;}
 .kftbl td{padding:5px 8px;border:0.5px solid var(--color-border-tertiary);font-size:13px;}
@@ -174,9 +174,14 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .ptcmp-tbl th:first-child{text-align:left;}
 .ptcmp-tbl td{padding:4px 6px;border:0.5px solid var(--color-border-tertiary);text-align:right;}
 .ptcmp-tbl td:first-child{text-align:left;font-weight:500;}
-.ptcmp-tbl tr.warn td{background:#FAEEDA;}
-.ptcmp-tbl tr.ng td{background:#FCEBEB;}
+.ptcmp-tbl tr.warn td{background:#FAEEDA;color:#78350F;}
+.ptcmp-tbl tr.ng td{background:#E24B4A;color:#fff;}
+@media(prefers-color-scheme:dark){.ptcmp-tbl tr.warn td{background:#92400E;color:#FEF3C7;}.ptcmp-tbl tr.ng td{background:#991B1B;color:#FECACA;}}
 .remeas-btn{font-size:11px;padding:2px 7px;border:0.5px solid #185FA5;border-radius:4px;cursor:pointer;background:none;color:#185FA5;white-space:nowrap;}
+.tr-remeas{background:#FFF8EC!important;}
+@media(prefers-color-scheme:dark){.tr-remeas{background:#451A03!important;}}
+.tr-ng{background:#FEF2F2!important;}
+@media(prefers-color-scheme:dark){.tr-ng{background:#450A0A!important;}}
 </style>
 </head>
 <body>
@@ -938,7 +943,8 @@ function renderTbl(){
 
     const tr=document.createElement('tr');
     if(isFS)tr.style.color=isRet?'#d97706':'#185FA5';
-    const remeasBadge=r.remeasure?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#FAEEDA;color:#854F0B;margin-left:3px;">再測</span>`:'';
+    if(r.remeasure)tr.classList.add('tr-remeas');
+    const remeasBadge=r.remeasure?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#D97706;color:#fff;margin-left:3px;">再測</span>`:'';
     tr.innerHTML=`
       <td style="vertical-align:top;min-width:92px;">
         <div style="display:flex;align-items:center;gap:2px;">
