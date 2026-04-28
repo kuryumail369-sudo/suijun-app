@@ -347,7 +347,7 @@
 <!-- ヒーロー -->
 <div class="hero">
   <div style="max-width:760px;margin:0 auto;text-align:left;margin-bottom:12px;">
-    <button onclick="location.href='https://kuryumail369-sudo.github.io/suijun-app/';" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:white;font-size:12px;padding:5px 14px;border-radius:20px;cursor:pointer;font-family:inherit;">← アプリに戻る</button>
+    <button onclick="window.location.replace('https://kuryumail369-sudo.github.io/suijun-app/');" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:white;font-size:12px;padding:5px 14px;border-radius:20px;cursor:pointer;font-family:inherit;">← アプリに戻る</button>
   </div>
   <div class="hero-badge">β版 取扱説明書</div>
   <h1>📐 SiteLogger</h1>
@@ -372,7 +372,8 @@
       <a href="#s11">11. 点検タブ</a>
       <a href="#s12">12. 出力・共有</a>
       <a href="#s13">13. 計算の仕組み</a>
-      <a href="#s14">14. よくある質問</a>
+      <a href="#s14">14. 転点の入力方法</a>
+      <a href="#s15">15. よくある質問</a>
     </div>
   </div>
 </div>
@@ -787,9 +788,58 @@
   </div>
 
   <!-- 14. FAQ -->
+
+  <!-- 入力方法 -->
   <div class="section anchor" id="s14">
     <div class="section-header">
       <div class="section-num">14</div>
+      <h2>入力方法：転点（TP）の正しい入力</h2>
+    </div>
+    <div class="section-body">
+      <p>転点・起点・終点の入力方法を誤ると閉合差が正しく計算されません。以下のルールに従ってください。</p>
+
+      <div class="tip tip-green" style="margin-bottom:16px;">
+        <strong>基本ルール：</strong>転点（TP・KP・IP）のBS・FSは必ず<strong>同じ行</strong>に入力してください。
+      </div>
+
+      <p><strong>各測点の入力まとめ</strong></p>
+      <table>
+        <tr><th>測点の種類</th><th>BS欄</th><th>FS欄</th></tr>
+        <tr><td><strong>起点BM</strong>（出発点）</td><td>入力する</td><td>入力しない</td></tr>
+        <tr><td><strong>転点 TP / KP / IP</strong></td><td>入力する</td><td>入力する（同じ行）</td></tr>
+        <tr><td><strong>中間点（IS）</strong></td><td>入力しない</td><td>FS欄に入力（自動でIS判定）</td></tr>
+        <tr><td><strong>閉合点・終点BM</strong></td><td>入力しない</td><td>入力する</td></tr>
+      </table>
+
+      <hr class="divider">
+
+      <p><strong>正しい入力例</strong> <span style="font-size:12px;background:#E1F5EE;color:#0F6E56;padding:2px 8px;border-radius:20px;font-weight:600;">正しい</span></p>
+      <table>
+        <tr><th>測点</th><th>BS (m)</th><th>FS (m)</th><th>IH (m)</th><th>GH (m)</th></tr>
+        <tr style="background:#E8F7F2;"><td>BM.1（起点）</td><td style="color:#185FA5;font-weight:500;">1.278</td><td style="color:#9CA3AF;">—</td><td style="color:#1D9E75;">11.278</td><td style="color:#1D9E75;">10.000</td></tr>
+        <tr style="background:#E8F7F2;"><td>TP.1（転点）</td><td style="color:#185FA5;font-weight:500;">1.433</td><td style="color:#D97706;font-weight:500;">1.519</td><td style="color:#1D9E75;">11.192</td><td style="color:#1D9E75;">9.759</td></tr>
+        <tr style="background:#E8F7F2;"><td>TP.2（転点）</td><td style="color:#185FA5;font-weight:500;">1.193</td><td style="color:#D97706;font-weight:500;">1.428</td><td style="color:#1D9E75;">10.957</td><td style="color:#1D9E75;">9.764</td></tr>
+        <tr style="background:#E8F7F2;"><td>BM.2（閉合点）</td><td style="color:#9CA3AF;">—</td><td style="color:#D97706;font-weight:500;">1.170</td><td style="color:#9CA3AF;">—</td><td style="color:#1D9E75;">10.022</td></tr>
+      </table>
+
+      <hr class="divider">
+
+      <p><strong>誤った入力例</strong> <span style="font-size:12px;background:#E24B4A;color:#fff;padding:2px 8px;border-radius:20px;font-weight:600;">誤り</span></p>
+      <table>
+        <tr><th>測点</th><th>BS (m)</th><th>FS (m)</th><th>備考</th></tr>
+        <tr><td>BM.1</td><td style="color:#185FA5;font-weight:500;">1.278</td><td style="color:#9CA3AF;">—</td><td></td></tr>
+        <tr style="background:#FEF2F2;"><td>TP.1</td><td style="color:#185FA5;font-weight:500;">1.433</td><td style="color:#9CA3AF;">—</td><td style="color:#E24B4A;font-size:12px;">BSのみ入力</td></tr>
+        <tr style="background:#FEF2F2;"><td>TP.1</td><td style="color:#9CA3AF;">—</td><td style="color:#E24B4A;font-weight:500;">1.519</td><td style="color:#E24B4A;font-size:12px;">別行にFSを入力 → IS誤判定！</td></tr>
+      </table>
+      <div class="tip" style="margin-top:8px;background:#FEF2F2;border-left-color:#E24B4A;color:#991B1B;">
+        <strong>なぜNG？</strong> TP.1のFS行はBS欄が空のため、アプリが中間視（IS）と誤判定します。ΣFSに加算されず、閉合差が大きくズレます。
+      </div>
+    </div>
+  </div>
+
+  <div class="section anchor" id="s15">
+    <div class="section-header">
+      <div class="section-num">15</div>
       <h2>よくある質問</h2>
     </div>
     <div class="section-body">
