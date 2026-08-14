@@ -124,10 +124,10 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .sc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.7rem 1rem;}
 .sc .sl{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;}
 .sc .sv{font-size:17px;font-weight:500;}
-.sv.ok{color:#1D9E75;}.sv.ng{color:#E24B4A;}@media(prefers-color-scheme:dark){.sv.ng{color:#FF6B6B;}}
+.sv.ok{color:#1D9E75;}.sv.ng{color:#E24B4A;}
 .crow{display:flex;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
 .badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;}
-.bok{background:#E1F5EE;color:#0F6E56;}.bng{background:#E24B4A;color:#fff;}.bwarn{background:#D97706;color:#fff;}
+.bok{background:#E1F5EE;color:#0F6E56;}.bng{background:#FCEBEB;color:#A32D2D;}.bwarn{background:#FAEEDA;color:#854F0B;}
 .kftbl{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px;}
 .kftbl th{font-size:11px;font-weight:500;padding:4px 8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);text-align:center;}
 .kftbl td{padding:5px 8px;border:0.5px solid var(--color-border-tertiary);font-size:13px;}
@@ -174,14 +174,41 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .ptcmp-tbl th:first-child{text-align:left;}
 .ptcmp-tbl td{padding:4px 6px;border:0.5px solid var(--color-border-tertiary);text-align:right;}
 .ptcmp-tbl td:first-child{text-align:left;font-weight:500;}
-.ptcmp-tbl tr.warn td{background:#FAEEDA;color:#78350F;}
-.ptcmp-tbl tr.ng td{background:#E24B4A;color:#fff;}
-@media(prefers-color-scheme:dark){.ptcmp-tbl tr.warn td{background:#92400E;color:#FEF3C7;}.ptcmp-tbl tr.ng td{background:#991B1B;color:#FECACA;}}
+.ptcmp-tbl tr.warn td{background:#FAEEDA;}
+.ptcmp-tbl tr.ng td{background:#FCEBEB;}
 .remeas-btn{font-size:11px;padding:2px 7px;border:0.5px solid #185FA5;border-radius:4px;cursor:pointer;background:none;color:#185FA5;white-space:nowrap;}
-.tr-remeas{background:#FFF8EC!important;}
-@media(prefers-color-scheme:dark){.tr-remeas{background:#451A03!important;}}
-.tr-ng{background:#FEF2F2!important;}
-@media(prefers-color-scheme:dark){.tr-ng{background:#450A0A!important;}}
+
+/* ===== ライセンス・アップグレード ===== */
+.license-banner{background:linear-gradient(135deg,#0D3F73,#185FA5);color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+.license-banner-icon{font-size:22px;flex-shrink:0;}
+.license-banner-body{flex:1;}
+.license-banner-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.license-banner-sub{font-size:11px;opacity:.8;}
+.license-banner-btn{background:#fff;color:#185FA5;border:none;border-radius:8px;font-size:12px;font-weight:600;padding:7px 14px;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.upgrade-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;display:flex;align-items:flex-end;justify-content:center;}
+.upgrade-modal{background:var(--color-background-primary);border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:0 0 32px;max-height:92vh;overflow-y:auto;}
+.upgrade-modal-handle{width:36px;height:4px;background:var(--color-border-secondary);border-radius:2px;margin:12px auto 16px;}
+.upgrade-modal-header{padding:0 20px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.upgrade-modal-title{font-size:18px;font-weight:700;color:var(--color-text-primary);margin-bottom:4px;}
+.upgrade-modal-sub{font-size:13px;color:var(--color-text-secondary);}
+.upgrade-plan{margin:16px 20px;border:1.5px solid #185FA5;border-radius:12px;padding:16px;background:var(--color-background-secondary);}
+.upgrade-plan-name{font-size:15px;font-weight:700;color:#185FA5;margin-bottom:4px;}
+.upgrade-plan-price{font-size:28px;font-weight:700;color:var(--color-text-primary);margin-bottom:12px;}
+.upgrade-plan-price span{font-size:14px;font-weight:400;color:var(--color-text-secondary);}
+.upgrade-feature{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--color-text-primary);margin-bottom:6px;}
+.upgrade-feature-check{color:#1D9E75;font-weight:600;}
+.upgrade-btn-primary{display:block;width:calc(100% - 40px);margin:16px 20px 8px;background:#185FA5;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;padding:15px;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none;}
+.upgrade-divider{text-align:center;font-size:12px;color:var(--color-text-secondary);margin:4px 0;}
+.upgrade-key-section{margin:8px 20px 0;}
+.upgrade-key-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;}
+.upgrade-key-row{display:flex;gap:8px;}
+.upgrade-key-input{flex:1;border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;font-size:14px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit;}
+.upgrade-key-btn{background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;font-family:inherit;flex-shrink:0;}
+.upgrade-key-msg{font-size:12px;margin-top:6px;min-height:18px;}
+.upgrade-close{display:block;width:calc(100% - 40px);margin:12px 20px 0;background:none;border:0.5px solid var(--color-border-secondary);border-radius:12px;font-size:14px;padding:12px;cursor:pointer;font-family:inherit;color:var(--color-text-secondary);}
+.xb-locked{opacity:.5;position:relative;}
+.xb-locked::after{content:'🔒';position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;}
+.storage-warn-banner{background:#E24B4A;color:#fff;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;font-weight:500;display:none;}
 </style>
 </head>
 <body>
@@ -197,11 +224,59 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <a href="terms.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;">v0.6</a>
   </div>
   <div class="route-list" id="route-list"></div>
+  <div id="storage-warn-banner" class="storage-warn-banner">⚠️ ストレージの空き容量が少なくなっています。データが保存されない可能性があります。CSV・PDFを出力してバックアップを取ってください。</div>
+  <div id="home-license-banner" class="license-banner" style="display:none;margin:0 0 8px;">
+    <div class="license-banner-icon">🔓</div>
+    <div class="license-banner-body">
+      <div class="license-banner-title">無料プランをご利用中</div>
+      <div class="license-banner-sub">路線1件・出力機能制限あり</div>
+    </div>
+    <button class="license-banner-btn" onclick="showUpgrade()">アップグレード</button>
+  </div>
   <button class="new-route-btn" onclick="createRoute()">＋ 新規路線を作成</button>
   <div style="text-align:center;margin-top:20px;padding-bottom:8px;">
     <a href="manual.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📖 使い方</a>
     <a href="terms.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">利用規約</a>
     <a href="terms.html#tab-privacy" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">プライバシーポリシー</a>
+  </div>
+</div>
+
+
+<!-- アップグレードモーダル -->
+<div id="upgrade-modal" class="upgrade-modal-overlay" style="display:none;" onclick="if(event.target===this)closeUpgrade()">
+  <div class="upgrade-modal">
+    <div class="upgrade-modal-handle"></div>
+    <div class="upgrade-modal-header">
+      <div class="upgrade-modal-title">📐 SiteLogger Pro</div>
+      <div class="upgrade-modal-sub">すべての機能をアンロックして、測量業務をもっと快適に。</div>
+    </div>
+    <div class="upgrade-plan">
+      <div class="upgrade-plan-name">Proプラン</div>
+      <div class="upgrade-plan-price">¥980<span> / 月（税込）</span></div>
+      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 路線数：無制限</div>
+      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> PDF成果表・スケッチ出力</div>
+      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> CSV・写真レポート出力</div>
+      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 点検タブ（全機能）</div>
+      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 音声・OCR・GPS（継続利用）</div>
+    </div>
+    <a id="stripe-link" class="upgrade-btn-primary" href="https://buy.stripe.com/XXXXXXXX" target="_blank">
+      💳 月額980円で始める（Stripe）
+    </a>
+    <div class="upgrade-divider">── ライセンスキーをお持ちの方はこちら ──</div>
+    <div class="upgrade-key-section">
+      <div class="upgrade-key-label">ライセンスキーを入力（β版ユーザー・購入済みの方）</div>
+      <div class="upgrade-key-row">
+        <input class="upgrade-key-input" id="license-key-input" placeholder="SL-XXXX-XXXX-XXXX" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+        <button class="upgrade-key-btn" onclick="applyLicenseKey()">適用</button>
+      </div>
+      <div class="upgrade-key-msg" id="license-key-msg"></div>
+    </div>
+    <button class="upgrade-close" onclick="closeUpgrade()">閉じる</button>
+    <div style="text-align:center;padding:12px 20px 0;font-size:11px;color:var(--color-text-secondary);line-height:1.6;">
+      サブスクリプションはいつでも解約可能です。<br>
+      <a href="terms.html" style="color:var(--color-text-secondary);">利用規約</a> ·
+      <a href="terms.html#tab-privacy" style="color:var(--color-text-secondary);">プライバシーポリシー</a>
+    </div>
   </div>
 </div>
 
@@ -515,13 +590,13 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
   <div id="tab-exp" style="display:none;">
     <div class="card">
       <span class="slabel" style="margin-bottom:10px;">PDF 印刷・保存</span>
-      <button class="xb p" onclick="printReport()">📄 成果表 PDF（A4）</button>
-      <button class="xb" onclick="printSketch()">🗺 スケッチ PDF（A4）</button>
+      <button class="xb p" id="btn-pdf" onclick="proAction(printReport)">📄 成果表 PDF（A4）</button>
+      <button class="xb" id="btn-sketch" onclick="proAction(printSketch)">🗺 スケッチ PDF（A4）</button>
       <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:14px;">新しいタブで開きます。印刷ダイアログで「PDFに保存」を選択。</div>
       <span class="slabel" style="margin-bottom:10px;">データエクスポート・共有</span>
-      <button class="xb" onclick="expCSV()">📊 CSV（GPS座標含む）をダウンロード</button>
-      <button class="xb" onclick="expPhotoReport()">🖼 写真付き観測記録（HTML）</button>
-      <button class="xb" style="background:#25D366;color:#fff;border-color:#25D366;" onclick="shareData()">📤 メール・アプリで共有</button>
+      <button class="xb" id="btn-csv" onclick="proAction(expCSV)">📊 CSV（GPS座標含む）をダウンロード</button>
+      <button class="xb" id="btn-photo" onclick="proAction(expPhotoReport)">🖼 写真付き観測記録（HTML）</button>
+      <button class="xb" style="background:#25D366;color:#fff;border-color:#25D366;" id="btn-share" onclick="proAction(shareData)">📤 メール・アプリで共有</button>
     </div>
     <div style="text-align:center;margin-top:16px;padding-bottom:4px;">
       <a href="manual.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📖 使い方</a>
@@ -554,6 +629,89 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 </div><!-- /app -->
 
 <script>
+
+// ===== ライセンス管理 =====
+// β版ユーザー・有効キー一覧（β配布キー＋購入後キーはCloudflare Workerから検証予定）
+const BETA_KEYS = [
+  'SL-BETA-2026-0001',
+  'SL-BETA-2026-0002',
+  'SL-BETA-2026-0003',
+  'SL-BETA-2026-0004',
+  'SL-BETA-2026-0005',
+  'SL-BETA-2026-0006',
+  'SL-BETA-2026-0007',
+  'SL-BETA-2026-0008',
+  'SL-BETA-2026-0009',
+  'SL-BETA-2026-0010',
+];
+const FREE_ROUTE_LIMIT = 1;
+
+function getLicense(){
+  return localStorage.getItem('suijun_license')||'';
+}
+function isPro(){
+  const key = getLicense().toUpperCase().trim();
+  return BETA_KEYS.includes(key);
+  // 将来：Cloudflare Workerでサブスク検証を追加
+}
+function applyLicenseKey(){
+  const key = document.getElementById('license-key-input').value.toUpperCase().trim();
+  const msg = document.getElementById('license-key-msg');
+  if(!key){msg.textContent='キーを入力してください。';msg.style.color='#E24B4A';return;}
+  if(BETA_KEYS.includes(key)){
+    localStorage.setItem('suijun_license', key);
+    msg.textContent='✓ ライセンスが有効化されました！Proプランが使えます。';
+    msg.style.color='#1D9E75';
+    setTimeout(()=>{closeUpgrade();updateLicenseUI();},1500);
+  } else {
+    msg.textContent='このキーは無効です。お確かめのうえ再入力してください。';
+    msg.style.color='#E24B4A';
+  }
+}
+function showUpgrade(){
+  document.getElementById('upgrade-modal').style.display='flex';
+  document.getElementById('license-key-msg').textContent='';
+  document.getElementById('license-key-input').value='';
+}
+function closeUpgrade(){
+  document.getElementById('upgrade-modal').style.display='none';
+}
+function proAction(fn){
+  if(isPro()){fn();return;}
+  showUpgrade();
+}
+function updateLicenseUI(){
+  const pro = isPro();
+  // ホームバナー
+  const banner = document.getElementById('home-license-banner');
+  if(banner) banner.style.display = pro ? 'none' : 'flex';
+  // 出力ボタンのロック表示
+  ['btn-pdf','btn-sketch','btn-csv','btn-photo','btn-share'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(pro){el.classList.remove('xb-locked');}
+    else{el.classList.add('xb-locked');}
+  });
+}
+function checkStorageUsage(){
+  try{
+    let total=0;
+    for(let k in localStorage){
+      if(localStorage.hasOwnProperty(k)) total+=((localStorage[k].length+k.length)*2);
+    }
+    const usageMB=(total/1024/1024).toFixed(1);
+    const banner=document.getElementById('storage-warn-banner');
+    if(banner){
+      if(total > 3.5*1024*1024){ // 3.5MB超で警告
+        banner.style.display='block';
+        banner.textContent=`⚠️ ストレージ使用量が ${usageMB}MB に達しています（上限約5MB）。写真レポートをダウンロードしてデータをバックアップしてください。`;
+      } else {
+        banner.style.display='none';
+      }
+    }
+  }catch(e){}
+}
+
 // ===== STATE =====
 let rows=[], rowsReturn=[], rowId=0, rowIdRet=0, viewMode='out';
 let routes=[], currentRouteId=null;
@@ -640,6 +798,9 @@ function openRoute(id){
 }
 
 function createRoute(){
+  if(!isPro() && routes.length >= FREE_ROUTE_LIMIT){
+    showUpgrade();return;
+  }
   const name=prompt('路線名を入力してください','路線 '+(routes.length+1));
   if(!name)return;
   const id='r'+Date.now(), today=new Date().toISOString().split('T')[0];
@@ -796,8 +957,9 @@ function saveToStorage(){
     localStorage.setItem('suijun_v06',JSON.stringify({routes,currentRouteId,v:6}));
     const ind=document.getElementById('save-ind');ind.textContent='✓';ind.style.color='';
   }catch(e){
-    document.getElementById('save-ind').textContent='⚠';
-    document.getElementById('save-ind').style.color='#E24B4A';
+    const ind2=document.getElementById('save-ind');
+    ind2.textContent='⚠ 保存失敗';ind2.style.color='#E24B4A';ind2.style.fontWeight='600';
+    if(confirm('⚠️ データの保存に失敗しました。\nストレージの空き容量が不足している可能性があります。\n\n今すぐCSVをダウンロードしてバックアップしますか？')){expCSV();}
   }
 }
 function loadFromStorage(){
@@ -943,8 +1105,7 @@ function renderTbl(){
 
     const tr=document.createElement('tr');
     if(isFS)tr.style.color=isRet?'#d97706':'#185FA5';
-    if(r.remeasure)tr.classList.add('tr-remeas');
-    const remeasBadge=r.remeasure?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#D97706;color:#fff;margin-left:3px;">再測</span>`:'';
+    const remeasBadge=r.remeasure?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#FAEEDA;color:#854F0B;margin-left:3px;">再測</span>`:'';
     tr.innerHTML=`
       <td style="vertical-align:top;min-width:92px;">
         <div style="display:flex;align-items:center;gap:2px;">
@@ -2122,6 +2283,10 @@ if(!loaded||routes.length===0){
 }
 // ホーム画面を表示
 renderRouteList();
+// ライセンスUI更新
+updateLicenseUI();
+// ストレージ容量確認
+checkStorageUsage();
 // スケッチ初期ページ
 newSkPage();
 // 観測者名datalist初期化
