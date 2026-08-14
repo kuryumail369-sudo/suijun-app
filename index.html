@@ -805,6 +805,7 @@ function showRouteMenu(id){
     if(routes.length<=1){alert('最後の路線は削除できません');return;}
     if(confirm(`「${r.name}」を削除しますか？`)){
       routes=routes.filter(x=>x.id!==id);
+      deleteRoutePhotosFromDB(id);
       saveToStorage();renderRouteList();
     }
   }
@@ -934,9 +935,102 @@ function applyReturnPoints(pts){
   markDirty();renderTbl();
 }
 
+// ===== 写真ストレージ（IndexedDB） =====
+// 写真Base64はlocalStorage（5MB上限）ではなくIndexedDB（数十〜数百MB規模）に保存する。
+// これによりlocalStorageの容量超過によるデータ消失を防ぐ。
+const PHOTO_DB_NAME='sitelogger_photos_db';
+const PHOTO_STORE='photos';
+let _photoDbPromise=null;
+function openPhotoDB(){
+  if(_photoDbPromise) return _photoDbPromise;
+  _photoDbPromise=new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)){reject(new Error('IndexedDB未対応'));return;}
+    const req=indexedDB.open(PHOTO_DB_NAME,1);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains(PHOTO_STORE)) db.createObjectStore(PHOTO_STORE,{keyPath:'key'});
+    };
+    req.onsuccess=e=>resolve(e.target.result);
+    req.onerror=()=>reject(req.error);
+  });
+  return _photoDbPromise;
+}
+function photoDbKey(routeId,dir,rowId){return `${routeId}__${dir}__${rowId}`;}
+async function savePhotoToDB(dir,rowId,dataUrl){
+  if(!currentRouteId||!dataUrl)return;
+  try{
+    const db=await openPhotoDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PHOTO_STORE,'readwrite');
+      tx.objectStore(PHOTO_STORE).put({key:photoDbKey(currentRouteId,dir,rowId),data:dataUrl});
+      tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+    });
+  }catch(e){console.warn('写真の保存に失敗しました(IndexedDB)',e);}
+}
+async function deletePhotoFromDB(routeId,dir,rowId){
+  if(!routeId)return;
+  try{
+    const db=await openPhotoDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PHOTO_STORE,'readwrite');
+      tx.objectStore(PHOTO_STORE).delete(photoDbKey(routeId,dir,rowId));
+      tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+    });
+  }catch(e){}
+}
+async function deleteRoutePhotosFromDB(routeId){
+  if(!routeId)return;
+  try{
+    const db=await openPhotoDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PHOTO_STORE,'readwrite');
+      const store=tx.objectStore(PHOTO_STORE);
+      const req=store.getAllKeys();
+      req.onsuccess=()=>{
+        (req.result||[]).forEach(k=>{ if(typeof k==='string'&&k.startsWith(routeId+'__')) store.delete(k); });
+      };
+      tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+    });
+  }catch(e){}
+}
+async function loadRoutePhotosFromDB(routeId){
+  const map={out:{},ret:{}};
+  if(!routeId)return map;
+  try{
+    const db=await openPhotoDB();
+    return await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PHOTO_STORE,'readonly');
+      const req=tx.objectStore(PHOTO_STORE).getAll();
+      req.onsuccess=()=>{
+        (req.result||[]).forEach(rec=>{
+          const parts=(rec.key||'').split('__');
+          if(parts.length===3&&parts[0]===routeId&&map[parts[1]]) map[parts[1]][Number(parts[2])]=rec.data;
+        });
+        resolve(map);
+      };
+      req.onerror=()=>reject(req.error);
+    });
+  }catch(e){return map;}
+}
+function hydratePhotosForCurrentRoute(){
+  const routeId=currentRouteId;
+  loadRoutePhotosFromDB(routeId).then(map=>{
+    if(currentRouteId!==routeId)return; // 取得中に別路線へ切替済みなら破棄
+    let changed=false;
+    rows.forEach(r=>{ if(map.out[r.id]!==undefined){r.photo=map.out[r.id];changed=true;} });
+    rowsReturn.forEach(r=>{ if(map.ret[r.id]!==undefined){r.photo=map.ret[r.id];changed=true;} });
+    if(changed) renderTbl();
+  }).catch(()=>{});
+}
+
 // ===== ROUTE DATA =====
 function saveCurrentState(){
   const r=routes.find(r=>r.id===currentRouteId);if(!r)return;
+  // 写真は容量の大きいIndexedDBへ退避し、localStorageには含めない（5MB容量超過によるデータ消失を防止）
+  if(currentRouteId){
+    rows.forEach(row=>{ if(row.photo) savePhotoToDB('out',row.id,row.photo); });
+    rowsReturn.forEach(row=>{ if(row.photo) savePhotoToDB('ret',row.id,row.photo); });
+  }
   r.rows=rows.map(r=>({...r,photo:null}));
   r.rowsReturn=rowsReturn.map(r=>({...r,photo:null}));
   r.proj=document.getElementById('proj').value;
@@ -967,6 +1061,7 @@ function loadCurrentState(){
   document.getElementById('tol-coef').value=r.tolCoef||'';
   document.getElementById('tol-direct').value=r.tolDirect||'';
   document.getElementById('memo').value=r.memo||'';
+  hydratePhotosForCurrentRoute();
 }
 
 // ===== STORAGE =====
@@ -979,6 +1074,15 @@ function markDirty(){
 function saveToStorage(){
   saveCurrentState();
   try{
+    // 他のタブ/セッション（例：同じ端末で複数開いた場合）で追加・保存された路線を
+    // 上書き消失させないよう、保存直前に既存データと突き合わせて未知の路線を保持する
+    try{
+      const existing=JSON.parse(localStorage.getItem('suijun_v06')||'null');
+      if(existing&&Array.isArray(existing.routes)){
+        const knownIds=new Set(routes.map(rt=>rt.id));
+        existing.routes.forEach(er=>{ if(er&&!knownIds.has(er.id)) routes.push(er); });
+      }
+    }catch(e){}
     localStorage.setItem('suijun_v06',JSON.stringify({routes,currentRouteId,v:6}));
     const ind=document.getElementById('save-ind');ind.textContent='✓';ind.style.color='';
   }catch(e){
@@ -987,6 +1091,17 @@ function saveToStorage(){
     if(confirm('⚠️ データの保存に失敗しました。\nストレージの空き容量が不足している可能性があります。\n\n今すぐCSVをダウンロードしてバックアップしますか？')){expCSV();}
   }
 }
+// アプリがバックグラウンドに回る／閉じられる瞬間に即座に保存する。
+// 1.2秒のデバウンス待ちの間にOSがタブ/PWAを一時停止・破棄すると、
+// 直前の入力（BS/FS値や写真）が保存されないまま失われることがあるため、
+// visibilitychange・pagehideの両方で強制フラッシュする（モバイルでの信頼性のため両方登録）。
+function flushSaveNow(){
+  try{ clearTimeout(autoSaveTimer); saveToStorage(); }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden') flushSaveNow();
+});
+window.addEventListener('pagehide',flushSaveNow);
 function loadFromStorage(){
   try{
     const d=JSON.parse(localStorage.getItem('suijun_v06')||localStorage.getItem('suijun_v05')||'null');
@@ -1001,8 +1116,10 @@ function addRow(){
   markDirty();renderTbl();
 }
 function removeRow(id){
+  const dir=viewMode==='out'?'out':'ret';
   if(viewMode==='out')rows=rows.filter(r=>r.id!==id);
   else rowsReturn=rowsReturn.filter(r=>r.id!==id);
+  deletePhotoFromDB(currentRouteId,dir,id);
   markDirty();renderTbl();
 }
 function updateField(idx,field,val){getCurRows()[idx][field]=val;markDirty();updateCalcCells();}
@@ -1623,11 +1740,14 @@ function confirmOcr(){
 // ===== 写真 — 各行にinputを直接持たせる方式に変更 =====
 function handleRowPhoto(input,id){
   const file=input.files[0];if(!file)return;
+  const dir=viewMode==='out'?'out':'ret';
   const rd=new FileReader();
   rd.onload=e=>{
     const arr=viewMode==='out'?rows:rowsReturn;
     const r=arr.find(r=>r.id===id);if(r)r.photo=e.target.result;
     renderTbl();
+    savePhotoToDB(dir,id,e.target.result); // 即時にIndexedDBへ保存（アプリを閉じても消えない）
+    markDirty();
   };
   rd.readAsDataURL(file);
 }
@@ -1656,7 +1776,11 @@ function retakePhoto(){
   inp.onchange=()=>{
     const file=inp.files[0];if(!file)return;
     const rd=new FileReader();
-    rd.onload=e=>{r.photo=e.target.result;renderTbl();inp.remove();};
+    rd.onload=e=>{
+      r.photo=e.target.result;renderTbl();inp.remove();
+      savePhotoToDB(dir,id,e.target.result); // 即時にIndexedDBへ保存
+      markDirty();
+    };
     rd.readAsDataURL(file);
   };
   document.body.appendChild(inp);inp.click();
