@@ -642,6 +642,17 @@ const FREE_ROUTE_LIMIT = 1;
 function getLicense(){
   return localStorage.getItem('suijun_license')||'';
 }
+// 1キー1端末：この端末固有のランダムIDを一度だけ生成してlocalStorageに保持する。
+// 物理端末を厳密に識別するものではなく「このアプリのインストール」を識別するIDだが、
+// 複数人・複数端末での同時使い回しを防ぐには十分な仕組み。
+function getDeviceId(){
+  let id = localStorage.getItem('suijun_device_id');
+  if(!id){
+    id = 'dev_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now()+'-'+Math.random().toString(36).slice(2)));
+    localStorage.setItem('suijun_device_id', id);
+  }
+  return id;
+}
 function isPro(){
   // ローカルキャッシュで即時判定（オフライン対応）
   const cached = localStorage.getItem('suijun_pro_cache');
@@ -652,20 +663,21 @@ function isPro(){
   return false;
 }
 async function verifyKeyOnline(key){
-  // βキー・購入キーいずれもWorker（サーバー側）で検証する
+  // βキー・購入キーいずれもWorker（サーバー側）で検証する。端末IDも一緒に送り、
+  // 1キー1端末の紐づけをサーバー側でチェックしてもらう。
   try{
     const res = await fetch(LICENSE_WORKER, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key})
+      body:JSON.stringify({key, deviceId:getDeviceId()})
     });
     const data = await res.json();
-    return data.valid;
+    return {valid:!!data.valid, error:data.error||null};
   }catch(e){
     // オフライン時はキャッシュを延長
     const cached = localStorage.getItem('suijun_pro_cache');
-    if(cached){const c=JSON.parse(cached);if(c.valid)return true;}
-    return false;
+    if(cached){const c=JSON.parse(cached);if(c.valid)return {valid:true,error:null};}
+    return {valid:false,error:null};
   }
 }
 function applyLicenseKey(){
@@ -673,8 +685,8 @@ function applyLicenseKey(){
   const msg = document.getElementById('license-key-msg');
   if(!key){msg.textContent='キーを入力してください。';msg.style.color='#E24B4A';return;}
   msg.textContent='🔍 確認中...';msg.style.color='#185FA5';
-  verifyKeyOnline(key).then(valid=>{
-    if(valid){
+  verifyKeyOnline(key).then(result=>{
+    if(result.valid){
       localStorage.setItem('suijun_license', key);
       // 30日間キャッシュ
       localStorage.setItem('suijun_pro_cache', JSON.stringify({
@@ -683,11 +695,41 @@ function applyLicenseKey(){
       msg.textContent='✓ ライセンスが有効化されました！Proプランが使えます。';
       msg.style.color='#1D9E75';
       setTimeout(()=>{closeUpgrade();updateLicenseUI();},1500);
+    } else if(result.error==='device_mismatch'){
+      msg.innerHTML='このキーは既に別の端末で使用されています。<br><button class="upgrade-key-btn" style="margin-top:8px;" onclick="switchDeviceAndApply(\''+key+'\')">この端末に切り替える</button>';
+      msg.style.color='#E24B4A';
     } else {
       msg.textContent='このキーは無効です。お確かめのうえ再入力してください。';
       msg.style.color='#E24B4A';
     }
   });
+}
+// 別端末で使用中のキーを、この端末に付け替える（機種変更などの正当なケース向け）
+async function switchDeviceAndApply(key){
+  const msg = document.getElementById('license-key-msg');
+  msg.textContent='🔄 切り替え中...';msg.style.color='#185FA5';
+  try{
+    const res = await fetch(LICENSE_WORKER_BASE+'/switch-device',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key, deviceId:getDeviceId()})
+    });
+    const data = await res.json();
+    if(data&&data.ok){
+      localStorage.setItem('suijun_license', key);
+      localStorage.setItem('suijun_pro_cache', JSON.stringify({
+        valid:true, expires:Date.now()+30*24*60*60*1000
+      }));
+      msg.textContent='✓ この端末に切り替えました！Proプランが使えます。';
+      msg.style.color='#1D9E75';
+      setTimeout(()=>{closeUpgrade();updateLicenseUI();},1500);
+    }else{
+      msg.textContent='切り替えに失敗しました。しばらくしてから再度お試しください。';
+      msg.style.color='#E24B4A';
+    }
+  }catch(e){
+    msg.textContent='通信エラーが発生しました。ネット接続をご確認のうえ、再度お試しください。';
+    msg.style.color='#E24B4A';
+  }
 }
 function showUpgrade(){
   document.getElementById('upgrade-modal').style.display='flex';
@@ -2476,9 +2518,9 @@ renderRouteList();
 updateLicenseUI();
 const _lic = getLicense();
 if(_lic){
-  verifyKeyOnline(_lic).then(v=>{
+  verifyKeyOnline(_lic).then(result=>{
     localStorage.setItem('suijun_pro_cache',JSON.stringify({
-      valid:v, expires:Date.now()+30*24*60*60*1000
+      valid:result.valid, expires:Date.now()+30*24*60*60*1000
     }));
     updateLicenseUI();
   });
