@@ -633,40 +633,65 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 // ===== ライセンス管理 =====
 // β版ユーザー・有効キー一覧（β配布キー＋購入後キーはCloudflare Workerから検証予定）
 const BETA_KEYS = [
-  'SL-BETA-2026-0001',
-  'SL-BETA-2026-0002',
-  'SL-BETA-2026-0003',
-  'SL-BETA-2026-0004',
-  'SL-BETA-2026-0005',
-  'SL-BETA-2026-0006',
-  'SL-BETA-2026-0007',
-  'SL-BETA-2026-0008',
-  'SL-BETA-2026-0009',
+  'SL-BETA-2026-0001','SL-BETA-2026-0002','SL-BETA-2026-0003',
+  'SL-BETA-2026-0004','SL-BETA-2026-0005','SL-BETA-2026-0006',
+  'SL-BETA-2026-0007','SL-BETA-2026-0008','SL-BETA-2026-0009',
   'SL-BETA-2026-0010',
 ];
+const LICENSE_WORKER = 'https://sitelogger-license.kuryumail-369.workers.dev/verify';
 const FREE_ROUTE_LIMIT = 1;
 
 function getLicense(){
   return localStorage.getItem('suijun_license')||'';
 }
 function isPro(){
-  const key = getLicense().toUpperCase().trim();
-  return BETA_KEYS.includes(key);
-  // 将来：Cloudflare Workerでサブスク検証を追加
+  // ローカルキャッシュで即時判定（オフライン対応）
+  const cached = localStorage.getItem('suijun_pro_cache');
+  if(cached){
+    const {valid, expires} = JSON.parse(cached);
+    if(Date.now() < expires) return valid;
+  }
+  return false;
+}
+async function verifyKeyOnline(key){
+  // βキーはローカルで即時判定
+  if(BETA_KEYS.includes(key.toUpperCase().trim())) return true;
+  // 購入キーはWorkerで検証
+  try{
+    const res = await fetch(LICENSE_WORKER, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key})
+    });
+    const data = await res.json();
+    return data.valid;
+  }catch(e){
+    // オフライン時はキャッシュを延長
+    const cached = localStorage.getItem('suijun_pro_cache');
+    if(cached){const c=JSON.parse(cached);if(c.valid)return true;}
+    return false;
+  }
 }
 function applyLicenseKey(){
   const key = document.getElementById('license-key-input').value.toUpperCase().trim();
   const msg = document.getElementById('license-key-msg');
   if(!key){msg.textContent='キーを入力してください。';msg.style.color='#E24B4A';return;}
-  if(BETA_KEYS.includes(key)){
-    localStorage.setItem('suijun_license', key);
-    msg.textContent='✓ ライセンスが有効化されました！Proプランが使えます。';
-    msg.style.color='#1D9E75';
-    setTimeout(()=>{closeUpgrade();updateLicenseUI();},1500);
-  } else {
-    msg.textContent='このキーは無効です。お確かめのうえ再入力してください。';
-    msg.style.color='#E24B4A';
-  }
+  msg.textContent='🔍 確認中...';msg.style.color='#185FA5';
+  verifyKeyOnline(key).then(valid=>{
+    if(valid){
+      localStorage.setItem('suijun_license', key);
+      // 30日間キャッシュ
+      localStorage.setItem('suijun_pro_cache', JSON.stringify({
+        valid:true, expires:Date.now()+30*24*60*60*1000
+      }));
+      msg.textContent='✓ ライセンスが有効化されました！Proプランが使えます。';
+      msg.style.color='#1D9E75';
+      setTimeout(()=>{closeUpgrade();updateLicenseUI();},1500);
+    } else {
+      msg.textContent='このキーは無効です。お確かめのうえ再入力してください。';
+      msg.style.color='#E24B4A';
+    }
+  });
 }
 function showUpgrade(){
   document.getElementById('upgrade-modal').style.display='flex';
@@ -2283,8 +2308,17 @@ if(!loaded||routes.length===0){
 }
 // ホーム画面を表示
 renderRouteList();
-// ライセンスUI更新
+// ライセンスUI更新・オンライン検証
 updateLicenseUI();
+const _lic = getLicense();
+if(_lic){
+  verifyKeyOnline(_lic).then(v=>{
+    localStorage.setItem('suijun_pro_cache',JSON.stringify({
+      valid:v, expires:Date.now()+30*24*60*60*1000
+    }));
+    updateLicenseUI();
+  });
+}
 // ストレージ容量確認
 checkStorageUsage();
 // スケッチ初期ページ
