@@ -226,12 +226,12 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
   <div class="route-list" id="route-list"></div>
   <div id="storage-warn-banner" class="storage-warn-banner">⚠️ ストレージの空き容量が少なくなっています。データが保存されない可能性があります。CSV・PDFを出力してバックアップを取ってください。</div>
   <div id="home-license-banner" class="license-banner" style="display:none;margin:0 0 8px;">
-    <div class="license-banner-icon">🔓</div>
+    <div class="license-banner-icon" id="license-banner-icon">🔓</div>
     <div class="license-banner-body">
-      <div class="license-banner-title">無料プランをご利用中</div>
-      <div class="license-banner-sub">路線1件・出力機能制限あり</div>
+      <div class="license-banner-title" id="license-banner-title">無料プランをご利用中</div>
+      <div class="license-banner-sub" id="license-banner-sub">路線1件・出力機能制限あり</div>
     </div>
-    <button class="license-banner-btn" onclick="showUpgrade()">アップグレード</button>
+    <button class="license-banner-btn" id="license-banner-btn" onclick="showUpgrade()">アップグレード</button>
   </div>
   <button class="new-route-btn" onclick="createRoute()">＋ 新規路線を作成</button>
   <div style="text-align:center;margin-top:20px;padding-bottom:8px;">
@@ -638,7 +638,8 @@ const BETA_KEYS = [
   'SL-BETA-2026-0007','SL-BETA-2026-0008','SL-BETA-2026-0009',
   'SL-BETA-2026-0010',
 ];
-const LICENSE_WORKER = 'https://sitelogger-license.kuryumail-369.workers.dev/verify';
+const LICENSE_WORKER_BASE = 'https://sitelogger-license.kuryumail-369.workers.dev';
+const LICENSE_WORKER = LICENSE_WORKER_BASE + '/verify';
 const FREE_ROUTE_LIMIT = 1;
 
 function getLicense(){
@@ -701,15 +702,59 @@ function showUpgrade(){
 function closeUpgrade(){
   document.getElementById('upgrade-modal').style.display='none';
 }
+// Stripeカスタマーポータルを開く（解約・支払い方法の変更など、ユーザー自身で行える）
+async function openBillingPortal(){
+  const key=getLicense();
+  if(!key){alert('ライセンスキーの情報が見つかりませんでした。');return;}
+  const btn=document.getElementById('license-banner-btn');
+  const original=btn?btn.textContent:'';
+  if(btn){btn.textContent='読み込み中…';btn.disabled=true;}
+  try{
+    const res=await fetch(LICENSE_WORKER_BASE+'/portal',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})
+    });
+    const data=await res.json();
+    if(data&&data.url){
+      window.open(data.url,'_blank');
+    }else if(data&&data.error==='no_customer'){
+      alert('β版キーなど、Stripeでのお支払いに紐づかないライセンスのため、契約管理ページは開けません。');
+    }else{
+      alert('契約管理ページを開けませんでした。しばらくしてから再度お試しください。');
+    }
+  }catch(e){
+    alert('通信エラーが発生しました。ネット接続をご確認のうえ、再度お試しください。');
+  }finally{
+    if(btn){btn.textContent=original;btn.disabled=false;}
+  }
+}
 function proAction(fn){
   if(isPro()){fn();return;}
   showUpgrade();
 }
 function updateLicenseUI(){
   const pro = isPro();
-  // ホームバナー
+  // ホームバナー：無料プランならアップグレード導線、Proなら契約管理導線を表示
   const banner = document.getElementById('home-license-banner');
-  if(banner) banner.style.display = pro ? 'none' : 'flex';
+  if(banner){
+    banner.style.display='flex';
+    const icon=document.getElementById('license-banner-icon');
+    const title=document.getElementById('license-banner-title');
+    const sub=document.getElementById('license-banner-sub');
+    const btn=document.getElementById('license-banner-btn');
+    if(pro){
+      icon.textContent='✅';
+      title.textContent='SiteLogger Pro をご利用中';
+      sub.textContent='すべての機能が使えます';
+      btn.textContent='契約を管理';
+      btn.onclick=openBillingPortal;
+    } else {
+      icon.textContent='🔓';
+      title.textContent='無料プランをご利用中';
+      sub.textContent='路線1件・出力機能制限あり';
+      btn.textContent='アップグレード';
+      btn.onclick=showUpgrade;
+    }
+  }
   // 出力ボタンのロック表示
   ['btn-pdf','btn-sketch','btn-csv','btn-photo','btn-share'].forEach(id=>{
     const el=document.getElementById(id);
