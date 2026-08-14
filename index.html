@@ -630,6 +630,33 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 
 <script>
 
+// ===== 汎用エスケープ関数 =====
+// 測点名・路線名・作業名・担当者名・現場メモなどはユーザーの自由入力であり、
+// これをそのままHTMLに埋め込むとXSS（HTMLインジェクション）の危険がある。
+// 特に写真付きHTMLレポート・PDF成果表は他者（お客様・役所など）に共有されるため、
+// 画面表示・出力の両方でHTMLに差し込む前に必ずこれを通す。
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// CSVセルの数式インジェクション対策：値が = + - @ で始まる場合、Excel等が
+// セルを数式として評価してしまうことがあるため、先頭にシングルクォートを付けて
+// 文字列として扱わせる。IH/GH列など意図的に数式を書き込むセルには使わないこと。
+function csvSafe(s){
+  s = String(s==null?'':s);
+  if(/^[=+\-@\t\r]/.test(s)) return "'"+s;
+  return s;
+}
+// インラインonclick等のJS文字列リテラル（'...'）に値を埋め込む際の安全化。
+// 注意: HTMLエンティティ（esc()の&#39;等）はブラウザの属性値パース時に
+// デコードされてからJSとしてコンパイルされるため、引用符の脱出を防げない。
+// ここでは実際の1文字を出力せず\xNN形式のJSエスケープシーケンスに変換することで、
+// 属性値パース後もJS文字列境界を破れない形にする。
+function jsAttr(s){
+  return String(s==null?'':s).replace(/[\\'"<>&\n\r]/g, c => ({
+    '\\':'\\x5C', "'":'\\x27', '"':'\\x22', '<':'\\x3C', '>':'\\x3E', '&':'\\x26', '\n':'\\n', '\r':'\\r'
+  }[c]));
+}
+
 // ===== ライセンス管理 =====
 // βキーはこれまでここに平文でハードコードされていたが、それだと公開リポジトリの
 // ソースを見れば誰でも無料でPro機能を使えてしまうため廃止。
@@ -696,7 +723,7 @@ function applyLicenseKey(){
       msg.style.color='#1D9E75';
       setTimeout(()=>{closeUpgrade();updateLicenseUI();},1500);
     } else if(result.error==='device_mismatch'){
-      msg.innerHTML='このキーは既に別の端末で使用されています。<br><button class="upgrade-key-btn" style="margin-top:8px;" onclick="switchDeviceAndApply(\''+key+'\')">この端末に切り替える</button>';
+      msg.innerHTML='このキーは既に別の端末で使用されています。<br><button class="upgrade-key-btn" style="margin-top:8px;" onclick="switchDeviceAndApply(\''+jsAttr(key)+'\')">この端末に切り替える</button>';
       msg.style.color='#E24B4A';
     } else {
       msg.textContent='このキーは無効です。お確かめのうえ再入力してください。';
@@ -853,11 +880,11 @@ function renderRouteList(){
     const badge=hasData
       ?'<span class="route-card-badge">観測済</span>'
       :'<span class="route-card-badge none">未観測</span>';
-    const meta=[r.date||'日付未入力', r.worker||'担当者未入力'].join(' · ');
+    const meta=esc([r.date||'日付未入力', r.worker||'担当者未入力'].join(' · '));
     card.innerHTML=`
       <div class="route-card-icon">📋</div>
       <div class="route-card-body">
-        <div class="route-card-name">${r.name}</div>
+        <div class="route-card-name">${esc(r.name)}</div>
         <div class="route-card-meta">${meta}</div>
       </div>
       ${badge}
@@ -999,7 +1026,7 @@ function importReturnPoints(mode){
       // datalistを生成
       let dl=document.getElementById('out-pts-dl');
       if(!dl){dl=document.createElement('datalist');dl.id='out-pts-dl';document.body.appendChild(dl);}
-      dl.innerHTML=uniq.map(p=>`<option value="${p}">`).join('');
+      dl.innerHTML=uniq.map(p=>`<option value="${esc(p)}">`).join('');
     },50);
     document.getElementById('ret-import-bar').style.display='none';
     return;
@@ -1313,7 +1340,7 @@ function renderTbl(){
 
     const mk=(field,val)=>`
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <input class="ni" type="number" step="0.001" value="${val}" placeholder="—"
+        <input class="ni" type="number" step="0.001" value="${esc(val)}" placeholder="—"
           onfocus="this.select();focusNi(${i},'${field}',${r.id})"
           oninput="updateField(${i},'${field}',this.value)"
           onchange="updateField(${i},'${field}',this.value)"
@@ -1333,7 +1360,7 @@ function renderTbl(){
     tr.innerHTML=`
       <td style="vertical-align:top;min-width:92px;">
         <div style="display:flex;align-items:center;gap:2px;">
-          <input class="pi" type="text" value="${r.point}" placeholder="BM.1"
+          <input class="pi" type="text" value="${esc(r.point)}" placeholder="BM.1"
             oninput="getCurRows()[${i}].point=this.value;markDirty()"
             onkeydown="if(event.key==='Enter'){this.blur();}">
           ${remeasBadge}
@@ -1535,7 +1562,7 @@ function updateWorkerDatalist(){
   const current=sel.value;
   const names=loadWorkerNames();
   sel.innerHTML='<option value="">-- 選択してください --</option>'+
-    names.map(n=>`<option value="${n}"${n===current?' selected':''}>${n}</option>`).join('');
+    names.map(n=>`<option value="${esc(n)}"${n===current?' selected':''}>${esc(n)}</option>`).join('');
 }
 
 // ===== 写真付きHTMLレポート =====
@@ -1555,7 +1582,7 @@ function expPhotoReport(){
       let imgs='';
       if(r.photo)imgs+=`<div><div style="font-size:11px;color:#666;margin-bottom:3px;">測点写真</div><img src="${r.photo}" style="max-width:280px;border-radius:6px;border:1px solid #ddd;"></div>`;
       return `<div style="margin-bottom:1.2rem;padding:10px;border:1px solid #e5e5ea;border-radius:8px;">
-        <div style="font-weight:500;font-size:14px;margin-bottom:8px;">📍 ${r.point||'—'}&nbsp;<span style="font-size:12px;color:#666;">GH: ${gh||'—'} m</span></div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:8px;">📍 ${esc(r.point)||'—'}&nbsp;<span style="font-size:12px;color:#666;">GH: ${gh||'—'} m</span></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">${imgs}</div>
       </div>`;
     }).join('');
@@ -1564,7 +1591,7 @@ function expPhotoReport(){
     const{ihD,ghV}=ghData[i];
     const bv=safeNum(r.bs),fv=safeNum(r.fs),iv=safeNum(r.is_);
     return `<tr style="${r.fs!==''?'color:#185FA5;':''}">
-      <td>${r.point||''}</td>
+      <td>${esc(r.point)}</td>
       <td style="text-align:right;">${bv!==null?bv.toFixed(3):''}</td>
       <td style="text-align:right;">${fv!==null?fv.toFixed(3):''}</td>
       <td style="text-align:right;">${iv!==null?iv.toFixed(3):''}</td>
@@ -1575,7 +1602,7 @@ function expPhotoReport(){
 
   const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>観測記録 ${proj}</title>
+<title>観測記録 ${esc(proj)}</title>
 <style>body{font-family:-apple-system,'Hiragino Sans',sans-serif;padding:16px;max-width:720px;margin:0 auto;color:#1d1d1f;}
 h1{font-size:18px;border-bottom:2px solid #185FA5;padding-bottom:6px;margin-bottom:12px;}
 h2{font-size:14px;color:#555;margin:16px 0 8px;border-left:3px solid #185FA5;padding-left:8px;}
@@ -1589,10 +1616,10 @@ td:first-child{font-weight:500;}
 </style></head><body>
 <h1>水準測量 観測記録</h1>
 <div class="meta">
-  <div><span class="ml">路線名</span>&nbsp;<span class="mv">${routeName}</span></div>
-  <div><span class="ml">作業名</span>&nbsp;<span class="mv">${proj}</span></div>
-  <div><span class="ml">測量日</span>&nbsp;<span class="mv">${date}</span></div>
-  <div><span class="ml">観測者</span>&nbsp;<span class="mv">${worker}</span></div>
+  <div><span class="ml">路線名</span>&nbsp;<span class="mv">${esc(routeName)}</span></div>
+  <div><span class="ml">作業名</span>&nbsp;<span class="mv">${esc(proj)}</span></div>
+  <div><span class="ml">測量日</span>&nbsp;<span class="mv">${esc(date)}</span></div>
+  <div><span class="ml">観測者</span>&nbsp;<span class="mv">${esc(worker)}</span></div>
   <div><span class="ml">起点BM</span>&nbsp;<span class="mv">${sb.toFixed(3)} m</span></div>
   <div><span class="ml">器差K</span>&nbsp;<span class="mv">${K?K.toFixed(3)+' mm':'—'}</span></div>
 </div>
@@ -1618,7 +1645,7 @@ async function shareData(){
     const ghData=calcGH(arr,startGH,kM);
     arr.forEach((r,i)=>{
       const{ihD,ghV}=ghData[i];
-      csv+=`${dir},${r.point||''},${r.bs||''},${r.fs||''},${r.is_||''},${ihD||''},${ghV!==''?parseFloat(ghV).toFixed(3):''},${r.lat!=null?r.lat.toFixed(8):''},${r.lon!=null?r.lon.toFixed(8):''},${r.acc||''}\n`;
+      csv+=`${dir},${csvSafe(r.point||'')},${csvSafe(r.bs||'')},${csvSafe(r.fs||'')},${csvSafe(r.is_||'')},${ihD||''},${ghV!==''?parseFloat(ghV).toFixed(3):''},${r.lat!=null?r.lat.toFixed(8):''},${r.lon!=null?r.lon.toFixed(8):''},${r.acc||''}\n`;
     });
   };
   addDir(rows,'往路',sb);
@@ -1633,12 +1660,12 @@ async function shareData(){
     photoRows.map(r=>{
       const gh=ghData[rows.indexOf(r)]?.ghV||'';
       return `<div style="margin-bottom:1rem;padding:10px;border:1px solid #e5e5ea;border-radius:8px;">
-        <div style="font-weight:500;font-size:14px;margin-bottom:6px;">📍 ${r.point||'—'} GH: ${gh||'—'} m</div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:6px;">📍 ${esc(r.point)||'—'} GH: ${gh||'—'} m</div>
         <img src="${r.photo}" style="max-width:100%;border-radius:6px;border:1px solid #ddd;">
       </div>`;
     }).join('');
-  const obsRows=rows.map((r,i)=>{const{ihD,ghV}=ghData[i];const bv=safeNum(r.bs),fv=safeNum(r.fs),iv=safeNum(r.is_);return `<tr style="${r.fs!==''?'color:#185FA5;':''}"><td>${r.point||''}</td><td style="text-align:right;">${bv!==null?bv.toFixed(3):''}</td><td style="text-align:right;">${fv!==null?fv.toFixed(3):''}</td><td style="text-align:right;">${iv!==null?iv.toFixed(3):''}</td><td style="text-align:right;">${ihD}</td><td style="text-align:right;">${ghV!==''?parseFloat(ghV).toFixed(3):''}</td></tr>`;}).join('');
-  const htmlContent=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>観測記録 ${proj}</title><style>body{font-family:-apple-system,'Hiragino Sans',sans-serif;padding:16px;max-width:720px;margin:0 auto;color:#1d1d1f;}h1{font-size:18px;border-bottom:2px solid #185FA5;padding-bottom:6px;margin-bottom:12px;}h2{font-size:14px;color:#555;margin:16px 0 8px;border-left:3px solid #185FA5;padding-left:8px;}.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:13px;}.ml{color:#666;}.mv{font-weight:500;}table{border-collapse:collapse;width:100%;font-size:13px;margin-bottom:16px;}th{background:#f0f4fa;border:1px solid #d2d2d7;padding:5px 8px;text-align:right;}th:first-child{text-align:left;}td{border:1px solid #d2d2d7;padding:4px 8px;}</style></head><body><h1>水準測量 観測記録</h1><div class="meta"><div><span class="ml">路線名</span>&nbsp;<span class="mv">${routeName}</span></div><div><span class="ml">作業名</span>&nbsp;<span class="mv">${proj}</span></div><div><span class="ml">測量日</span>&nbsp;<span class="mv">${date}</span></div><div><span class="ml">観測者</span>&nbsp;<span class="mv">${worker}</span></div><div><span class="ml">起点BM</span>&nbsp;<span class="mv">${sb.toFixed(3)} m</span></div><div><span class="ml">器差K</span>&nbsp;<span class="mv">${K?K.toFixed(3)+' mm':'—'}</span></div></div><h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th></tr></thead><tbody>${obsRows}</tbody></table><h2>測点写真</h2>${photoSection}</body></html>`;
+  const obsRows=rows.map((r,i)=>{const{ihD,ghV}=ghData[i];const bv=safeNum(r.bs),fv=safeNum(r.fs),iv=safeNum(r.is_);return `<tr style="${r.fs!==''?'color:#185FA5;':''}"><td>${esc(r.point)}</td><td style="text-align:right;">${bv!==null?bv.toFixed(3):''}</td><td style="text-align:right;">${fv!==null?fv.toFixed(3):''}</td><td style="text-align:right;">${iv!==null?iv.toFixed(3):''}</td><td style="text-align:right;">${ihD}</td><td style="text-align:right;">${ghV!==''?parseFloat(ghV).toFixed(3):''}</td></tr>`;}).join('');
+  const htmlContent=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>観測記録 ${esc(proj)}</title><style>body{font-family:-apple-system,'Hiragino Sans',sans-serif;padding:16px;max-width:720px;margin:0 auto;color:#1d1d1f;}h1{font-size:18px;border-bottom:2px solid #185FA5;padding-bottom:6px;margin-bottom:12px;}h2{font-size:14px;color:#555;margin:16px 0 8px;border-left:3px solid #185FA5;padding-left:8px;}.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:13px;}.ml{color:#666;}.mv{font-weight:500;}table{border-collapse:collapse;width:100%;font-size:13px;margin-bottom:16px;}th{background:#f0f4fa;border:1px solid #d2d2d7;padding:5px 8px;text-align:right;}th:first-child{text-align:left;}td{border:1px solid #d2d2d7;padding:4px 8px;}</style></head><body><h1>水準測量 観測記録</h1><div class="meta"><div><span class="ml">路線名</span>&nbsp;<span class="mv">${esc(routeName)}</span></div><div><span class="ml">作業名</span>&nbsp;<span class="mv">${esc(proj)}</span></div><div><span class="ml">測量日</span>&nbsp;<span class="mv">${esc(date)}</span></div><div><span class="ml">観測者</span>&nbsp;<span class="mv">${esc(worker)}</span></div><div><span class="ml">起点BM</span>&nbsp;<span class="mv">${sb.toFixed(3)} m</span></div><div><span class="ml">器差K</span>&nbsp;<span class="mv">${K?K.toFixed(3)+' mm':'—'}</span></div></div><h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th></tr></thead><tbody>${obsRows}</tbody></table><h2>測点写真</h2>${photoSection}</body></html>`;
 
   if(navigator.share){
     try{
@@ -2002,7 +2029,7 @@ function setColor(c,el){sk_color=c;document.querySelectorAll('.cd').forEach(d=>d
 function openPin(x,y){
   pendingPin={x,y};
   const all=[...rows,...rowsReturn].filter(r=>r.point);
-  document.getElementById('pts-dl').innerHTML=[...new Set(all.map(r=>r.point))].map(p=>`<option value="${p}">`).join('');
+  document.getElementById('pts-dl').innerHTML=[...new Set(all.map(r=>r.point))].map(p=>`<option value="${esc(p)}">`).join('');
   const pp=document.getElementById('pin-pp');
   const cwR=document.getElementById('cw').getBoundingClientRect();
   const baseW=cwR.width;
@@ -2032,7 +2059,7 @@ function renderPins(){
     svg+=`<g><circle cx="${px}" cy="${py}" r="9" fill="#E24B4A" stroke="#fff" stroke-width="1.5"/>
       <text x="${px}" y="${py+3.5}" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold" font-family="sans-serif">+</text>
       <rect x="${px+11}" y="${py-13}" width="${tw}" height="17" rx="3" fill="rgba(226,75,74,0.9)"/>
-      <text x="${px+16}" y="${py-1}" font-size="10.5" fill="#fff" font-family="sans-serif">${p.name}</text></g>`;
+      <text x="${px+16}" y="${py-1}" font-size="10.5" fill="#fff" font-family="sans-serif">${esc(p.name)}</text></g>`;
   });
   svg+=`</svg>`;ui.innerHTML=svg;
 }
@@ -2077,7 +2104,7 @@ function showPinManager(){
   }else{
     list.innerHTML=pins.map((p,i)=>`<div class="pin-item">
       <span style="font-size:16px;">📍</span>
-      <span style="flex:1;font-size:14px;color:var(--color-text-primary);">${p.name}</span>
+      <span style="flex:1;font-size:14px;color:var(--color-text-primary);">${esc(p.name)}</span>
       <span style="font-size:11px;color:var(--color-text-secondary);">${p.x.toFixed(0)}, ${p.y.toFixed(0)}</span>
       <button class="pin-del" onclick="deletePinAt(${i})">削除</button>
     </div>`).join('');
@@ -2162,7 +2189,7 @@ function renderPointComparison(){
       diffMM=Math.round((og-rg)*10000)/10;
       cls=Math.abs(diffMM)>allowMM?'ng':Math.abs(diffMM)>allowMM*0.7?'warn':'';
       badge=cls==='ng'?'<span class="badge bng">要再測</span>':cls==='warn'?'<span class="badge bwarn">注意</span>':'<span class="badge bok">OK</span>';
-      if(cls==='ng'&&!rmg) remeasBtn=`<button class="remeas-btn" onclick="addReMeasure('${pt}')">再測追加</button>`;
+      if(cls==='ng'&&!rmg) remeasBtn=`<button class="remeas-btn" onclick="addReMeasure('${jsAttr(pt)}')">再測追加</button>`;
     } else if(og===undefined||rg===undefined){
       badge='<span class="badge" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">片道のみ</span>';
     }
@@ -2191,7 +2218,7 @@ function renderPointComparison(){
     const diffCell=diffMM!==null?`${diffMM.toFixed(1)}mm`:'—';
 
     return `<tr class="${cls}">
-      <td>${pt}</td>
+      <td>${esc(pt)}</td>
       <td>${og!==undefined?og.toFixed(3):'—'}</td>
       <td>${rg!==undefined?rg.toFixed(3):'—'}</td>
       <td style="color:${rmg!==undefined?'#1D9E75':'var(--color-text-secondary)'};">${remCell}</td>
@@ -2369,7 +2396,7 @@ function buildObsTblHTML(arr,startGH,kM,color){
   const ghData=calcGH(arr,startGH,kM);
   return arr.map((r,i)=>{
     const{ihD,ghV,isFS}=ghData[i];const gps=r.lat!=null?`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`:'';
-    return `<tr style="${isFS?`color:${color};`:''}"><td>${r.point||''}</td><td>${r.bs!==''?parseFloat(r.bs).toFixed(3):''}</td><td>${r.fs!==''?parseFloat(r.fs).toFixed(3):''}</td><td>${r.is_!==''?parseFloat(r.is_).toFixed(3):''}</td><td>${ihD}</td><td>${ghV!==''?parseFloat(ghV).toFixed(3):''}</td><td style="font-size:8.5pt;color:#555;">${gps}</td></tr>`;
+    return `<tr style="${isFS?`color:${color};`:''}"><td>${esc(r.point||'')}</td><td>${r.bs!==''?parseFloat(r.bs).toFixed(3):''}</td><td>${r.fs!==''?parseFloat(r.fs).toFixed(3):''}</td><td>${r.is_!==''?parseFloat(r.is_).toFixed(3):''}</td><td>${ihD}</td><td>${ghV!==''?parseFloat(ghV).toFixed(3):''}</td><td style="font-size:8.5pt;color:#555;">${gps}</td></tr>`;
   }).join('');
 }
 function printReport(){
@@ -2379,7 +2406,7 @@ function printReport(){
   const{sBS,sFS,diff,ce,cl,al,n}=getCalc();
   const out=calcDir(rows),ret=calcDir(rowsReturn),hasRet=rowsReturn.some(r=>r.bs!==''||r.fs!=='');
   const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=10*Math.sqrt(n2||1),best=(out.diff-ret.diff)/2;
-  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>成果表 ${proj}</title>
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>成果表 ${esc(proj)}</title>
 <style>@page{size:A4;margin:15mm 18mm 20mm;}
 .sl-toolbar{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(24,95,165,0.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px rgba(0,0,0,0.2);}
 .sl-toolbar button{border:none;border-radius:8px;font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:8px 16px;-webkit-tap-highlight-color:transparent;}
@@ -2403,12 +2430,12 @@ table{border-collapse:collapse;width:100%;margin-bottom:8pt;font-size:9pt;}th{ba
 </div>
 <div class="sl-toolbar-spacer"></div>
 <h1>水準測量成果表</h1>
-<div class="ig"><div><div class="lbl">路線名</div><div class="val">${routeName}</div></div><div><div class="lbl">作業名</div><div class="val">${proj}</div></div><div><div class="lbl">測量日</div><div class="val">${date}</div></div><div><div class="lbl">担当者</div><div class="val">${worker}</div></div><div><div class="lbl">天候</div><div class="val">${wx}</div></div><div><div class="lbl">器差K</div><div class="val">${K?K.toFixed(3)+' mm':'—'}</div></div><div><div class="lbl">起点BM</div><div class="val">${sb.toFixed(3)} m</div></div><div><div class="lbl">終点BM</div><div class="val">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div><div class="lbl">測点/FS数</div><div class="val">${rows.length}/${n}</div></div></div>
+<div class="ig"><div><div class="lbl">路線名</div><div class="val">${esc(routeName)}</div></div><div><div class="lbl">作業名</div><div class="val">${esc(proj)}</div></div><div><div class="lbl">測量日</div><div class="val">${esc(date)}</div></div><div><div class="lbl">担当者</div><div class="val">${esc(worker)}</div></div><div><div class="lbl">天候</div><div class="val">${esc(wx)}</div></div><div><div class="lbl">器差K</div><div class="val">${K?K.toFixed(3)+' mm':'—'}</div></div><div><div class="lbl">起点BM</div><div class="val">${sb.toFixed(3)} m</div></div><div><div class="lbl">終点BM</div><div class="val">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div><div class="lbl">測点/FS数</div><div class="val">${rows.length}/${n}</div></div></div>
 <h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rows,sb,kM,'#185FA5')}</tbody></table>
 ${hasRet?`<h2>復路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rowsReturn,parseFloat(eb)||0,kM,'#d97706')}</tbody></table>`:''}
 <h2>集計・点検</h2><div class="rg"><div class="ri"><div class="rl">ΣBS</div><div class="rv">${sBS.toFixed(3)} m</div></div><div class="ri"><div class="rl">ΣFS</div><div class="rv">${sFS.toFixed(3)} m</div></div><div class="ri"><div class="rl">ΣBS－ΣFS</div><div class="rv">${diff.toFixed(3)} m</div></div><div class="ri"><div class="rl">実測終点BM</div><div class="rv">${ce.toFixed(3)} m</div></div><div class="ri"><div class="rl">既知終点BM</div><div class="rv">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div class="ri"><div class="rl">閉合差</div><div class="rv ${cl!==null?(Math.abs(cl)<=al?'ok':'ng'):''}">${cl!==null?((cl*1000).toFixed(1)+' mm'):'—'}</div></div></div>
 ${hasRet?`<h2>往復比較</h2><table><thead><tr><th style="text-align:left;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead><tbody><tr><td>総高低差(m)</td><td>${out.diff.toFixed(4)}</td><td>${ret.diff.toFixed(4)}</td><td></td></tr><tr><td>往復較差</td><td colspan="2" style="text-align:center;font-weight:500;${Math.abs(korsa*1000)<=alMM?'color:#0a5c3e;':'color:#8b1a1a;'}">${(korsa*1000).toFixed(1)} mm</td><td style="${Math.abs(korsa*1000)<=alMM?'color:#0a5c3e;':'color:#8b1a1a;'}font-weight:500;">${Math.abs(korsa*1000)<=alMM?'合格 ✓':'不合格 ✗'}</td></tr><tr><td>許容較差</td><td colspan="2" style="text-align:center;">±${alMM.toFixed(0)} mm</td><td></td></tr><tr><td>最確値</td><td colspan="2" style="text-align:center;font-weight:500;font-size:11pt;">${best.toFixed(4)} m</td><td></td></tr></tbody></table>`:''}
-<h2>現場メモ</h2><div class="memo">${document.getElementById('memo').value||'（記録なし）'}</div>
+<h2>現場メモ</h2><div class="memo">${esc(document.getElementById('memo').value||'（記録なし）')}</div>
 <div class="sign"><div class="sbox">作業者</div><div class="sbox">検査者</div><div class="sbox">承認</div></div>
 </body></html>`;
   const w=window.open('','_blank');if(!w){alert('ポップアップを許可してください');return;}
@@ -2417,7 +2444,7 @@ ${hasRet?`<h2>往復比較</h2><table><thead><tr><th style="text-align:left;">�
 function printSketch(){
   saveDr();const proj=document.getElementById('proj').value||'スケッチ';
   const imgs=pages.map(p=>{const c=document.createElement('canvas');c.width=W;c.height=H;const cx=c.getContext('2d');cx.drawImage(p.bg,0,0);cx.drawImage(p.dr,0,0);p.pins.forEach(pin=>{cx.save();cx.fillStyle='#E24B4A';cx.beginPath();cx.arc(pin.x,pin.y,11,0,Math.PI*2);cx.fill();cx.fillStyle='#fff';cx.font='bold 13px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('+',pin.x,pin.y);const tw=pin.name.length*8.5+16;cx.fillStyle='rgba(226,75,74,0.9)';cx.fillRect(pin.x+13,pin.y-13,tw,17);cx.fillStyle='#fff';cx.font='12px sans-serif';cx.textAlign='left';cx.fillText(pin.name,pin.x+18,pin.y-1);cx.restore();});return c.toDataURL('image/png');});
-  const ph=imgs.map((s,i)=>`<div ${i>0?'style="page-break-before:always;"':''}><p style="font-size:9pt;color:#666;margin-bottom:5pt;">${proj} — スケッチ ${i+1}/${imgs.length}</p><img src="${s}" style="width:100%;max-height:235mm;object-fit:contain;display:block;"></div>`).join('');
+  const ph=imgs.map((s,i)=>`<div ${i>0?'style="page-break-before:always;"':''}><p style="font-size:9pt;color:#666;margin-bottom:5pt;">${esc(proj)} — スケッチ ${i+1}/${imgs.length}</p><img src="${s}" style="width:100%;max-height:235mm;object-fit:contain;display:block;"></div>`).join('');
   const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>スケッチ</title><style>@page{size:A4;margin:15mm;}body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:0;}h1{font-size:13pt;text-align:center;margin-bottom:8pt;border-bottom:1pt solid #333;padding-bottom:4pt;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
 .sl-toolbar{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(24,95,165,0.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px rgba(0,0,0,0.2);}
 .sl-toolbar button{border:none;border-radius:8px;font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:8px 16px;-webkit-tap-highlight-color:transparent;}
@@ -2432,7 +2459,7 @@ function printSketch(){
   <button class="sl-btn-print" onclick="window.print()">🖨 印刷・PDF保存</button>
 </div>
 <div class="sl-toolbar-spacer"></div>
-<h1>現場スケッチ — ${proj}</h1>${ph}</body></html>`;
+<h1>現場スケッチ — ${esc(proj)}</h1>${ph}</body></html>`;
   const w=window.open('','_blank');if(!w){alert('ポップアップを許可してください');return;}
   w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),900);
 }
@@ -2467,7 +2494,9 @@ function expCSV(){
   const proj=document.getElementById('proj').value||'水準測量';
   const date=document.getElementById('date').value||'';
   const worker=document.getElementById('worker').value||'';
-  let csv=`# 作業名: ${proj}  測量日: ${date}  観測者: ${worker}  器差K: ${K}mm\n`;
+  // コメント行全体を1セルとして扱い、カンマを含んでいてもExcelで意図せず
+  // 列分割されて後続セルが「=」等で始まる数式インジェクションにならないよう保護
+  let csv=cf(`# 作業名: ${proj}  測量日: ${date}  観測者: ${worker}  器差K: ${K}mm`)+'\n';
   csv+='方向,測点,BS(m),FS(m),IS(m),IH(m),GH(m),緯度,経度,精度(m)\n';
   let rowNum=3; // 1行目=メタ情報、2行目=ヘッダー、3行目からデータ
   const addDir=(arr,dir,startGH)=>{
@@ -2486,7 +2515,7 @@ function expCSV(){
         ghFormula=`=IF(D${rowNum}<>"",F${rowNum-1}-D${rowNum},IF(E${rowNum}<>"",F${rowNum-1}-E${rowNum},""))`;
         ihFormula=bsVal!==''?`=G${rowNum}+C${rowNum}`:'';
       }
-      csv+=`${cf(dir)},${cf(r.point||'')},${cf(bsVal)},${cf(fsVal)},${cf(isVal)},${cf(ihFormula)},${cf(ghFormula)},${r.lat!=null?r.lat.toFixed(8):''},${r.lon!=null?r.lon.toFixed(8):''},${r.acc||''}\n`;
+      csv+=`${cf(dir)},${cf(csvSafe(r.point||''))},${cf(csvSafe(String(bsVal)))},${cf(csvSafe(String(fsVal)))},${cf(csvSafe(String(isVal)))},${cf(ihFormula)},${cf(ghFormula)},${r.lat!=null?r.lat.toFixed(8):''},${r.lon!=null?r.lon.toFixed(8):''},${r.acc||''}\n`;
       rowNum++;
     });
     rowNum++; // 往路・復路の区切り
