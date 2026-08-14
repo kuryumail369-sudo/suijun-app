@@ -631,13 +631,10 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 <script>
 
 // ===== ライセンス管理 =====
-// β版ユーザー・有効キー一覧（β配布キー＋購入後キーはCloudflare Workerから検証予定）
-const BETA_KEYS = [
-  'SL-BETA-2026-0001','SL-BETA-2026-0002','SL-BETA-2026-0003',
-  'SL-BETA-2026-0004','SL-BETA-2026-0005','SL-BETA-2026-0006',
-  'SL-BETA-2026-0007','SL-BETA-2026-0008','SL-BETA-2026-0009',
-  'SL-BETA-2026-0010',
-];
+// βキーはこれまでここに平文でハードコードされていたが、それだと公開リポジトリの
+// ソースを見れば誰でも無料でPro機能を使えてしまうため廃止。
+// βキーもCloudflare WorkerのKV（sitelogger-licenses）側で購入キーと同じ方式で
+// 管理し、/verify で検証する（Cloudflare側の設定作業が別途必要）。
 const LICENSE_WORKER_BASE = 'https://sitelogger-license.kuryumail-369.workers.dev';
 const LICENSE_WORKER = LICENSE_WORKER_BASE + '/verify';
 const FREE_ROUTE_LIMIT = 1;
@@ -655,9 +652,7 @@ function isPro(){
   return false;
 }
 async function verifyKeyOnline(key){
-  // βキーはローカルで即時判定
-  if(BETA_KEYS.includes(key.toUpperCase().trim())) return true;
-  // 購入キーはWorkerで検証
+  // βキー・購入キーいずれもWorker（サーバー側）で検証する
   try{
     const res = await fetch(LICENSE_WORKER, {
       method:'POST',
