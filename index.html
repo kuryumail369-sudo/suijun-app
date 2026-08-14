@@ -1328,7 +1328,7 @@ function renderTbl(){
     const{ihD,ghV,isFS}=ghData[i];
     const gpsHtml=r.lat!=null
       ?`<div style="font-size:9px;color:#16a34a;margin-top:2px;">📍${r.lat.toFixed(4)},${r.lon.toFixed(4)}</div>`
-      :`<button onclick="getGPS(${i})" style="font-size:9px;padding:1px 4px;border:0.5px solid var(--color-border-secondary);border-radius:3px;cursor:pointer;background:none;color:var(--color-text-secondary);margin-top:2px;display:block;">📍GPS</button>`;
+      :`<button onclick="getGPS(${r.id})" style="font-size:9px;padding:1px 4px;border:0.5px solid var(--color-border-secondary);border-radius:3px;cursor:pointer;background:none;color:var(--color-text-secondary);margin-top:2px;display:block;">📍GPS</button>`;
 
     // 写真セル — 各行に独自のfile inputを生成
     const photoCell=r.photo
@@ -1347,7 +1347,7 @@ function renderTbl(){
           onkeydown="if(event.key==='Enter'){blurKb();this.blur();}"
           onblur="if(this.value!==''){const n=parseFloat(this.value);if(!isNaN(n)){this.value=n.toFixed(3);updateField(${i},'${field}',this.value);}}">
         <div style="display:flex;gap:3px;margin-top:2px;">
-          <button id="mic-${i}-${field}" onclick="startVoice(${i},'${field}')"
+          <button id="mic-${r.id}-${field}" onclick="startVoice(${r.id},'${field}')"
             style="font-size:9px;padding:1px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;-webkit-tap-highlight-color:transparent;">🎤</button>
           <button onclick="captureForCell(${r.id},'${field}')"
             style="font-size:9px;padding:1px 5px;border:0.5px solid #185FA5;border-radius:3px;cursor:pointer;background:none;color:#185FA5;-webkit-tap-highlight-color:transparent;">📷</button>
@@ -1366,7 +1366,7 @@ function renderTbl(){
           ${remeasBadge}
         </div>
         <div style="display:flex;gap:3px;margin-top:2px;">
-          <button onclick="startVoicePoint(${i})" style="font-size:9px;padding:1px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;-webkit-tap-highlight-color:transparent;">🎤</button>
+          <button onclick="startVoicePoint(${r.id})" style="font-size:9px;padding:1px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;-webkit-tap-highlight-color:transparent;">🎤</button>
           ${gpsHtml}
         </div>
       </td>
@@ -1418,7 +1418,7 @@ function blurKb(){
   bar.style.bottom='0';
   activeKb=null;
 }
-function startVoiceKb(){if(activeKb)startVoice(activeKb.idx,activeKb.field);}
+function startVoiceKb(){if(activeKb)startVoice(activeKb.rid,activeKb.field);}
 
 // カメラを直接起動してOCR
 function captureDirectKb(){
@@ -1470,13 +1470,14 @@ function captureForCell(rid,field){
 }
 
 // 測点名の音声入力
-function startVoicePoint(idx){
+function startVoicePoint(rowId){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
   const rec=new SR();
   rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
   const btn=event.target;
   btn.textContent='⏺';btn.style.background='#FCEBEB';
+  const targetArr=getCurRows(); // 押下時点の配列を固定（往路・復路間でidが重複しうるため）
   rec.onresult=e=>{
     let t=e.results[0][0].transcript.trim();
     t=t.replace(/ナンバー/g,'No.').replace(/番号/g,'No.')
@@ -1486,8 +1487,10 @@ function startVoicePoint(idx){
        .replace(/\s+/g,'');
     t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
     t=t.replace(/No\.-/g,'No.');
-    getCurRows()[idx].point=t;
-    markDirty();renderTbl();
+    // GPS/BS/FS音声入力と同様、行の位置(index)ではなくidで対象行を探し直す
+    // （認識中に往路⇔復路の切替や行の追加・削除が起きても正しい行に書き込むため）
+    const r=targetArr.find(r=>r.id===rowId);
+    if(r){r.point=t;markDirty();renderTbl();}
   };
   const rst=()=>{btn.textContent='🎤';btn.style.background='none';};
   rec.onerror=e=>{
@@ -1696,24 +1699,41 @@ async function shareData(){
 }
 
 // ===== GPS =====
-function getGPS(idx){
+// 注意: GPS取得は最大15秒かかることがある非同期処理。行の「位置（何番目か）」ではなく
+// 行の一意なidを覚えておき、結果が返ってきた時点で改めてidから行を探す。
+// さらに、rowsとrowsReturnはそれぞれ0始まりでidを振っているため往路・復路間でidが
+// 重複しうる。そのため対象の配列（rows/rowsReturnそのもの）への参照もボタン押下時点で
+// 覚えておき、後から getCurRows()（現在の表示方向に依存し途中で変わりうる）で
+// 取り直さないようにする。こうしないと、取得待ちの間に往路⇔復路を切り替えられた場合、
+// 同じidを持つ「別方向の別の行」に結果が書き込まれてしまう。
+function getGPS(rowId){
   if(!navigator.geolocation){alert('GPSに対応していません');return;}
-  const btn=document.querySelector(`[onclick="getGPS(${idx})"]`);
+  const btn=document.querySelector(`[onclick="getGPS(${rowId})"]`);
   if(btn){btn.textContent='取得中…';btn.disabled=true;}
+  const targetArr=getCurRows(); // 押下時点の配列を固定
   navigator.geolocation.getCurrentPosition(
-    pos=>{const r=getCurRows()[idx];r.lat=pos.coords.latitude;r.lon=pos.coords.longitude;r.acc=Math.round(pos.coords.accuracy);markDirty();renderTbl();},
+    pos=>{
+      const r=targetArr.find(r=>r.id===rowId);
+      if(!r)return; // 取得中に行が削除された等
+      r.lat=pos.coords.latitude;r.lon=pos.coords.longitude;r.acc=Math.round(pos.coords.accuracy);markDirty();renderTbl();
+    },
     err=>{alert('GPS取得エラー: '+err.message);if(btn){btn.textContent='📍GPS';btn.disabled=false;}},
     {enableHighAccuracy:true,timeout:15000,maximumAge:0}
   );
 }
 
 // ===== マイク =====
-function startVoice(idx,field){
+// 注意: 音声認識はユーザーが話し終えるまで非同期に待つ処理。GPSと同様、行の位置（index）
+// ではなく行の一意なidで対象を覚えておき、結果が返ってきた時点でidから行を探し直す。
+// rows/rowsReturnはidが往路・復路間で重複しうるため、対象配列への参照もボタン押下時点で
+// 固定し、待機中に往路⇔復路が切り替わっても正しい配列内で探すようにする。
+function startVoice(rowId,field){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
   if(voiceRec){voiceRec.stop();voiceRec=null;return;}
 
-  const btn=document.getElementById(`mic-${idx}-${field}`);
+  const btn=document.getElementById(`mic-${rowId}-${field}`);
+  const targetArr=getCurRows(); // 押下時点の配列を固定
 
   voiceRec=new SR();
   voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
@@ -1722,7 +1742,10 @@ function startVoice(idx,field){
   voiceRec.onresult=e=>{
     const t=e.results[0][0].transcript;
     const v=voiceToNum(t);
-    if(v!==null){getCurRows()[idx][field]=v.toFixed(3);markDirty();renderTbl();}
+    if(v!==null){
+      const r=targetArr.find(r=>r.id===rowId);
+      if(r){r[field]=v.toFixed(3);markDirty();renderTbl();}
+    }
     else alert(`"${t}" — 数値が認識できませんでした`);
   };
   const rst=()=>{
@@ -1745,34 +1768,6 @@ function voiceToNum(t){
   t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
   const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);
   return m?parseFloat(m[0]):null;
-}
-
-function startVoice(idx,field){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
-  if(voiceRec){voiceRec.stop();voiceRec=null;return;}
-  const btn=document.getElementById(`mic-${idx}-${field}`);
-  voiceRec=new SR();
-  voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
-  if(btn){btn.classList.add('mic-active');btn.textContent='⏺';}
-  voiceRec.onresult=e=>{
-    const t=e.results[0][0].transcript;
-    const v=voiceToNum(t);
-    if(v!==null){getCurRows()[idx][field]=v.toFixed(3);markDirty();renderTbl();}
-    else alert(`"${t}" — 数値が認識できませんでした`);
-  };
-  const rst=()=>{
-    voiceRec=null;
-    document.querySelectorAll('.ic').forEach(b=>{
-      if(b.textContent==='⏺'){b.textContent='🎤';b.classList.remove('mic-active');}
-    });
-  };
-  voiceRec.onerror=e=>{
-    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
-    rst();
-  };
-  voiceRec.onend=rst;
-  voiceRec.start();
 }
 
 // ===== OCR =====
@@ -2405,7 +2400,9 @@ function printReport(){
   const routeName=routes.find(r=>r.id===currentRouteId)?.name||'';
   const{sBS,sFS,diff,ce,cl,al,n}=getCalc();
   const out=calcDir(rows),ret=calcDir(rowsReturn),hasRet=rowsReturn.some(r=>r.bs!==''||r.fs!=='');
-  const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=10*Math.sqrt(n2||1),best=(out.diff-ret.diff)/2;
+  // 点検タブと同じ許容値ロジックを使用（直接mm入力 or 係数式）。未設定時はnull。
+  const korsa=out.diff+ret.diff,n2=Math.max(out.n,ret.n),alMM=getTolMM(n2),best=(out.diff-ret.diff)/2;
+  const korsaOK=alMM!==null?Math.abs(korsa*1000)<=alMM:null;
   const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>成果表 ${esc(proj)}</title>
 <style>@page{size:A4;margin:15mm 18mm 20mm;}
 .sl-toolbar{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(24,95,165,0.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px rgba(0,0,0,0.2);}
@@ -2434,7 +2431,7 @@ table{border-collapse:collapse;width:100%;margin-bottom:8pt;font-size:9pt;}th{ba
 <h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rows,sb,kM,'#185FA5')}</tbody></table>
 ${hasRet?`<h2>復路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rowsReturn,parseFloat(eb)||0,kM,'#d97706')}</tbody></table>`:''}
 <h2>集計・点検</h2><div class="rg"><div class="ri"><div class="rl">ΣBS</div><div class="rv">${sBS.toFixed(3)} m</div></div><div class="ri"><div class="rl">ΣFS</div><div class="rv">${sFS.toFixed(3)} m</div></div><div class="ri"><div class="rl">ΣBS－ΣFS</div><div class="rv">${diff.toFixed(3)} m</div></div><div class="ri"><div class="rl">実測終点BM</div><div class="rv">${ce.toFixed(3)} m</div></div><div class="ri"><div class="rl">既知終点BM</div><div class="rv">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div class="ri"><div class="rl">閉合差</div><div class="rv ${cl!==null?(Math.abs(cl)<=al?'ok':'ng'):''}">${cl!==null?((cl*1000).toFixed(1)+' mm'):'—'}</div></div></div>
-${hasRet?`<h2>往復比較</h2><table><thead><tr><th style="text-align:left;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead><tbody><tr><td>総高低差(m)</td><td>${out.diff.toFixed(4)}</td><td>${ret.diff.toFixed(4)}</td><td></td></tr><tr><td>往復較差</td><td colspan="2" style="text-align:center;font-weight:500;${Math.abs(korsa*1000)<=alMM?'color:#0a5c3e;':'color:#8b1a1a;'}">${(korsa*1000).toFixed(1)} mm</td><td style="${Math.abs(korsa*1000)<=alMM?'color:#0a5c3e;':'color:#8b1a1a;'}font-weight:500;">${Math.abs(korsa*1000)<=alMM?'合格 ✓':'不合格 ✗'}</td></tr><tr><td>許容較差</td><td colspan="2" style="text-align:center;">±${alMM.toFixed(0)} mm</td><td></td></tr><tr><td>最確値</td><td colspan="2" style="text-align:center;font-weight:500;font-size:11pt;">${best.toFixed(4)} m</td><td></td></tr></tbody></table>`:''}
+${hasRet?`<h2>往復比較</h2><table><thead><tr><th style="text-align:left;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead><tbody><tr><td>総高低差(m)</td><td>${out.diff.toFixed(4)}</td><td>${ret.diff.toFixed(4)}</td><td></td></tr><tr><td>往復較差</td><td colspan="2" style="text-align:center;font-weight:500;${korsaOK===null?'':(korsaOK?'color:#0a5c3e;':'color:#8b1a1a;')}">${(korsa*1000).toFixed(1)} mm</td><td style="${korsaOK===null?'':(korsaOK?'color:#0a5c3e;':'color:#8b1a1a;')}font-weight:500;">${korsaOK===null?'許容値未入力':(korsaOK?'合格 ✓':'不合格 ✗')}</td></tr><tr><td>許容較差</td><td colspan="2" style="text-align:center;">${alMM!==null?'±'+alMM.toFixed(0)+' mm':'—'}</td><td></td></tr><tr><td>最確値</td><td colspan="2" style="text-align:center;font-weight:500;font-size:11pt;">${best.toFixed(4)} m</td><td></td></tr></tbody></table>`:''}
 <h2>現場メモ</h2><div class="memo">${esc(document.getElementById('memo').value||'（記録なし）')}</div>
 <div class="sign"><div class="sbox">作業者</div><div class="sbox">検査者</div><div class="sbox">承認</div></div>
 </body></html>`;
