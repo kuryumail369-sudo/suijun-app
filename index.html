@@ -1334,7 +1334,7 @@ function renderTbl(){
 
     // 写真セル — 各行に独自のfile inputを生成
     const photoCell=r.photo
-      ?`<img class="pt-thumb" src="${r.photo}" onclick="openPV(${r.id})">`
+      ?`<img class="pt-thumb" src="${esc(r.photo)}" onclick="openPV(${r.id})">`
       :`<label style="display:block;cursor:pointer;">
           <input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleRowPhoto(this,${r.id})">
           <span class="pt-cam" style="display:flex;align-items:center;justify-content:center;">📸</span>
