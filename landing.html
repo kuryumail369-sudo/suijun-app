@@ -267,7 +267,7 @@ footer{padding:32px 0 44px;text-align:center;}
       <div class="feat-highlight-card">
         <div class="tag">オフライン対応PWA</div>
         <h3>電波がなくても、現場で使える。</h3>
-        <p>インターネット接続不要で動作するPWAなので、山間部や造成地などの電波が不安定な現場でも安心。観測データはすべて端末内に保存され、サーバーには送信されません。</p>
+        <p>インターネット接続不要で動作するPWAなので、山間部や造成地などの電波が不安定な現場でも安心。観測データは端末内に保存され、通常の利用ではサーバーに送信されません。</p>
       </div>
     </div>
 
@@ -354,11 +354,11 @@ footer{padding:32px 0 44px;text-align:center;}
       </div>
       <div class="faq-item">
         <div class="faq-q"><span class="q-mark">Q.</span>観測データはどこに保存されますか？</div>
-        <p class="faq-a">A. 観測データはすべてお使いの端末内（ブラウザのローカルストレージ）に保存され、サーバーには送信されません。AI液晶OCRを使う際の画像のみ、読み取りのために通信が発生します。</p>
+        <p class="faq-a">A. 観測データはお使いの端末内（ローカルストレージ・IndexedDB）に保存されます。観測の入力・自動計算・点検といった通常の利用では、サーバーには送信されません。通信が発生するのは、AI液晶OCRで画像を読み取るときと、CSV・写真付き観測記録の出力・共有を行うとき（生成のために送信され、生成後は保存されません）の2つです。詳しくは<a href="terms.html#tab-privacy">プライバシーポリシー</a>をご覧ください。</p>
       </div>
       <div class="faq-item">
         <div class="faq-q"><span class="q-mark">Q.</span>電波がない現場でも使えますか？</div>
-        <p class="faq-a">A. はい。観測入力・自動計算・スケッチ・データ保存はすべてオフラインで動作します。AI液晶OCRによる自動読み取りのみ、通信が必要です（手入力であればオフラインでも入力できます）。</p>
+        <p class="faq-a">A. はい。観測入力・自動計算・スケッチ・データ保存はすべてオフラインで動作します。通信が必要なのはAI液晶OCRによる自動読み取りと、CSV・写真付き観測記録の出力だけです（手入力・PDF出力はオフラインでも行えます）。</p>
       </div>
       <div class="faq-item">
         <div class="faq-q"><span class="q-mark">Q.</span>無料プランでどこまで試せますか？</div>

@@ -202,7 +202,7 @@
   <!-- ===== 利用規約 ===== -->
   <div id="tab-terms" class="tab-panel active">
 
-    <div class="meta">制定日：2026年4月　最終更新：2026年4月</div>
+    <div class="meta">制定日：2026年4月　最終更新：2026年8月</div>
 
     <div class="warn-banner">
       <strong>⚠️ 重要：ご利用前に必ずお読みください</strong>
@@ -241,7 +241,7 @@
     <div class="section">
       <div class="section-header"><div class="section-num">3</div><h2>データ保存・消失に関する免責</h2></div>
       <div class="section-body">
-        <p>本アプリの観測データはユーザーの端末上のブラウザ（ローカルストレージ）にのみ保存されます。開発者のサーバーには保存されません。</p>
+        <p>本アプリの観測データはユーザーの端末上のブラウザ（ローカルストレージ・IndexedDB）に保存されます。開発者のサーバーには保存されません（Proプランの出力機能利用時にファイル生成のため一時的に送信されますが、保存はされません。詳細はプライバシーポリシーをご確認ください）。</p>
         <p>以下の操作・事象により、保存されたデータが<strong>完全かつ不可逆的に消失する可能性</strong>があります。</p>
         <ul>
           <li>ブラウザの「閲覧データ消去」「キャッシュ削除」の実行</li>
@@ -357,7 +357,7 @@
   <!-- ===== プライバシーポリシー ===== -->
   <div id="tab-privacy" class="tab-panel">
 
-    <div class="meta">制定日：2026年4月　最終更新：2026年4月</div>
+    <div class="meta">制定日：2026年4月　最終更新：2026年8月</div>
 
     <div class="section">
       <div class="section-header"><div class="section-num">1</div><h2>基本方針</h2></div>
@@ -371,7 +371,7 @@
       <div class="section-body">
         <p>本アプリは以下の情報を収集・利用します。</p>
 
-        <p><strong>① 端末内にのみ保存される情報（開発者には送信されません）</strong></p>
+        <p><strong>① 端末内に保存される情報</strong></p>
         <ul>
           <li>観測データ（測点名・BS・FS・IH・GH等）</li>
           <li>測量情報（作業名・測量日・観測者名・BM値等）</li>
@@ -379,9 +379,19 @@
           <li>スケッチデータ</li>
           <li>路線情報・アプリ設定</li>
         </ul>
-        <div class="emph">上記のデータは外部サーバーに送信されず、ユーザーの端末内にのみ保存されます。</div>
+        <div class="emph">これらのデータはユーザーの端末内（ブラウザのローカルストレージ・IndexedDB）に保存されます。観測の入力・自動計算・点検・PDF出力といった通常の利用では、外部サーバーに送信されません。ただし、Proプランの一部の出力機能を利用した場合に限り、ファイル生成のために送信されます（次項②）。</div>
 
-        <p><strong>② OCR機能利用時に送信される情報</strong></p>
+        <p><strong>② Proプランの出力機能利用時に送信される情報</strong></p>
+        <p>下記の機能は、出力ファイルの生成を開発者のサーバー（Cloudflare Workers）上で行うため、その処理に必要な観測データを送信します。これらの機能を利用しない限り、送信は発生しません。</p>
+        <ul>
+          <li><strong>対象機能：</strong>CSV出力／写真付き観測記録（HTML）／メール・アプリで共有</li>
+          <li><strong>送信される内容：</strong>作業名・測量日・観測者名・路線名・測点名・観測値（BS/FS/IS等）・GPS座標・測点写真</li>
+          <li><strong>送信先：</strong>Cloudflare Workers（<code>sitelogger-license.kuryumail-369.workers.dev</code>）</li>
+          <li><strong>利用目的：</strong>ライセンスの有効性確認と、出力ファイルの生成のみ</li>
+          <li><strong>保存期間：</strong>生成したファイルを返した時点で破棄され、サーバーには保存されません</li>
+        </ul>
+
+        <p><strong>③ OCR機能利用時に送信される情報</strong></p>
         <p>液晶OCR機能をご利用の場合、撮影した画像データがCloudflare Workers経由でAnthropic社のAPIに送信されます。送信される情報は画像データのみで、測点名・観測者名等の個人情報は含まれません。</p>
         <ul>
           <li>送信先：Cloudflare Workers（<code>sitelogger-ocr.kuryumail-369.workers.dev</code>）</li>
@@ -389,7 +399,17 @@
           <li>保存期間：APIレスポンス生成後、開発者側での画像保存は行いません</li>
         </ul>
 
-        <p><strong>③ Google Analyticsによるアクセス情報</strong></p>
+        <p><strong>④ Proプランのご購入・ライセンス管理に伴う情報</strong></p>
+        <p>Proプランをご購入いただいた場合、ライセンスの発行・検証のため以下の情報を開発者のサーバー（Cloudflare KV）に保存します。</p>
+        <ul>
+          <li>メールアドレス（Stripe社の決済処理を通じて取得）</li>
+          <li>Stripeの顧客ID・サブスクリプションID</li>
+          <li>発行したライセンスキー・契約状態（有効／解約済み）</li>
+          <li>端末識別子（アプリが生成するランダムなID。氏名や端末の固有番号とは関係しません）</li>
+        </ul>
+        <p>クレジットカード番号等の決済情報は、すべてStripe社が処理し、開発者は取得も保存もしません。上記の情報は、契約終了後も購入記録として保持されます。削除をご希望の場合は末尾の窓口までご連絡ください。</p>
+
+        <p><strong>⑤ Google Analyticsによるアクセス情報</strong></p>
         <p>本アプリはGoogle Analytics（G-FD9VDMW9MP）を使用してアクセス状況を分析しています。収集される情報は以下のとおりです。</p>
         <ul>
           <li>ページビュー数・滞在時間・画面遷移</li>
@@ -399,8 +419,11 @@
         </ul>
         <p>これらはCookieを用いて収集されます。個人を特定する情報（氏名・メールアドレス・観測データ等）は収集されません。Google Analyticsのデータ収集を拒否する場合は、<a href="https://tools.google.com/dlpage/gaoptout" target="_blank" style="color:var(--blue);">Google Analyticsオプトアウトアドオン</a>をご利用ください。</p>
 
-        <p><strong>④ GPS情報（任意取得）</strong></p>
-        <p>ユーザーが「📍GPS取得」ボタンを押した場合のみ、端末のGPS機能から位置情報を取得します。取得した座標はその測点データとともに端末内に保存され、CSV出力時に含まれます。開発者のサーバーには送信されません。</p>
+        <p><strong>⑥ GPS情報（任意取得）</strong></p>
+        <p>ユーザーが「📍GPS取得」ボタンを押した場合のみ、端末のGPS機能から位置情報を取得します。取得した座標はその測点データとともに端末内に保存されます。上記②の出力機能（CSV出力・写真付き観測記録・共有）を利用した場合は、その生成処理のためにサーバーへ送信されます（生成後は保存されません）。</p>
+
+        <p><strong>⑦ 不正利用防止のための技術情報</strong></p>
+        <p>ライセンス検証・出力機能へのリクエストに際し、総当たり攻撃や過度な負荷を防ぐ目的でIPアドレスを一時的に利用します。当該情報は短時間（数十秒程度）で自動的に削除されます。</p>
       </div>
     </div>
 
@@ -424,6 +447,9 @@
           <li><strong>法令に基づく場合：</strong>裁判所・警察等の公的機関から法的根拠に基づく開示要求があった場合</li>
           <li><strong>OCR機能利用時：</strong>前述のとおり、画像データがAnthropic社のAPIに送信されます。Anthropic社のプライバシーポリシーは<a href="https://www.anthropic.com/privacy" target="_blank" style="color:var(--blue);">こちら</a>をご参照ください。</li>
           <li><strong>Google Analytics：</strong>前述のとおり、アクセス情報がGoogle社に送信されます。</li>
+          <li><strong>決済処理：</strong>Proプランのご購入に際し、Stripe社が決済情報およびメールアドレスを処理します。</li>
+          <li><strong>ライセンスキーの送付：</strong>ライセンスキーの案内メール送信のため、Resend社にメールアドレスを送信します。</li>
+          <li><strong>インフラの利用：</strong>本アプリのサーバー処理・通信はCloudflare社の提供する基盤上で行われます。</li>
         </ol>
         <div class="emph">観測データ・測量情報・写真等のユーザーデータを第三者に販売・提供することは一切ありません。</div>
       </div>
