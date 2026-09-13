@@ -638,6 +638,23 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 <input type="file" id="sk-fi" accept="image/*" capture="environment" style="display:none" onchange="loadSkPhoto(this.files[0])">
 
 <!-- キーボードアクセサリバー -->
+
+<!-- ピン管理モーダル -->
+<div id="pin-modal" onclick="closePinModal()">
+  <div id="pin-modal-inner" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);">📍 ピン管理</div>
+      <button class="pb" onclick="closePinModal()">閉じる</button>
+    </div>
+    <div id="pin-list"></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- 入力補助バーと行メニューは .app の外（body直下）に置く。
+     position:fixed は祖先の transform / filter 等の影響を受けるため、
+     入れ子を最小にして基準がずれる余地をなくす。 -->
 <div id="kb-bar">
   <span id="kb-label" style="flex:1;font-size:13px;font-weight:600;color:var(--color-text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
   <button class="kb-btn" id="kb-voice" onpointerdown="event.preventDefault()" onclick="kbVoice()">🎤 音声</button>
@@ -652,19 +669,6 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
   <button onclick="rowMenuInsert()">＋ この下に行を挿入</button>
   <button class="danger" onclick="rowMenuDelete()">🗑 この行を削除</button>
 </div>
-
-<!-- ピン管理モーダル -->
-<div id="pin-modal" onclick="closePinModal()">
-  <div id="pin-modal-inner" onclick="event.stopPropagation()">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);">📍 ピン管理</div>
-      <button class="pb" onclick="closePinModal()">閉じる</button>
-    </div>
-    <div id="pin-list"></div>
-  </div>
-</div>
-
-</div><!-- /app -->
 
 <script>
 
@@ -2709,6 +2713,57 @@ checkStorageUsage();
 newSkPage();
 // 観測者名datalist初期化
 updateWorkerDatalist();
+</script>
+
+<!-- 診断パネル：URLの末尾に #debug を付けたときだけ表示する。
+     実機でのみ起きる position:fixed の不具合を数値で確認するためのもの。 -->
+<div id="dbg" style="display:none;position:fixed;left:6px;right:6px;bottom:6px;z-index:9999;
+  background:rgba(20,20,22,.92);color:#8CE99A;font:11px/1.5 ui-monospace,monospace;
+  padding:8px 10px;border-radius:8px;white-space:pre;pointer-events:none;"></div>
+<script>
+(function(){
+  var started=false;
+  function boot(){
+    if(started||location.hash.indexOf('debug')<0)return;
+    started=true;
+    start();
+  }
+  window.addEventListener('hashchange',boot); // 開いたまま #debug を足しても効くように
+  function start(){
+  var el=document.getElementById('dbg');
+  el.style.display='block';
+  function culprit(node){
+    var e=node.parentElement, hit=[];
+    while(e&&e!==document.documentElement){
+      var c=getComputedStyle(e), bad=[];
+      if(c.transform!=='none')bad.push('transform');
+      if(c.filter!=='none')bad.push('filter');
+      if(c.backdropFilter&&c.backdropFilter!=='none')bad.push('backdrop');
+      if(c.perspective!=='none')bad.push('perspective');
+      if(c.willChange!=='auto')bad.push('will-change');
+      if(c.contain!=='none')bad.push('contain');
+      if(bad.length)hit.push((e.id||e.className||e.tagName)+'['+bad.join(',')+']');
+      e=e.parentElement;
+    }
+    return hit.length?hit.join(' '):'なし';
+  }
+  function tick(){
+    var b=document.getElementById('kb-bar'), r=b.getBoundingClientRect(), c=getComputedStyle(b);
+    var vv=window.visualViewport;
+    el.textContent=
+      'バー上端(画面基準) '+Math.round(r.top)+'px  ← 0なら固定OK\n'+
+      'position '+c.position+'  display '+c.display+'\n'+
+      'transform '+c.transform+'\n'+
+      'scrollY '+Math.round(window.scrollY)+'  innerH '+window.innerHeight+'\n'+
+      (vv?('vv.h '+Math.round(vv.height)+'  vv.top '+Math.round(vv.offsetTop)+'  scale '+(vv.scale||1).toFixed(2)+'\n'):'')+
+      'fixedを壊す祖先: '+culprit(b)+'\n'+
+      'focus '+((document.activeElement&&(document.activeElement.id||document.activeElement.className))||'なし');
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  }
+  boot();
+})();
 </script>
 </body>
 </html>
