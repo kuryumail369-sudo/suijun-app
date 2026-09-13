@@ -180,6 +180,24 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .kb-btn.p{background:#185FA5;color:#fff;border-color:#185FA5;}
 .kb-btn.rec{background:#E24B4A;color:#fff;border-color:#E24B4A;font-weight:700;}
 #kb-bar.recording{background:#FCEBEB;border-bottom:2px solid #E24B4A;}
+/* ===== バックアップ・復元 ===== */
+.bk-row{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.bk-btn{flex:1;min-height:48px;padding:12px 8px;font-size:14px;font-weight:600;border-radius:10px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;}
+.bk-btn:active{background:var(--color-background-secondary);}
+#bk-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;align-items:center;justify-content:center;padding:16px;}
+#bk-ov.open{display:flex;}
+#bk-box{background:var(--color-background-primary);border-radius:14px;width:100%;max-width:430px;max-height:82vh;overflow:auto;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);}
+#bk-title{font-size:17px;font-weight:700;color:var(--color-text-primary);margin-bottom:6px;}
+#bk-body{font-size:14px;color:var(--color-text-primary);line-height:1.6;}
+.bk-note{font-size:12px;color:var(--color-text-secondary);line-height:1.6;margin:10px 0 14px;}
+.bk-choice{display:block;width:100%;text-align:left;padding:14px;margin-bottom:10px;border-radius:10px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;}
+.bk-choice:active{background:var(--color-background-secondary);}
+.bk-choice b{display:block;font-size:15px;font-weight:700;color:var(--color-text-primary);margin-bottom:3px;}
+.bk-choice em{display:block;font-style:normal;font-size:12px;color:var(--color-text-secondary);line-height:1.5;}
+.bk-choice.danger{border-color:#E9A9A8;}
+.bk-choice.danger b{color:#C1462F;}
+.bk-cancel{display:block;width:100%;padding:12px;margin-top:4px;font-size:14px;font-weight:600;border-radius:10px;border:1px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary);cursor:pointer;}
+.bk-sum{background:var(--color-background-secondary);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;margin-bottom:12px;}
 #kb-bar.recording #kb-label{color:#C1462F;font-weight:700;}
 @keyframes recpulse{0%,100%{opacity:1;}50%{opacity:.45;}}
 .kb-btn.rec{animation:recpulse 1s ease-in-out infinite;}
@@ -245,7 +263,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <a href="terms.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;">v0.6</a>
   </div>
   <div class="route-list" id="route-list"></div>
-  <div id="storage-warn-banner" class="storage-warn-banner">⚠️ ストレージの空き容量が少なくなっています。データが保存されない可能性があります。CSV・PDFを出力してバックアップを取ってください。</div>
+  <div id="storage-warn-banner" class="storage-warn-banner">⚠️ ストレージの空き容量が少なくなっています。データが保存されない可能性があります。下の「💾 バックアップを保存」でデータを書き出してください。</div>
   <div id="home-license-banner" class="license-banner" style="display:none;margin:0 0 8px;">
     <div class="license-banner-icon" id="license-banner-icon">🔓</div>
     <div class="license-banner-body">
@@ -255,6 +273,11 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <button class="license-banner-btn" id="license-banner-btn" onclick="showUpgrade()">アップグレード</button>
   </div>
   <button class="new-route-btn" onclick="createRoute()">＋ 新規路線を作成</button>
+  <div class="bk-row">
+    <button class="bk-btn" onclick="backupStart()">💾 バックアップを保存</button>
+    <button class="bk-btn" onclick="restorePick()">📥 バックアップから復元</button>
+  </div>
+  <div style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin-top:8px;line-height:1.6;">機種変更・端末の故障に備えて、全路線をファイルに書き出せます（無料）。</div>
   <div style="text-align:center;margin-top:20px;padding-bottom:8px;">
     <a href="manual.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📖 使い方</a>
     <a href="terms.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">利用規約</a>
@@ -625,6 +648,12 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <button class="xb" id="btn-photo" onclick="proAction(expPhotoReport)">🖼 写真付き観測記録（HTML）</button>
       <button class="xb" style="background:#25D366;color:#fff;border-color:#25D366;" id="btn-share" onclick="proAction(shareData)">📤 メール・アプリで共有</button>
     </div>
+    <div class="card">
+      <span class="slabel" style="margin-bottom:10px;">バックアップ・復元（無料）</span>
+      <button class="xb" onclick="backupStart()">💾 全データをバックアップ</button>
+      <button class="xb" onclick="restorePick()">📥 バックアップから復元</button>
+      <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.6;">全路線の観測値・写真・スケッチを1つのファイルに書き出します。機種変更や端末の故障に備えて、定期的な保存をおすすめします。ライセンスキーは含まれません。</div>
+    </div>
     <div style="text-align:center;margin-top:16px;padding-bottom:4px;">
       <a href="manual.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📖 使い方</a>
       <a href="terms.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">利用規約</a>
@@ -660,6 +689,15 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
   <button class="kb-btn" id="kb-voice" onpointerdown="event.preventDefault()" onclick="kbVoice()">🎤 音声</button>
   <button class="kb-btn" id="kb-ocr" onpointerdown="event.preventDefault()" onclick="kbOcr()">📷 OCR</button>
   <button class="kb-btn p" onclick="blurKb()">完了</button>
+</div>
+
+<!-- バックアップ・復元 -->
+<input type="file" id="bk-fi" accept="application/json,.json" style="display:none" onchange="restoreFile(this.files[0])">
+<div id="bk-ov" onclick="if(event.target===this)bkClose()">
+  <div id="bk-box">
+    <div id="bk-title"></div>
+    <div id="bk-body"></div>
+  </div>
 </div>
 
 <!-- 行メニュー（⋯） -->
@@ -903,6 +941,7 @@ function goHome(){
   hideKbBar();
   saveCurrentState();
   saveToStorage();
+  saveSketchNow();
   document.getElementById('home-screen').style.display='';
   document.getElementById('obs-screen').style.display='none';
   renderRouteList();
@@ -958,15 +997,17 @@ function showRouteMenu(id){
     if(confirm(`「${r.name}」を削除しますか？`)){
       routes=routes.filter(x=>x.id!==id);
       deleteRoutePhotosFromDB(id);
+      deleteSketchFromDB(id);
       saveToStorage();renderRouteList();
     }
   }
 }
 
 function openRoute(id){
-  if(currentRouteId&&currentRouteId!==id) saveCurrentState();
+  if(currentRouteId&&currentRouteId!==id){saveCurrentState();saveSketchNow();}
   currentRouteId=id;
   loadCurrentState();
+  loadSketchForRoute(id);
   renderTbl();
   document.getElementById('obs-title').textContent=routes.find(r=>r.id===id)?.name||'';
   document.getElementById('home-screen').style.display='none';
@@ -1095,15 +1136,17 @@ function applyReturnPoints(pts){
 // これによりlocalStorageの容量超過によるデータ消失を防ぐ。
 const PHOTO_DB_NAME='sitelogger_photos_db';
 const PHOTO_STORE='photos';
+const SK_STORE='sketches';   // v2で追加：スケッチを路線ごとに保存する
 let _photoDbPromise=null;
 function openPhotoDB(){
   if(_photoDbPromise) return _photoDbPromise;
   _photoDbPromise=new Promise((resolve,reject)=>{
     if(!('indexedDB' in window)){reject(new Error('IndexedDB未対応'));return;}
-    const req=indexedDB.open(PHOTO_DB_NAME,1);
+    const req=indexedDB.open(PHOTO_DB_NAME,2);
     req.onupgradeneeded=e=>{
       const db=e.target.result;
       if(!db.objectStoreNames.contains(PHOTO_STORE)) db.createObjectStore(PHOTO_STORE,{keyPath:'key'});
+      if(!db.objectStoreNames.contains(SK_STORE)) db.createObjectStore(SK_STORE,{keyPath:'key'});
     };
     req.onsuccess=e=>resolve(e.target.result);
     req.onerror=()=>reject(req.error);
@@ -1252,6 +1295,7 @@ function saveToStorage(){
 // visibilitychange・pagehideの両方で強制フラッシュする（モバイルでの信頼性のため両方登録）。
 function flushSaveNow(){
   try{ clearTimeout(autoSaveTimer); saveToStorage(); }catch(e){}
+  try{ if(typeof saveSketchNow==='function') saveSketchNow(); }catch(e){}
 }
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden') flushSaveNow();
@@ -1262,6 +1306,271 @@ function loadFromStorage(){
     const d=JSON.parse(localStorage.getItem('suijun_v06')||localStorage.getItem('suijun_v05')||'null');
     if(d&&d.routes&&d.routes.length>0){routes=d.routes;currentRouteId=d.currentRouteId||routes[0].id;return true;}
   }catch(e){}return false;
+}
+
+// ===== バックアップ・復元 =====
+// 全路線（localStorage）と写真（IndexedDB）を1つのJSONファイルにまとめて書き出す。
+// ライセンスキー・端末IDは意図的に含めない（バックアップファイルを他人に渡しても
+// Pro権利が漏れないようにするため）。全ユーザー無料。
+const BK_FORMAT='sitelogger-backup';
+let _bkPhotos=null;   // 書き出しダイアログ表示中に保持する写真データ
+let _bkSketches=null; // 同上（スケッチ）
+let _bkImport=null;   // 復元ダイアログ表示中に保持する読込済みデータ
+
+function bkOpen(title,html){
+  document.getElementById('bk-title').textContent=title;
+  document.getElementById('bk-body').innerHTML=html;
+  document.getElementById('bk-ov').classList.add('open');
+}
+function bkClose(){
+  document.getElementById('bk-ov').classList.remove('open');
+  document.getElementById('bk-body').innerHTML='';
+  _bkPhotos=null;_bkSketches=null;_bkImport=null;
+}
+function bkSize(bytes){
+  if(bytes<1024)return bytes+' B';
+  if(bytes<1024*1024)return Math.round(bytes/1024)+' KB';
+  return (bytes/1024/1024).toFixed(1)+' MB';
+}
+function bkStamp(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
+}
+
+async function readAllPhotos(){
+  const db=await openPhotoDB();
+  return await new Promise((res,rej)=>{
+    const tx=db.transaction(PHOTO_STORE,'readonly');
+    const req=tx.objectStore(PHOTO_STORE).getAll();
+    req.onsuccess=()=>res((req.result||[]).map(r=>({key:r.key,data:r.data})));
+    req.onerror=()=>rej(req.error);
+  });
+}
+async function readAllSketches(){
+  const db=await openPhotoDB();
+  return await new Promise((res,rej)=>{
+    const tx=db.transaction(SK_STORE,'readonly');
+    const req=tx.objectStore(SK_STORE).getAll();
+    req.onsuccess=()=>res((req.result||[]).map(r=>({key:r.key,pages:r.pages})));
+    req.onerror=()=>rej(req.error);
+  });
+}
+async function clearAllSketches(){
+  const db=await openPhotoDB();
+  await new Promise((res,rej)=>{
+    const tx=db.transaction(SK_STORE,'readwrite');
+    tx.objectStore(SK_STORE).clear();
+    tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);
+  });
+}
+async function writeSketches(list,idMap){
+  const db=await openPhotoDB();
+  await new Promise((res,rej)=>{
+    const tx=db.transaction(SK_STORE,'readwrite');
+    const st=tx.objectStore(SK_STORE);
+    list.forEach(sk=>{
+      if(!sk||!sk.key||!Array.isArray(sk.pages))return;
+      const nid=idMap[sk.key];
+      if(!nid)return;
+      st.put({key:nid,pages:sk.pages});
+    });
+    tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);
+  });
+}
+async function clearAllPhotos(){
+  const db=await openPhotoDB();
+  await new Promise((res,rej)=>{
+    const tx=db.transaction(PHOTO_STORE,'readwrite');
+    tx.objectStore(PHOTO_STORE).clear();
+    tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);
+  });
+}
+// idMap で旧路線ID→新路線IDに読み替えながら書き戻す（追加復元でIDが衝突した場合に対応）
+async function writePhotos(list,idMap){
+  const db=await openPhotoDB();
+  await new Promise((res,rej)=>{
+    const tx=db.transaction(PHOTO_STORE,'readwrite');
+    const st=tx.objectStore(PHOTO_STORE);
+    list.forEach(p=>{
+      if(!p||!p.key||!p.data)return;
+      const parts=String(p.key).split('__');
+      if(parts.length!==3)return;
+      const nid=idMap[parts[0]];
+      if(!nid)return;
+      st.put({key:nid+'__'+parts[1]+'__'+parts[2],data:p.data});
+    });
+    tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);
+  });
+}
+
+function bkPayload(photos,sketches){
+  return {app:'SiteLogger',format:BK_FORMAT,v:1,
+    exportedAt:new Date().toISOString(),
+    routes:routes,currentRouteId:currentRouteId,
+    workers:loadWorkerNames(),
+    photos:photos||[],
+    sketches:sketches||[]};
+}
+
+async function backupStart(){
+  flushSaveNow();
+  await saveSketchNow();
+  let photos=[],sketches=[];
+  try{photos=await readAllPhotos();}catch(e){photos=[];}
+  try{sketches=await readAllSketches();}catch(e){sketches=[];}
+  sketches=sketches.filter(sk=>sk&&Array.isArray(sk.pages)&&sk.pages.length>0);
+  _bkPhotos=photos;_bkSketches=sketches;
+  const baseSize=new Blob([JSON.stringify(bkPayload([],[]))]).size;
+  const photoSize=photos.reduce((s,p)=>s+(p.data?p.data.length:0),0);
+  const skSize=sketches.reduce((s,sk)=>s+sk.pages.reduce((t,pg)=>t+((pg.bg||'').length+(pg.dr||'').length),0),0);
+  const nRoutes=routes.length,nPhotos=photos.length;
+  const nSkPages=sketches.reduce((t,sk)=>t+sk.pages.length,0);
+  const media=[];
+  if(nPhotos)media.push('写真 '+nPhotos+'枚');
+  if(nSkPages)media.push('スケッチ '+nSkPages+'枚');
+  const fullBtn=media.length
+    ?`<button class="bk-choice" onclick="bkSave(true)"><b>📷 画像も含める（推奨）</b><em>路線 ${nRoutes}件・${media.join('・')} ／ 約 ${bkSize(baseSize+photoSize+skSize)}</em></button>`
+    :`<div class="bk-note">この端末に保存されている写真・スケッチはありません。</div>`;
+  bkOpen('バックアップを保存',
+    `<div class="bk-note">全路線の観測値・測点名・GPS座標・メモを1つのファイルに書き出します。書き出したファイルは「ファイル」アプリなどに保存され、別の端末での復元に使えます。</div>`+
+    fullBtn+
+    `<button class="bk-choice" onclick="bkSave(false)"><b>📄 観測データのみ</b><em>路線 ${nRoutes}件（写真・スケッチなし） ／ 約 ${bkSize(baseSize)}</em></button>`+
+    `<button class="bk-cancel" onclick="bkClose()">キャンセル</button>`);
+}
+
+function bkSave(withPhotos){
+  const photos=withPhotos?(_bkPhotos||[]):[];
+  const sketches=withPhotos?(_bkSketches||[]):[];
+  let json;
+  try{
+    json=JSON.stringify(bkPayload(photos,sketches));
+  }catch(e){
+    bkClose();
+    alert('バックアップの作成に失敗しました。「観測データのみ」でもう一度お試しください。');
+    return;
+  }
+  bkClose();
+  try{
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='SiteLogger_backup_'+bkStamp()+'.json';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),20000);
+  }catch(e){
+    alert('ファイルの書き出しに失敗しました。端末の空き容量をご確認ください。');
+  }
+}
+
+function restorePick(){
+  const fi=document.getElementById('bk-fi');
+  fi.value='';
+  fi.click();
+}
+
+async function restoreFile(f){
+  if(!f)return;
+  let txt,d;
+  try{txt=await f.text();}catch(e){alert('ファイルを読み込めませんでした。');return;}
+  try{d=JSON.parse(txt);}catch(e){
+    alert('このファイルは読み込めませんでした。\nSiteLoggerのバックアップファイル（.json）を選んでください。');return;
+  }
+  if(!d||d.format!==BK_FORMAT||!Array.isArray(d.routes)||d.routes.length===0){
+    alert('SiteLoggerのバックアップファイルではないようです。\n（CSVやPDFからは復元できません）');return;
+  }
+  _bkImport=d;
+  const nP=Array.isArray(d.photos)?d.photos.length:0;
+  const nS=Array.isArray(d.sketches)?d.sketches.reduce((t,sk)=>t+((sk&&Array.isArray(sk.pages))?sk.pages.length:0),0):0;
+  let when='不明';
+  try{
+    const dt=new Date(d.exportedAt);
+    if(!isNaN(dt.getTime())){
+      const p=n=>String(n).padStart(2,'0');
+      when=dt.getFullYear()+'/'+p(dt.getMonth()+1)+'/'+p(dt.getDate())+' '+p(dt.getHours())+':'+p(dt.getMinutes());
+    }
+  }catch(e){}
+  const names=d.routes.slice(0,5).map(r=>esc(r.name||'（名称なし）')).join('、')+(d.routes.length>5?' ほか':'');
+  bkOpen('バックアップから復元',
+    `<div class="bk-sum"><b>作成日時</b>：${esc(when)}<br><b>路線</b>：${d.routes.length}件（${names}）<br><b>写真</b>：${nP}枚　<b>スケッチ</b>：${nS}枚</div>`+
+    `<div class="bk-note">現在この端末には路線が ${routes.length}件あります。取り込み方を選んでください。</div>`+
+    `<button class="bk-choice" onclick="restoreApply('merge')"><b>➕ 今のデータに追加する</b><em>現在の ${routes.length}件はそのまま残し、バックアップの ${d.routes.length}件を追加します。名前が重なる路線には「（復元）」が付きます。</em></button>`+
+    `<button class="bk-choice danger" onclick="restoreApply('replace')"><b>♻️ すべて置き換える</b><em>現在の ${routes.length}件をすべて削除し、バックアップの内容に戻します。元に戻せません。</em></button>`+
+    `<button class="bk-cancel" onclick="bkClose()">キャンセル</button>`);
+}
+
+async function restoreApply(mode){
+  const d=_bkImport;
+  if(!d)return;
+  if(mode==='replace'){
+    if(!confirm('⚠️ 現在のデータ（路線 '+routes.length+'件）と写真をすべて削除して、\nバックアップの内容に置き換えます。\n\nこの操作は元に戻せません。実行しますか？'))return;
+  }
+  const src=d.routes,photos=Array.isArray(d.photos)?d.photos:[];
+  const sketches=Array.isArray(d.sketches)?d.sketches:[];
+  bkOpen('復元中','<div class="bk-note">復元しています。しばらくお待ちください…</div>');
+  try{
+    const idMap={};
+    let next;
+    if(mode==='replace'){
+      next=src.map(r=>{idMap[r.id]=r.id;return {...r};});
+    }else{
+      const usedIds=new Set(routes.map(r=>r.id));
+      const usedNames=new Set(routes.map(r=>r.name));
+      next=routes.slice();
+      src.forEach(r=>{
+        let nid=r.id;
+        while(!nid||usedIds.has(nid)) nid='r'+Date.now()+Math.random().toString(36).slice(2,7);
+        usedIds.add(nid);idMap[r.id]=nid;
+        let nm=r.name||'路線';
+        if(usedNames.has(nm)){
+          let base=nm+'（復元）',i=2;nm=base;
+          while(usedNames.has(nm)){nm=r.name+'（復元'+i+'）';i++;}
+        }
+        usedNames.add(nm);
+        next.push({...r,id:nid,name:nm});
+      });
+    }
+    // 写真の入れ替えはここまでの処理が成功してから行う（失敗時に既存写真を失わないため）
+    if(mode==='replace'){
+      try{await clearAllPhotos();}catch(e){}
+      try{await clearAllSketches();}catch(e){}
+    }
+    if(photos.length){
+      try{await writePhotos(photos,idMap);}
+      catch(e){alert('観測データは復元しましたが、写真の一部を保存できませんでした。\n端末の空き容量をご確認ください。');}
+    }
+    if(sketches.length){
+      try{await writeSketches(sketches,idMap);}
+      catch(e){alert('観測データは復元しましたが、スケッチの一部を保存できませんでした。\n端末の空き容量をご確認ください。');}
+    }
+    // 作業者名リストの取り込み
+    if(Array.isArray(d.workers)&&d.workers.length){
+      try{
+        const cur=mode==='replace'?[]:loadWorkerNames();
+        const merged=[];
+        cur.concat(d.workers).forEach(n=>{if(typeof n==='string'&&n&&merged.indexOf(n)<0)merged.push(n);});
+        localStorage.setItem('suijun_workers',JSON.stringify(merged.slice(0,50)));
+      }catch(e){}
+    }
+    routes=next;
+    // 画面に残っている旧路線の入力値が復元後のデータを上書きしないよう、
+    // 現在の路線選択をいったん解除してホーム画面へ戻す。
+    currentRouteId=null;rows=[];rowsReturn=[];
+    skDirtyRoute=null;clearTimeout(skSaveTimer);pages=[];curPage=0;newSkPage();
+    localStorage.setItem('suijun_v06',JSON.stringify({routes,currentRouteId:null,v:6}));
+    bkClose();
+    hideKbBar();
+    document.getElementById('home-screen').style.display='';
+    document.getElementById('obs-screen').style.display='none';
+    renderRouteList();
+    if(typeof updateLicenseUI==='function'){try{updateLicenseUI();}catch(e){}}
+    const done=['路線 '+routes.length+'件'];
+    if(photos.length)done.push('写真 '+photos.length+'枚');
+    if(sketches.length)done.push('スケッチ '+sketches.reduce((t,sk)=>t+((sk&&sk.pages)?sk.pages.length:0),0)+'枚');
+    alert('✅ 復元が完了しました。\n'+done.join('・')+'\n\n一覧から路線を開いて内容をご確認ください。');
+  }catch(e){
+    bkClose();
+    alert('復元に失敗しました。\n'+(e&&e.message?e.message:'')+'\n\n現在のデータはそのまま残っています。');
+  }
 }
 
 // ===== OBSERVATION =====
@@ -2189,12 +2498,12 @@ function newSkPage(img=null){
     for(let y=0;y<H;y+=40){bc.beginPath();bc.moveTo(0,y);bc.lineTo(W,y);bc.stroke();}
   }
   const dr=document.createElement('canvas');dr.width=W;dr.height=H;
-  pages.push({bg,dr,pins:[],hist:[],histIdx:-1});switchPg(pages.length-1);
+  pages.push({bg,dr,pins:[],hist:[],histIdx:-1});switchPg(pages.length-1);markSketchDirty();
 }
 function switchPg(idx){curPage=idx;bgCtx.clearRect(0,0,W,H);bgCtx.drawImage(pages[idx].bg,0,0);drCtx.clearRect(0,0,W,H);drCtx.drawImage(pages[idx].dr,0,0);renderPins();renderThumbs();}
 function saveDr(){const c=pages[curPage].dr.getContext('2d');c.clearRect(0,0,W,H);c.drawImage(drCv,0,0);}
-function pushH(){saveDr();const p=pages[curPage];p.hist=p.hist.slice(0,p.histIdx+1);const s=document.createElement('canvas');s.width=W;s.height=H;s.getContext('2d').drawImage(drCv,0,0);p.hist.push({cv:s,pins:JSON.parse(JSON.stringify(p.pins))});p.histIdx=p.hist.length-1;updThumb(curPage);}
-function skUndo(){const p=pages[curPage];if(p.histIdx>0){p.histIdx--;const s=p.hist[p.histIdx];drCtx.clearRect(0,0,W,H);drCtx.drawImage(s.cv,0,0);p.pins=JSON.parse(JSON.stringify(s.pins));saveDr();}else if(p.histIdx===0){p.histIdx=-1;drCtx.clearRect(0,0,W,H);p.pins=[];saveDr();}renderPins();updThumb(curPage);}
+function pushH(){saveDr();const p=pages[curPage];p.hist=p.hist.slice(0,p.histIdx+1);const s=document.createElement('canvas');s.width=W;s.height=H;s.getContext('2d').drawImage(drCv,0,0);p.hist.push({cv:s,pins:JSON.parse(JSON.stringify(p.pins))});p.histIdx=p.hist.length-1;updThumb(curPage);markSketchDirty();}
+function skUndo(){const p=pages[curPage];if(p.histIdx>0){p.histIdx--;const s=p.hist[p.histIdx];drCtx.clearRect(0,0,W,H);drCtx.drawImage(s.cv,0,0);p.pins=JSON.parse(JSON.stringify(s.pins));saveDr();}else if(p.histIdx===0){p.histIdx=-1;drCtx.clearRect(0,0,W,H);p.pins=[];saveDr();}renderPins();updThumb(curPage);markSketchDirty();}
 function skClear(){drCtx.clearRect(0,0,W,H);pages[curPage].pins=[];pushH();renderPins();}
 function setTool(t){sk_tool=t;['pen','marker','pin','text','eraser'].forEach(n=>{const b=document.getElementById('tb-'+n);if(b)b.classList.toggle('active',n===t);});if(sk_txInp){sk_txInp.remove();sk_txInp=null;}}
 function setColor(c,el){sk_color=c;document.querySelectorAll('.cd').forEach(d=>d.classList.remove('active'));el.classList.add('active');}
@@ -2259,7 +2568,95 @@ function renderThumbs(){
   const add=document.createElement('button');add.className='addp';add.textContent='+';add.onclick=newBlank;row.appendChild(add);
 }
 function updThumb(idx){const ths=document.querySelectorAll('.pth');if(ths[idx]){const tc=ths[idx].querySelector('canvas');if(tc){const tcx=tc.getContext('2d');tcx.clearRect(0,0,68,51);tcx.drawImage(pages[idx].bg,0,0,68,51);tcx.drawImage(pages[idx].dr,0,0,68,51);}}}
-function delPg(idx){if(pages.length<=1){skClear();return;}pages.splice(idx,1);curPage=Math.min(curPage,pages.length-1);switchPg(curPage);renderThumbs();}
+function delPg(idx){if(pages.length<=1){skClear();return;}pages.splice(idx,1);curPage=Math.min(curPage,pages.length-1);switchPg(curPage);renderThumbs();markSketchDirty();}
+
+// ===== スケッチの保存・復元（路線ごと・IndexedDB） =====
+// スケッチはキャンバス（画像）なのでlocalStorageには入らない。写真と同じIndexedDBに
+// 路線IDをキーとして保存する。取り消し履歴(hist)は保存しない（再読込でリセットされる）。
+let skSaveTimer=null,skDirtyRoute=null;
+
+function markSketchDirty(){
+  if(!currentRouteId)return;
+  skDirtyRoute=currentRouteId;
+  clearTimeout(skSaveTimer);
+  skSaveTimer=setTimeout(()=>{saveSketchNow();},1500);
+}
+function serializeSketch(){
+  // 背景は必ず全面が塗られている（写真 or 方眼）ため透過不要 → JPEGで軽量化。
+  // 描画レイヤーは透過が必要なのでPNG。
+  return pages.map(p=>({
+    bg:p.bg.toDataURL('image/jpeg',0.85),
+    dr:p.dr.toDataURL('image/png'),
+    pins:Array.isArray(p.pins)?p.pins:[]
+  }));
+}
+async function saveSketchNow(){
+  const rid=skDirtyRoute;
+  clearTimeout(skSaveTimer);
+  if(!rid)return;
+  let data;
+  try{
+    if(pages[curPage])saveDr();
+    data=serializeSketch();
+  }catch(e){return;}
+  try{
+    const db=await openPhotoDB();
+    await new Promise((res,rej)=>{
+      const tx=db.transaction(SK_STORE,'readwrite');
+      tx.objectStore(SK_STORE).put({key:rid,pages:data});
+      tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);
+    });
+    if(skDirtyRoute===rid)skDirtyRoute=null;
+  }catch(e){console.warn('スケッチの保存に失敗しました',e);}
+}
+function imgToCanvas(url){
+  return new Promise(res=>{
+    const c=document.createElement('canvas');c.width=W;c.height=H;
+    if(!url){res(c);return;}
+    const im=new Image();
+    im.onload=()=>{try{c.getContext('2d').drawImage(im,0,0,W,H);}catch(e){}res(c);};
+    im.onerror=()=>res(c);
+    im.src=url;
+  });
+}
+async function loadSketchForRoute(rid){
+  let rec=null;
+  try{
+    const db=await openPhotoDB();
+    rec=await new Promise((res,rej)=>{
+      const tx=db.transaction(SK_STORE,'readonly');
+      const r=tx.objectStore(SK_STORE).get(rid);
+      r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error);
+    });
+  }catch(e){}
+  if(currentRouteId!==rid)return; // 読込中に別路線へ切り替わっていたら破棄
+  const list=(rec&&Array.isArray(rec.pages))?rec.pages:[];
+  if(!list.length){
+    // まだスケッチが無い路線：白紙を1枚用意するだけで、保存はしない
+    // （何も描いていない方眼が全路線ぶん保存されるのを防ぐ）
+    pages=[];curPage=0;resetVP();newSkPage();
+    clearTimeout(skSaveTimer);if(skDirtyRoute===rid)skDirtyRoute=null;
+    return;
+  }
+  const built=[];
+  for(const pd of list){
+    const bg=await imgToCanvas(pd&&pd.bg),dr=await imgToCanvas(pd&&pd.dr);
+    built.push({bg,dr,pins:(pd&&Array.isArray(pd.pins))?pd.pins:[],hist:[],histIdx:-1});
+  }
+  if(currentRouteId!==rid)return;
+  pages=built;curPage=0;resetVP();switchPg(0);
+}
+async function deleteSketchFromDB(rid){
+  if(!rid)return;
+  try{
+    const db=await openPhotoDB();
+    await new Promise((res,rej)=>{
+      const tx=db.transaction(SK_STORE,'readwrite');
+      tx.objectStore(SK_STORE).delete(rid);
+      tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){}
+}
 function saveSk(){
   saveDr();const out=document.createElement('canvas');out.width=W;out.height=H;const ox=out.getContext('2d');
   ox.drawImage(pages[curPage].bg,0,0);ox.drawImage(pages[curPage].dr,0,0);

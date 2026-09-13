@@ -376,9 +376,10 @@
       <a href="#s10">10. スケッチ</a>
       <a href="#s11">11. 点検タブ</a>
       <a href="#s12">12. 出力・共有</a>
-      <a href="#s13">13. 計算の仕組み</a>
-      <a href="#s14">14. 転点の入力方法</a>
-      <a href="#s15">15. よくある質問</a>
+      <a href="#s13">13. バックアップ・復元</a>
+      <a href="#s14">14. 計算の仕組み</a>
+      <a href="#s15">15. 転点の入力方法</a>
+      <a href="#s16">16. よくある質問</a>
     </div>
   </div>
 </div>
@@ -698,6 +699,11 @@
       </table>
 
       <div class="tip tip-green">スケッチはPDF出力（「🗺 スケッチ PDF」）でA4縦で印刷・保存できます。</div>
+
+      <div class="tip">
+        <strong>スケッチは路線ごとに自動保存されます。</strong> 描いた内容・ピン・下地写真は路線に紐づいて端末内に保存され、アプリを閉じても残ります。別の路線を開くと、その路線のスケッチに切り替わります。バックアップ（<a href="#s13">13章</a>）にも含まれるので、機種変更のときもそのまま引き継げます。<br>
+        なお「↩ 元に戻す」の履歴だけは保存されません。アプリを開き直すと取り消し履歴はリセットされます（描いた内容自体は残ります）。
+      </div>
     </div>
   </div>
 
@@ -778,10 +784,48 @@
     </div>
   </div>
 
-  <!-- 13. 計算の仕組み -->
+
+  <!-- 13. バックアップ・復元 -->
   <div class="section anchor" id="s13">
     <div class="section-header">
       <div class="section-num">13</div>
+      <h2>💾 バックアップ・復元</h2>
+    </div>
+    <div class="section-body">
+      <p>観測データはお使いの端末の中だけに保存されています。<strong>端末を機種変更・初期化したり、故障・紛失したりすると、データは復旧できません。</strong>定期的なバックアップをおすすめします。この機能は<strong>無料プランでもすべてご利用いただけます</strong>。</p>
+
+      <h3 style="font-size:15px;margin:18px 0 8px;">バックアップを保存する</h3>
+      <p>ホーム画面（路線一覧）の <span class="badge badge-green">💾 バックアップを保存</span>、または「📤 出力」タブの <span class="badge badge-green">💾 全データをバックアップ</span> を押します。</p>
+      <table>
+        <tr><th>選択肢</th><th>内容</th></tr>
+        <tr><td><span class="badge badge-blue">📷 画像も含める</span></td><td>観測データに加えて、測点写真とスケッチもすべて保存します。ファイルは大きくなりますが、これ1つで完全に元に戻せます。</td></tr>
+        <tr><td><span class="badge badge-blue">📄 観測データのみ</span></td><td>測点名・BS・FS・IS・GPS座標・メモなどのみ。ファイルは軽量ですが、写真とスケッチは復元されません。</td></tr>
+      </table>
+      <p><code>SiteLogger_backup_日付_時刻.json</code> という名前のファイルが書き出されます。iPhoneなら「ファイル」アプリ、AndroidならダウンロードフォルダやGoogleドライブなどに保存してください。</p>
+
+      <h3 style="font-size:15px;margin:18px 0 8px;">バックアップから復元する</h3>
+      <p><span class="badge badge-green">📥 バックアップから復元</span> を押し、保存しておいた <code>.json</code> ファイルを選びます。ファイルの内容（作成日時・路線数・写真枚数）が表示されたあと、取り込み方を選べます。</p>
+      <table>
+        <tr><th>取り込み方</th><th>内容</th></tr>
+        <tr><td><span class="badge badge-blue">➕ 今のデータに追加する</span></td><td>今ある路線はそのまま残し、バックアップの路線を追加します。名前が重なる場合は「（復元）」が付きます。<strong>既存データが消えないので安全です。</strong></td></tr>
+        <tr><td><span class="badge badge-amber">♻️ すべて置き換える</span></td><td>今ある路線と写真をすべて削除し、バックアップの状態に戻します。<strong>元に戻せません。</strong>機種変更後の新しい端末など、中身が空のときに使ってください。</td></tr>
+      </table>
+
+      <div class="tip">
+        <strong>機種変更のときは：</strong> 古い端末で「写真も含める」でバックアップを保存 → ファイルを新しい端末へ移す（AirDrop・メール・クラウドなど） → 新しい端末でSiteLoggerを開いて「バックアップから復元」→「すべて置き換える」。この手順で、路線・観測値・写真・スケッチ・作業者名がそのまま引き継がれます。
+      </div>
+
+      <div class="tip tip-amber">
+        <strong>ご注意：</strong> バックアップファイルに<strong>ライセンスキーは含まれません</strong>（ファイルを他の方に渡してもPro権利が渡らないようにするためです）。新しい端末では、お手元のライセンスキーを改めて入力してください。<br>
+        また、バックアップファイルは端末内に書き出されるだけで、<strong>サーバーには一切送信されません。</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14. 計算の仕組み -->
+  <div class="section anchor" id="s14">
+    <div class="section-header">
+      <div class="section-num">14</div>
       <h2>計算の仕組み</h2>
     </div>
     <div class="section-body">
@@ -803,9 +847,9 @@
   <!-- 14. FAQ -->
 
   <!-- 入力方法 -->
-  <div class="section anchor" id="s14">
+  <div class="section anchor" id="s15">
     <div class="section-header">
-      <div class="section-num">14</div>
+      <div class="section-num">15</div>
       <h2>入力方法：転点（TP）の正しい入力</h2>
     </div>
     <div class="section-body">
@@ -850,9 +894,9 @@
     </div>
   </div>
 
-  <div class="section anchor" id="s15">
+  <div class="section anchor" id="s16">
     <div class="section-header">
-      <div class="section-num">15</div>
+      <div class="section-num">16</div>
       <h2>よくある質問</h2>
     </div>
     <div class="section-body">
