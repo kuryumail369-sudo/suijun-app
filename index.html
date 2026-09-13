@@ -299,7 +299,8 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="upgrade-plan-name">Proプラン</div>
       <div class="upgrade-plan-price">¥980<span> / 月（税込）</span></div>
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 路線数：無制限</div>
-      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> PDF成果表・スケッチ出力</div>
+      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 成果表PDFのフッター表示なし</div>
+      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> スケッチPDF出力</div>
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> CSV・写真レポート出力</div>
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 点検タブ（全機能）</div>
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 音声・OCR・GPS（継続利用）</div>
@@ -640,7 +641,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
   <div id="tab-exp" style="display:none;">
     <div class="card">
       <span class="slabel" style="margin-bottom:10px;">PDF 印刷・保存</span>
-      <button class="xb p" id="btn-pdf" onclick="proAction(printReport)">📄 成果表 PDF（A4）</button>
+      <button class="xb p" id="btn-pdf" onclick="printReport()">📄 成果表 PDF（A4）</button>
       <button class="xb" id="btn-sketch" onclick="proAction(printSketch)">🗺 スケッチ PDF（A4）</button>
       <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:14px;">新しいタブで開きます。印刷ダイアログで「PDFに保存」を選択。</div>
       <span class="slabel" style="margin-bottom:10px;">データエクスポート・共有</span>
@@ -894,13 +895,13 @@ function updateLicenseUI(){
     } else {
       icon.textContent='🔓';
       title.textContent='無料プランをご利用中';
-      sub.textContent='路線1件・出力機能制限あり';
+      sub.textContent='路線1件／成果表PDFは無料（フッター付き）';
       btn.textContent='アップグレード';
       btn.onclick=showUpgrade;
     }
   }
   // 出力ボタンのロック表示
-  ['btn-pdf','btn-sketch','btn-csv','btn-photo','btn-share'].forEach(id=>{
+  ['btn-sketch','btn-csv','btn-photo','btn-share'].forEach(id=>{
     const el=document.getElementById(id);
     if(!el)return;
     if(pro){el.classList.remove('xb-locked');}
@@ -2970,6 +2971,12 @@ function buildObsTblHTML(arr,startGH,kM,color){
   }).join('');
 }
 function printReport(){
+  // 成果表PDFは無料プランでも出力できる（一連の流れを最後まで体験してもらうため）。
+  // 無料の場合のみ、末尾に控えめな作成元の表示を入れる。Proでは入らない。
+  const _pro=isPro();
+  const freeFooter=_pro?'':`
+<div class="sl-freenote">無料プランのため、下の1行が印刷されます。Proプランにすると表示されません。</div>
+<div class="sl-credit">この成果表は SiteLogger（水準測量 現場野帳）で作成されました　https://kuryumail369-sudo.github.io/suijun-app/</div>`;
   const proj=document.getElementById('proj').value||'',date=document.getElementById('date').value||'',worker=document.getElementById('worker').value||'',wx=document.getElementById('wx').value;
   const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000,sb=parseFloat(document.getElementById('bm-s').value)||0,eb=document.getElementById('bm-e').value;
   const routeName=routes.find(r=>r.id===currentRouteId)?.name||'';
@@ -2994,7 +3001,9 @@ table{border-collapse:collapse;width:100%;margin-bottom:8pt;font-size:9pt;}th{ba
 .rg{display:grid;grid-template-columns:repeat(3,1fr);gap:5pt;margin-bottom:8pt;}.ri{border:0.5pt solid #aaa;padding:4pt 7pt;}.ri .rl{font-size:7.5pt;color:#666;}.ri .rv{font-size:11pt;font-weight:500;margin-top:2pt;}.ok{color:#0a5c3e;}.ng{color:#8b1a1a;}
 .memo{border:0.5pt solid #aaa;padding:7pt;font-size:9.5pt;min-height:28pt;white-space:pre-wrap;}
 .sign{display:grid;grid-template-columns:repeat(3,1fr);gap:8pt;margin-top:18pt;}.sbox{border:0.5pt solid #aaa;height:38pt;padding:3pt 5pt;font-size:8pt;color:#666;}
-@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>
+.sl-credit{margin-top:14pt;padding-top:5pt;border-top:0.5pt solid #ccc;font-size:7.5pt;color:#888;text-align:center;letter-spacing:0.02em;}
+.sl-freenote{margin-top:14pt;padding:7pt 9pt;background:#FFF7E6;border:0.5pt solid #E8C97A;border-radius:4pt;font-size:8.5pt;color:#8a6d3b;}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.sl-freenote{display:none;}}</style></head><body>
 <div class="sl-toolbar">
   <button class="sl-btn-back" onclick="window.close()">← 戻る</button>
   <span class="sl-title">📄 成果表 PDF</span>
@@ -3009,6 +3018,7 @@ ${hasRet?`<h2>復路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)<
 ${hasRet?`<h2>往復比較</h2><table><thead><tr><th style="text-align:left;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead><tbody><tr><td>総高低差(m)</td><td>${out.diff.toFixed(4)}</td><td>${ret.diff.toFixed(4)}</td><td></td></tr><tr><td>往復較差</td><td colspan="2" style="text-align:center;font-weight:500;${korsaOK===null?'':(korsaOK?'color:#0a5c3e;':'color:#8b1a1a;')}">${(korsa*1000).toFixed(1)} mm</td><td style="${korsaOK===null?'':(korsaOK?'color:#0a5c3e;':'color:#8b1a1a;')}font-weight:500;">${korsaOK===null?'許容値未入力':(korsaOK?'合格 ✓':'不合格 ✗')}</td></tr><tr><td>許容較差</td><td colspan="2" style="text-align:center;">${alMM!==null?'±'+alMM.toFixed(0)+' mm':'—'}</td><td></td></tr><tr><td>最確値</td><td colspan="2" style="text-align:center;font-weight:500;font-size:11pt;">${best.toFixed(4)} m</td><td></td></tr></tbody></table>`:''}
 <h2>現場メモ</h2><div class="memo">${esc(document.getElementById('memo').value||'（記録なし）')}</div>
 <div class="sign"><div class="sbox">作業者</div><div class="sbox">検査者</div><div class="sbox">承認</div></div>
+${freeFooter}
 </body></html>`;
   const w=window.open('','_blank');if(!w){alert('ポップアップを許可してください');return;}
   w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),700);
