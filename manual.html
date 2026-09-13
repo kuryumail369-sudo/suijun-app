@@ -537,6 +537,10 @@
         <tr><td><strong>📸</strong></td><td>測点写真。タップして撮影</td></tr>
       </table>
 
+      <div class="tip">
+        <strong>視準距離（任意）：</strong> 測量情報カードの「視準距離も記録する」をオンにすると、BS・FSの入力欄の下に距離(m)の欄が追加されます。列は増えないので、表が横に広がることはありません。ここに入れた距離は、点検タブの公共測量判定で使う<strong>観測距離 S</strong> の自動計算に使われ、成果表PDF・CSVにも出力されます。使わない場合はオフのままで構いません。
+      </div>
+
       <div class="tip tip-green">
         <strong>IS（中間視）は自動判定：</strong> 測点名がBM・KP・TP・IPで始まらない場合、FSに入力した値は自動的に中間視（IS）として扱われ、ΣFSには加算されません。入力列はBS・FSの2列だけ使えばOKです。
       </div>
@@ -617,7 +621,7 @@
       <div class="tip tip-amber">
         <strong>⚠️ 読み取り結果は必ず確認してください。</strong> AIによる自動読み取りは万全ではなく、誤認識することがあります。測量成果に関わる数値のため、入力前に必ず液晶の表示とご確認ください。
       </div>
-      <p style="font-size:13px;color:var(--text-sub);">機種によっては標尺読み（Rh）と同時に水平距離（Hd）が表示されます。水平距離も併せて読み取り、参考値として表示します。</p>
+      <p style="font-size:13px;color:var(--text-sub);">機種によっては標尺読み（Rh）と同時に水平距離（Hd）が表示されます。水平距離も併せて読み取ります。観測入力タブの「視準距離も記録する」をオンにしていれば距離欄にも入力され、オフのときは参考表示のみです。</p>
 
       <div class="tip tip-amber">
         <strong>OCRはオンライン必須：</strong> AI解析にインターネット接続が必要です。オフライン時は使用できません。手入力または音声入力をご利用ください。
@@ -720,7 +724,7 @@
       <p><strong>許容閉合差の設定（任意基準）</strong></p>
       <div class="tip tip-amber">
         <strong>⚠️ 公共測量の許容範囲とは異なります。</strong><br>
-        本アプリの判定は<strong>据付回数 n による任意基準（±C√n mm）</strong>です。公共測量の正式な許容範囲は<strong>観測距離 S（片道km）を用いた別の式</strong>で定められています（例：3級水準測量の往復観測値の較差は 10mm√S、環閉合差は 10mm√S、既知点間の閉合差は 15mm√S）。両者は一致しません。<strong>公共測量の成果判定には、必ず発注者・計画機関の作業規程に従ってください。</strong>
+        本アプリの判定は<strong>据付回数 n による任意基準（±C√n mm）</strong>です。公共測量の正式な許容範囲は<strong>観測距離 S（片道km）を用いた別の式</strong>で定められています（例：3級水準測量の往復観測値の較差は 10mm√S、環閉合差は 10mm√S、既知点間の閉合差は 15mm√S）。両者は一致しません。<strong>公共測量の基準で判定したい場合は、下の「公共測量（作業規程の準則）で判定する」をお使いください。</strong>
       </div>
       <table>
         <tr><th>精度の目安</th><th>係数C</th><th>例（n=4）</th><th>想定用途</th></tr>
@@ -730,6 +734,22 @@
         <tr><td>概略</td><td>20</td><td>±40mm</td><td>概略測量・造成</td></tr>
       </table>
       <p style="font-size:13px;color:var(--text-sub);">行をタップすると係数Cが自動入力されます。式は <code>±C√n mm</code>（n = 転点数）。直接mm値で入力することも可能です。表の区分は目安であり、公式な等級区分ではありません。</p>
+
+      <hr class="divider">
+      <p><strong>公共測量（作業規程の準則）で判定する</strong></p>
+      <p>点検タブの「準則の許容範囲で判定する」をオンにすると、作業規程の準則で定められた許容範囲で合否を判定できます。上の任意基準（±C√n）とは別に、独立して表示されます。</p>
+      <table>
+        <tr><th>項目</th><th>1級</th><th>2級</th><th>3級</th><th>4級</th><th>簡易</th></tr>
+        <tr><td>往復観測値の較差<br><span style="font-size:11px;color:var(--text-sub);">第65条</span></td><td>2.5mm√S</td><td>5mm√S</td><td>10mm√S</td><td>20mm√S</td><td>—</td></tr>
+        <tr><td>環閉合差<br><span style="font-size:11px;color:var(--text-sub);">第69条</span></td><td>2mm√S</td><td>5mm√S</td><td>10mm√S</td><td>20mm√S</td><td>40mm√S</td></tr>
+        <tr><td>既知点間の閉合差<br><span style="font-size:11px;color:var(--text-sub);">第69条</span></td><td>15mm√S</td><td>15mm√S</td><td>15mm√S</td><td>25mm√S</td><td>50mm√S</td></tr>
+      </table>
+      <p><strong>S は観測距離（片道・km単位）</strong>です。「距離 S」欄に直接入力するか、観測表に視準距離を記録している場合は「この値を使う」を押すと自動で合計されます。</p>
+      <p>「路線の形」で <strong>既知点間</strong>（出発と到着が別の既知点）か <strong>環</strong>（出発点に戻る）かを選ぶと、それに応じた許容範囲が使われます。簡易水準測量は片道観測が前提のため、往復観測値の較差の規定はありません。</p>
+
+      <div class="tip tip-amber">
+        <strong>ご注意：</strong> ここに表示される判定は準則の値に基づく参考です。<strong>実際の成果判定は、必ず発注者・計画機関の作業規程でご確認ください。</strong>特記仕様書で別の基準が定められている場合があります。
+      </div>
 
       <hr class="divider">
       <p><strong>確認できる内容</strong></p>

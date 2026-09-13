@@ -182,6 +182,17 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 #kb-bar.recording{background:#FCEBEB;border-bottom:2px solid #E24B4A;}
 /* ===== バックアップ・復元 ===== */
 .bk-row{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+/* ===== 視準距離のサブ入力（BS/FSセルの下） ===== */
+.di{width:78px;height:32px;padding:3px 6px;font-size:16px;font-weight:400;text-align:right;
+  border:0.5px dashed var(--color-border-secondary);border-radius:6px;
+  background:transparent;color:var(--color-text-secondary);}
+.di::placeholder{font-size:12px;color:var(--color-text-tertiary,#9a9aa0);}
+/* ===== 公共測量（準則）判定カード ===== */
+.js-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;}
+.js-row:last-child{border-bottom:none;}
+.js-row .jl{flex:1;color:var(--color-text-primary);}
+.js-val{font-size:13px;color:var(--color-text-secondary);white-space:nowrap;}
+.js-note{font-size:11px;line-height:1.6;color:var(--color-text-secondary);margin-top:8px;}
 .bk-btn{flex:1;min-height:48px;padding:12px 8px;font-size:14px;font-weight:600;border-radius:10px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;}
 .bk-btn:active{background:var(--color-background-secondary);}
 #bk-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;align-items:center;justify-content:center;padding:16px;}
@@ -361,7 +372,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <div id="ocr-res" class="ocr-res">
       <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">読み取り結果 — <span id="ocr-tgt-lbl">—</span> に入力しますか？</div>
       <div style="font-size:26px;font-weight:500;color:#1D9E75;" id="ocr-val">—</div>
-      <div id="ocr-dist" style="display:none;font-size:11px;color:var(--color-text-secondary);margin-top:2px;"></div>
+      <div id="ocr-dist" style="display:none;font-size:12px;line-height:1.5;color:var(--color-text-secondary);margin-top:4px;"></div>
       <div style="font-size:11px;color:#854F0B;background:#FAEEDA;border-radius:6px;padding:6px 8px;margin-top:8px;line-height:1.5;">
         ⚠️ 自動読み取りは誤認識することがあります。液晶の表示と数値が一致しているか必ず確認してください。
       </div>
@@ -418,6 +429,12 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
           </div>
         </div>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);cursor:pointer;">
+        <input type="checkbox" id="use-dist" onchange="toggleDistCol()" style="width:20px;height:20px;flex:none;">
+        <span style="font-size:13px;color:var(--color-text-primary);line-height:1.5;">視準距離も記録する<br>
+          <span style="font-size:11px;color:var(--color-text-secondary);">BS・FSの下に距離(m)の入力欄が出ます。公共測量の許容範囲の判定に使います。使わない場合はオフのままで構いません。</span>
+        </span>
+      </label>
     </div>
     <div class="card">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -585,7 +602,51 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
             <td style="padding:5px 8px;color:var(--color-text-secondary);">概略測量・造成</td>
           </tr>
         </table>
-        <div style="font-size:10px;color:var(--color-text-secondary);margin-top:6px;">行をタップすると係数Cが自動入力されます。数値は目安であり、公式な等級区分ではありません。</div>
+        <div style="font-size:10px;color:var(--color-text-secondary);margin-top:6px;">行をタップすると係数Cが自動入力されます。数値は目安であり、公式な等級区分ではありません。公共測量の判定は下の「公共測量（準則）で判定」をお使いください。</div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 公共測量（作業規程の準則）で判定</div>
+    <div class="card">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="js-on" onchange="markDirty();toggleJunsoku()" style="width:20px;height:20px;flex:none;">
+        <span style="font-size:14px;font-weight:600;color:var(--color-text-primary);">準則の許容範囲で判定する</span>
+      </label>
+      <div id="js-body" style="display:none;margin-top:12px;">
+        <div class="g3">
+          <div class="mi"><label>区分</label>
+            <select id="js-grade" onchange="markDirty();runChecks()" style="width:100%;">
+              <option value="1">1級</option>
+              <option value="2">2級</option>
+              <option value="3" selected>3級</option>
+              <option value="4">4級</option>
+              <option value="k">簡易</option>
+            </select>
+          </div>
+          <div class="mi"><label>路線の形</label>
+            <select id="js-type" onchange="markDirty();runChecks()" style="width:100%;">
+              <option value="known">既知点間</option>
+              <option value="loop">環</option>
+            </select>
+          </div>
+          <div class="mi"><label>距離 S (片道km)</label>
+            <input type="number" id="js-s" step="0.001" min="0" placeholder="0.000"
+              onfocus="this.select();focusField('js-s','number','観測距離 S (片道km)')" onblur="scheduleKbHide()"
+              oninput="markDirty();runChecks()" onchange="markDirty();runChecks()" style="width:100%;">
+          </div>
+        </div>
+        <div id="js-auto" style="display:none;margin-top:8px;background:#EEF4FF;border-radius:var(--border-radius-md);padding:9px 11px;font-size:12px;color:#185FA5;line-height:1.6;">
+          <span id="js-auto-txt"></span>
+          <button onclick="applyAutoS()" style="margin-left:6px;font-size:12px;padding:4px 12px;border:0.5px solid #185FA5;border-radius:20px;cursor:pointer;background:#fff;color:#185FA5;">この値を使う</button>
+        </div>
+        <div style="margin-top:12px;border-top:0.5px solid var(--color-border-tertiary);padding-top:4px;">
+          <div class="js-row"><span class="jl" id="js-l1">往復観測値の較差</span><span class="js-val" id="js-v1">—</span><span class="badge" id="js-b1">—</span></div>
+          <div class="js-row"><span class="jl" id="js-l2">既知点間の閉合差</span><span class="js-val" id="js-v2">—</span><span class="badge" id="js-b2">—</span></div>
+        </div>
+        <div class="js-note" id="js-formula"></div>
+        <div style="font-size:11px;line-height:1.6;color:#854F0B;background:#FAEEDA;border-radius:8px;padding:8px 10px;margin-top:10px;">
+          作業規程の準則 第65条（往復観測値の較差）・第69条（点検計算）の値を用いています。<strong>Sは観測距離（片道・km単位）</strong>です。実際の成果判定は、必ず発注者・計画機関の作業規程でご確認ください。
+        </div>
       </div>
     </div>
 
@@ -1024,7 +1085,7 @@ function createRoute(){
   const name=prompt('路線名を入力してください','路線 '+(routes.length+1));
   if(!name)return;
   const id='r'+Date.now(), today=new Date().toISOString().split('T')[0];
-  const mk=(pts)=>pts.map((p,i)=>({id:i,point:p,bs:'',fs:'',is_:'',lat:null,lon:null,acc:null}));
+  const mk=(pts)=>pts.map((p,i)=>({id:i,point:p,bs:'',fs:'',is_:'',distBs:'',distFs:'',lat:null,lon:null,acc:null}));
   routes.push({id,name,createdAt:new Date().toISOString(),proj:'',date:today,worker:'',wx:'晴',bmStart:'',bmEnd:'',kCorr:'',memo:'',
     rows:mk(['BM.1','No.1','BM.2']),rowsReturn:mk(['BM.2','No.1','BM.1'])});
   saveToStorage();
@@ -1101,7 +1162,7 @@ function importReturnPoints(mode){
     rowsReturn=[];
     rowIdRet=0;
     for(let i=0;i<pts.length;i++){
-      rowsReturn.push({id:rowIdRet++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null});
+      rowsReturn.push({id:rowIdRet++,point:'',bs:'',fs:'',is_:'',distBs:'',distFs:'',lat:null,lon:null,acc:null,photo:null});
     }
     // 測点名datalistを往路の全測点で更新（renderTbl内のpi inputのlistに流用）
     markDirty();renderTbl();
@@ -1126,7 +1187,7 @@ function importReturnPoints(mode){
 function applyReturnPoints(pts){
   // 既存の復路行に測点名をセット、足りなければ追加
   while(rowsReturn.length<pts.length){
-    rowsReturn.push({id:rowIdRet++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null});
+    rowsReturn.push({id:rowIdRet++,point:'',bs:'',fs:'',is_:'',distBs:'',distFs:'',lat:null,lon:null,acc:null,photo:null});
   }
   pts.forEach((pt,i)=>{ rowsReturn[i].point=pt; });
   markDirty();renderTbl();
@@ -1239,6 +1300,11 @@ function saveCurrentState(){
   r.bmStart=document.getElementById('bm-s').value;
   r.bmEnd=document.getElementById('bm-e').value;
   r.kCorr=document.getElementById('k-corr').value;
+  r.useDist=!!document.getElementById('use-dist').checked;
+  r.jsOn=!!document.getElementById('js-on').checked;
+  r.jsGrade=document.getElementById('js-grade').value||'3';
+  r.jsType=document.getElementById('js-type').value||'known';
+  r.jsS=document.getElementById('js-s').value||'';
   r.tolCoef=document.getElementById('tol-coef').value||'';
   r.tolDirect=document.getElementById('tol-direct').value||'';
   r.memo=document.getElementById('memo').value;
@@ -1257,6 +1323,12 @@ function loadCurrentState(){
   document.getElementById('bm-s').value=r.bmStart||'';
   document.getElementById('bm-e').value=r.bmEnd||'';
   document.getElementById('k-corr').value=r.kCorr||'';
+  document.getElementById('use-dist').checked=!!r.useDist;
+  document.getElementById('js-on').checked=!!r.jsOn;
+  document.getElementById('js-grade').value=r.jsGrade||'3';
+  document.getElementById('js-type').value=r.jsType||'known';
+  document.getElementById('js-s').value=r.jsS||'';
+  toggleJunsoku();
   document.getElementById('tol-coef').value=r.tolCoef||'';
   document.getElementById('tol-direct').value=r.tolDirect||'';
   document.getElementById('memo').value=r.memo||'';
@@ -1577,7 +1649,7 @@ async function restoreApply(mode){
 // ===== OBSERVATION =====
 function addRow(){
   const isRet=viewMode==='ret';
-  getCurRows().push({id:isRet?rowIdRet++:rowId++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null});
+  getCurRows().push({id:isRet?rowIdRet++:rowId++,point:'',bs:'',fs:'',is_:'',distBs:'',distFs:'',lat:null,lon:null,acc:null,photo:null});
   markDirty();renderTbl();
 }
 function removeRow(id){
@@ -1588,6 +1660,50 @@ function removeRow(id){
   markDirty();renderTbl();
 }
 function updateField(idx,field,val){getCurRows()[idx][field]=val;markDirty();updateCalcCells();}
+
+// 「視準距離も記録する」のON/OFF
+function toggleDistCol(){
+  markDirty();
+  renderTbl();
+  runChecks();
+}
+
+// ===== 公共測量（作業規程の準則）の許容範囲 =====
+// 第65条（往復観測値の較差）・第69条（点検計算：環閉合差／既知点から既知点までの閉合差）。
+// 係数の単位はmm、Sは観測距離（片道・km単位）。
+// 簡易水準測量には往復観測値の較差の規定が無い（第65条の表に列が無い）。
+const JUNSOKU={
+  '1':{name:'1級水準測量', ofuku:2.5, kan:2,  kichi:15},
+  '2':{name:'2級水準測量', ofuku:5,   kan:5,  kichi:15},
+  '3':{name:'3級水準測量', ofuku:10,  kan:10, kichi:15},
+  '4':{name:'4級水準測量', ofuku:20,  kan:20, kichi:25},
+  'k':{name:'簡易水準測量', ofuku:null, kan:40, kichi:50}
+};
+
+function toggleJunsoku(){
+  const on=document.getElementById('js-on').checked;
+  document.getElementById('js-body').style.display=on?'':'none';
+  runChecks();
+}
+
+// 観測表の視準距離から片道距離S（km）を合計する。往路の距離のみを対象とする
+// （Sは「片道」の観測距離のため、復路を足してはいけない）。
+function autoSkm(){
+  let m=0,cnt=0;
+  rows.forEach(r=>{
+    ['distBs','distFs'].forEach(f=>{
+      const v=parseFloat(r[f]);
+      if(!isNaN(v)&&v>0){m+=v;cnt++;}
+    });
+  });
+  return cnt>0?{km:m/1000, m:m, cnt}:null;
+}
+function applyAutoS(){
+  const a=autoSkm();
+  if(!a)return;
+  document.getElementById('js-s').value=a.km.toFixed(3);
+  markDirty();runChecks();
+}
 
 // ===== 行メニュー（⋯） =====
 // 以前は行末に「✕削除」ボタンを16x14pxで直接置いていたが、確認も無く
@@ -1652,7 +1768,7 @@ function insertRowAfter(id){
   const idx=arr.findIndex(r=>r.id===id);
   if(idx<0)return;
   const isRet=viewMode==='ret';
-  const newRow={id:isRet?rowIdRet++:rowId++,point:'',bs:'',fs:'',is_:'',lat:null,lon:null,acc:null,photo:null};
+  const newRow={id:isRet?rowIdRet++:rowId++,point:'',bs:'',fs:'',is_:'',distBs:'',distFs:'',lat:null,lon:null,acc:null,photo:null};
   arr.splice(idx+1,0,newRow);
   markDirty();renderTbl();
 }
@@ -1754,15 +1870,27 @@ function renderTbl(){
 
     // セル下の補助ボタン（🎤📷）は撤去し、フォーカス時に画面下のキーボードバーへ集約する。
     // 23x14pxのボタンが並ぶ状態は屋外・手袋での誤タップの原因になるため。
-    const mk=(field,val)=>`
+    const useDist=!!document.getElementById('use-dist').checked;
+    const mk=(field,val)=>{
+      const df=field==='bs'?'distBs':'distFs';
+      const dv=r[df]||'';
+      const distInput=useDist?`
+        <input class="di" type="number" step="0.1" min="0" value="${esc(dv)}" placeholder="距離m"
+          onfocus="this.select();focusDist(${i},'${df}',${r.id})"
+          oninput="updateField(${i},'${df}',this.value)"
+          onchange="updateField(${i},'${df}',this.value)"
+          onkeydown="if(event.key==='Enter'){blurKb();this.blur();}"
+          onblur="scheduleKbHide()">`:'';
+      return `
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
         <input class="ni" type="number" step="0.001" value="${esc(val)}" placeholder="—"
           onfocus="this.select();focusNi(${i},'${field}',${r.id})"
           oninput="updateField(${i},'${field}',this.value)"
           onchange="updateField(${i},'${field}',this.value)"
           onkeydown="if(event.key==='Enter'){blurKb();this.blur();}"
-          onblur="if(this.value!==''){const n=parseFloat(this.value);if(!isNaN(n)){this.value=n.toFixed(3);updateField(${i},'${field}',this.value);}}scheduleKbHide();">
+          onblur="if(this.value!==''){const n=parseFloat(this.value);if(!isNaN(n)){this.value=n.toFixed(3);updateField(${i},'${field}',this.value);}}scheduleKbHide();">${distInput}
       </div>`;
+    };
 
     const tr=document.createElement('tr');
     if(isFS)tr.style.color=isRet?'#d97706':'#185FA5';
@@ -1853,6 +1981,18 @@ function focusNi(idx,field,rid){
   // 数値セルでは音声・OCRの両方が使える
   document.getElementById('kb-voice').style.display='';
   document.getElementById('kb-ocr').style.display='';
+  showKbBar();
+}
+
+// 視準距離セル用。距離は音声で入れられるようにし、OCRは読み値セル側から
+// まとめて取り込む（同じ画面に読み値と距離が両方映っているため）。
+function focusDist(idx,field,rid){
+  activeKb={idx,field,rid};
+  const r=getCurRows()[idx];
+  const lb=field==='distBs'?'後視の距離 (m)':'前視の距離 (m)';
+  document.getElementById('kb-label').textContent=(r&&r.point||'測点')+' — '+lb;
+  document.getElementById('kb-voice').style.display='';
+  document.getElementById('kb-ocr').style.display='none';
   showKbBar();
 }
 
@@ -2273,8 +2413,11 @@ async function runOcr(du){
       ocrTgt?`${tr.point||''} の ${lbs[ocrTgt.field]||''}`.trim():'選択中のセル';
     document.getElementById('ocr-val').textContent=parsed.reading+' m';
     const dEl=document.getElementById('ocr-dist');
+    const useDist=!!document.getElementById('use-dist').checked;
     if(parsed.distance!==null){
-      dEl.textContent='水平距離 '+parsed.distance+' m（参考）';
+      dEl.textContent=useDist
+        ? '水平距離 '+parsed.distance+' m ← 距離欄にも入力します'
+        : '水平距離 '+parsed.distance+' m（参考。「視準距離も記録する」をONにすると距離欄に入ります）';
       dEl.style.display='block';
     }else{
       dEl.style.display='none';
@@ -2322,11 +2465,17 @@ function confirmOcr(){
   if(isNaN(v)){closeOcr();return;}
   const arr=ocrTgt.dir==='out'?rows:rowsReturn;
   const r=arr.find(r=>r.id===ocrTgt.id);
-  // 読み取った水平距離は確認画面に参考表示するのみで、保存はしない。
-  // 表示・修正できる欄が無い状態で保存すると、ユーザーが誤読に気づけないため。
-  // 距離を保存するのは、観測表に距離欄を設けるときに合わせて実装する。
   if(r) r[ocrTgt.field]=v.toFixed(3);
-  closeOcr();markDirty();renderTbl();
+  // 水平距離は「視準距離も記録する」がONのときだけ保存する。
+  // 表示・修正できる欄が無い状態で保存すると、ユーザーが誤読に気づけないため。
+  if(r && document.getElementById('use-dist').checked && ocrPending.distance!==null){
+    const dnum=parseFloat(ocrPending.distance);
+    if(!isNaN(dnum)&&dnum>0){
+      const df=ocrTgt.field==='bs'?'distBs':(ocrTgt.field==='fs'?'distFs':null);
+      if(df) r[df]=String(dnum);
+    }
+  }
+  closeOcr();markDirty();renderTbl();runChecks();
 }
 
 // ===== 写真 — 各行にinputを直接持たせる方式に変更 =====
@@ -2958,22 +3107,95 @@ function runChecks(){
     });
     setBdg('rk-cl','復路未入力','warn');
   }
+  runJunsoku(cl,out,ret,hasRet);
   renderPointComparison();
 }
+
+// ===== 準則モードの判定 =====
+// cl: 往路の閉合差（m、実測終点BM−既知終点BM）／out,ret: 各方向の集計／hasRet: 復路入力の有無
+function runJunsoku(cl,out,ret,hasRet){
+  const onEl=document.getElementById('js-on');
+  if(!onEl||!onEl.checked)return;
+
+  const g=JUNSOKU[document.getElementById('js-grade').value]||JUNSOKU['3'];
+  const type=document.getElementById('js-type').value||'known';
+  const S=parseFloat(document.getElementById('js-s').value);
+  const hasS=!isNaN(S)&&S>0;
+  const rootS=hasS?Math.sqrt(S):null;
+
+  // 観測表の距離から自動計算できる場合は案内を出す
+  const auto=autoSkm();
+  const autoBox=document.getElementById('js-auto');
+  if(auto){
+    document.getElementById('js-auto-txt').textContent=
+      `観測表の距離（往路 ${auto.cnt}件・合計 ${auto.m.toFixed(1)} m）から S = ${auto.km.toFixed(3)} km`;
+    autoBox.style.display='';
+  }else{
+    autoBox.style.display='none';
+  }
+
+  const fx=document.getElementById('js-formula');
+  const put=(i,label,val,badge,badgeType)=>{
+    document.getElementById('js-l'+i).textContent=label;
+    document.getElementById('js-v'+i).textContent=val;
+    setBdg('js-b'+i,badge,badgeType);
+  };
+
+  // --- 1段目：往復観測値の較差（第65条） ---
+  if(g.ofuku===null){
+    put(1,'往復観測値の較差（第65条）','—','規定なし','warn');
+  }else{
+    const base=`往復観測値の較差（許容 ±${g.ofuku}mm√S）`;
+    if(!hasRet)      put(1,base,'—','復路未入力','warn');
+    else if(!hasS)   put(1,base,'—','距離S未入力','warn');
+    else{
+      const korsaMM=Math.abs((out.diff+ret.diff)*1000);
+      const allow=g.ofuku*rootS;
+      const ok=korsaMM<=allow;
+      put(1,`往復観測値の較差（許容 ±${allow.toFixed(1)}mm）`,
+          `${korsaMM.toFixed(1)} mm`,ok?'合格 ✓':'不合格 ✗',ok?'ok':'ng');
+    }
+  }
+
+  // --- 2段目：閉合差（第69条。環 or 既知点間） ---
+  const coef=type==='loop'?g.kan:g.kichi;
+  const name=type==='loop'?'環閉合差':'既知点から既知点までの閉合差';
+  const base2=`${name}（許容 ±${coef}mm√S）`;
+  if(cl===null)     put(2,base2,'—','終点BM未入力','warn');
+  else if(!hasS)    put(2,base2,'—','距離S未入力','warn');
+  else{
+    const clMM=Math.abs(cl*1000);
+    const allow=coef*rootS;
+    const ok=clMM<=allow;
+    put(2,`${name}（許容 ±${allow.toFixed(1)}mm）`,
+        `${clMM.toFixed(1)} mm`,ok?'合格 ✓':'不合格 ✗',ok?'ok':'ng');
+  }
+
+  fx.textContent=hasS
+    ? `${g.name}／S = ${S.toFixed(3)} km（√S = ${rootS.toFixed(4)}）`
+    : `${g.name}／観測距離 S（片道km）を入力すると判定できます。`;
+}
+
 function setBdg(id,txt,type){const el=document.getElementById(id);el.textContent=txt;el.className='badge b'+type;}
 
 // ===== PDF =====
+function hasDistData(){
+  return [...rows,...rowsReturn].some(r=>(r.distBs!==''&&r.distBs!=null)||(r.distFs!==''&&r.distFs!=null));
+}
 function buildObsTblHTML(arr,startGH,kM,color){
   const ghData=calcGH(arr,startGH,kM);
+  const wd=hasDistData();
   return arr.map((r,i)=>{
     const{ihD,ghV,isFS}=ghData[i];const gps=r.lat!=null?`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`:'';
-    return `<tr style="${isFS?`color:${color};`:''}"><td>${esc(r.point||'')}</td><td>${r.bs!==''?parseFloat(r.bs).toFixed(3):''}</td><td>${r.fs!==''?parseFloat(r.fs).toFixed(3):''}</td><td>${r.is_!==''?parseFloat(r.is_).toFixed(3):''}</td><td>${ihD}</td><td>${ghV!==''?parseFloat(ghV).toFixed(3):''}</td><td style="font-size:8.5pt;color:#555;">${gps}</td></tr>`;
+    const dcell=wd?`<td style="font-size:8.5pt;color:#555;">${r.distBs?parseFloat(r.distBs).toFixed(1):''}${(r.distBs&&r.distFs)?' / ':''}${r.distFs?parseFloat(r.distFs).toFixed(1):''}</td>`:'';
+    return `<tr style="${isFS?`color:${color};`:''}"><td>${esc(r.point||'')}</td><td>${r.bs!==''?parseFloat(r.bs).toFixed(3):''}</td><td>${r.fs!==''?parseFloat(r.fs).toFixed(3):''}</td><td>${r.is_!==''?parseFloat(r.is_).toFixed(3):''}</td><td>${ihD}</td><td>${ghV!==''?parseFloat(ghV).toFixed(3):''}</td>${dcell}<td style="font-size:8.5pt;color:#555;">${gps}</td></tr>`;
   }).join('');
 }
 function printReport(){
   // 成果表PDFは無料プランでも出力できる（一連の流れを最後まで体験してもらうため）。
   // 無料の場合のみ、末尾に控えめな作成元の表示を入れる。Proでは入らない。
   const _pro=isPro();
+  const distTh=hasDistData()?'<th>距離 後/前(m)</th>':'';
   const freeFooter=_pro?'':`
 <div class="sl-freenote">無料プランのため、下の1行が印刷されます。Proプランにすると表示されません。</div>
 <div class="sl-credit">この成果表は SiteLogger（水準測量 現場野帳）で作成されました　https://kuryumail369-sudo.github.io/suijun-app/</div>`;
@@ -3012,8 +3234,8 @@ table{border-collapse:collapse;width:100%;margin-bottom:8pt;font-size:9pt;}th{ba
 <div class="sl-toolbar-spacer"></div>
 <h1>水準測量成果表</h1>
 <div class="ig"><div><div class="lbl">路線名</div><div class="val">${esc(routeName)}</div></div><div><div class="lbl">作業名</div><div class="val">${esc(proj)}</div></div><div><div class="lbl">測量日</div><div class="val">${esc(date)}</div></div><div><div class="lbl">担当者</div><div class="val">${esc(worker)}</div></div><div><div class="lbl">天候</div><div class="val">${esc(wx)}</div></div><div><div class="lbl">器差K</div><div class="val">${K?K.toFixed(3)+' mm':'—'}</div></div><div><div class="lbl">起点BM</div><div class="val">${sb.toFixed(3)} m</div></div><div><div class="lbl">終点BM</div><div class="val">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div><div class="lbl">測点/FS数</div><div class="val">${rows.length}/${n}</div></div></div>
-<h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rows,sb,kM,'#185FA5')}</tbody></table>
-${hasRet?`<h2>復路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th><th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rowsReturn,parseFloat(eb)||0,kM,'#d97706')}</tbody></table>`:''}
+<h2>往路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th>${distTh}<th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rows,sb,kM,'#185FA5')}</tbody></table>
+${hasRet?`<h2>復路観測記録</h2><table><thead><tr><th>測点</th><th>BS(m)</th><th>FS(m)</th><th>IS(m)</th><th>IH(m)</th><th>GH(m)</th>${distTh}<th>GPS</th></tr></thead><tbody>${buildObsTblHTML(rowsReturn,parseFloat(eb)||0,kM,'#d97706')}</tbody></table>`:''}
 <h2>集計・点検</h2><div class="rg"><div class="ri"><div class="rl">ΣBS</div><div class="rv">${sBS.toFixed(3)} m</div></div><div class="ri"><div class="rl">ΣFS</div><div class="rv">${sFS.toFixed(3)} m</div></div><div class="ri"><div class="rl">ΣBS－ΣFS</div><div class="rv">${diff.toFixed(3)} m</div></div><div class="ri"><div class="rl">実測終点BM</div><div class="rv">${ce.toFixed(3)} m</div></div><div class="ri"><div class="rl">既知終点BM</div><div class="rv">${eb?parseFloat(eb).toFixed(3)+' m':'—'}</div></div><div class="ri"><div class="rl">閉合差</div><div class="rv ${cl!==null?(Math.abs(cl)<=al?'ok':'ng'):''}">${cl!==null?((cl*1000).toFixed(1)+' mm'):'—'}</div></div></div>
 ${hasRet?`<h2>往復比較</h2><table><thead><tr><th style="text-align:left;">項目</th><th>往路</th><th>復路</th><th>判定</th></tr></thead><tbody><tr><td>総高低差(m)</td><td>${out.diff.toFixed(4)}</td><td>${ret.diff.toFixed(4)}</td><td></td></tr><tr><td>往復較差</td><td colspan="2" style="text-align:center;font-weight:500;${korsaOK===null?'':(korsaOK?'color:#0a5c3e;':'color:#8b1a1a;')}">${(korsa*1000).toFixed(1)} mm</td><td style="${korsaOK===null?'':(korsaOK?'color:#0a5c3e;':'color:#8b1a1a;')}font-weight:500;">${korsaOK===null?'許容値未入力':(korsaOK?'合格 ✓':'不合格 ✗')}</td></tr><tr><td>許容較差</td><td colspan="2" style="text-align:center;">${alMM!==null?'±'+alMM.toFixed(0)+' mm':'—'}</td><td></td></tr><tr><td>最確値</td><td colspan="2" style="text-align:center;font-weight:500;font-size:11pt;">${best.toFixed(4)} m</td><td></td></tr></tbody></table>`:''}
 <h2>現場メモ</h2><div class="memo">${esc(document.getElementById('memo').value||'（記録なし）')}</div>
@@ -3118,7 +3340,7 @@ if('serviceWorker' in navigator){
 const loaded=loadFromStorage();
 if(!loaded||routes.length===0){
   const id='r'+Date.now(),today=new Date().toISOString().split('T')[0];
-  const mk=(pts)=>pts.map((p,i)=>({id:i,point:p,bs:'',fs:'',is_:'',lat:null,lon:null,acc:null}));
+  const mk=(pts)=>pts.map((p,i)=>({id:i,point:p,bs:'',fs:'',is_:'',distBs:'',distFs:'',lat:null,lon:null,acc:null}));
   routes=[{id,name:'路線 1',createdAt:new Date().toISOString(),proj:'',date:today,worker:'',wx:'晴',bmStart:'',bmEnd:'',kCorr:'',memo:'',
     rows:mk(['BM.1','No.1','BM.2']),rowsReturn:mk(['BM.2','No.1','BM.1'])}];
   currentRouteId=id;
