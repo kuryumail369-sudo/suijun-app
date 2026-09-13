@@ -104,6 +104,9 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 /* 行メニュー（⋯）— 誤タップでの行削除を防ぐため、削除は直接ボタンではなくメニュー内に置く */
 .rowmenu-btn{font-size:20px;line-height:1;cursor:pointer;color:var(--color-text-secondary);background:none;border:none;padding:10px 8px;border-radius:6px;-webkit-tap-highlight-color:transparent;}
 .rowmenu-btn:active{background:var(--color-background-secondary);}
+/* メニュー表示中は、どの行のものか一目で分かるように⋯と行を色づける */
+.rowmenu-btn.active{color:#C1462F;background:#FCEBEB;font-weight:700;box-shadow:0 0 0 2px #E24B4A inset;}
+#obs-tb tr.menu-open>td{background:#FFF4F2;}
 #rowmenu{display:none;position:fixed;z-index:350;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);overflow:hidden;min-width:210px;}
 #rowmenu .rm-head{font-size:11px;color:var(--color-text-secondary);padding:10px 16px 6px;}
 #rowmenu button{display:block;width:100%;text-align:left;font-size:15px;padding:14px 16px;border:none;background:none;color:var(--color-text-primary);cursor:pointer;font-family:inherit;}
@@ -1279,7 +1282,13 @@ let rowMenuId=null;
 
 function openRowMenu(ev,id){
   ev.stopPropagation();
+  clearRowMenuMark();
   rowMenuId=id;
+  // どの行のメニューを開いているのかを見失わないよう印を付ける
+  const btn=ev.currentTarget;
+  btn.classList.add('active');
+  const tr=btn.closest('tr');
+  if(tr)tr.classList.add('menu-open');
   const r=getCurRows().find(x=>x.id===id);
   document.getElementById('rowmenu-head').textContent=(r&&r.point)?r.point+' の操作':'この行の操作';
   const menu=document.getElementById('rowmenu'), ov=document.getElementById('rowmenu-ov');
@@ -1295,9 +1304,15 @@ function openRowMenu(ev,id){
   menu.style.top=top+'px';
 }
 
+function clearRowMenuMark(){
+  document.querySelectorAll('.rowmenu-btn.active').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#obs-tb tr.menu-open').forEach(t=>t.classList.remove('menu-open'));
+}
+
 function closeRowMenu(){
   document.getElementById('rowmenu').style.display='none';
   document.getElementById('rowmenu-ov').style.display='none';
+  clearRowMenuMark();
   rowMenuId=null;
 }
 
