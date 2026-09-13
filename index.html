@@ -84,7 +84,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 .mi label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:3px;}
-.mi input,.mi select{width:100%;padding:6px 8px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);}
+.mi input,.mi select{width:100%;padding:8px 8px;font-size:16px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);}
 
 /* ===== 観測テーブル ===== */
 .tbl-wrap{overflow-x:auto;margin-top:8px;-webkit-overflow-scrolling:touch;}
@@ -166,7 +166,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .pth .pd{position:absolute;top:2px;right:2px;font-size:9px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:3px;cursor:pointer;padding:1px 3px;display:none;}
 .pth:hover .pd{display:block;}
 .addp{flex-shrink:0;width:68px;height:51px;border-radius:5px;border:1px dashed var(--color-border-secondary);cursor:pointer;background:none;color:var(--color-text-secondary);font-size:20px;}
-.note{width:100%;min-height:72px;font-size:14px;padding:8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);resize:vertical;font-family:var(--font-sans);}
+.note{width:100%;min-height:72px;font-size:16px;padding:8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);resize:vertical;font-family:var(--font-sans);}
 
 /* マイク録音中 */
 .mic-active{color:#E24B4A!important;opacity:1!important;}
@@ -220,7 +220,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .upgrade-key-section{margin:8px 20px 0;}
 .upgrade-key-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;}
 .upgrade-key-row{display:flex;gap:8px;}
-.upgrade-key-input{flex:1;border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;font-size:14px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit;}
+.upgrade-key-input{flex:1;border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;font-size:16px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit;}
 .upgrade-key-btn{background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;font-family:inherit;flex-shrink:0;}
 .upgrade-key-msg{font-size:12px;margin-top:6px;min-height:18px;}
 .upgrade-close{display:block;width:calc(100% - 40px);margin:12px 20px 0;background:none;border:0.5px solid var(--color-border-secondary);border-radius:12px;font-size:14px;padding:12px;cursor:pointer;font-family:inherit;color:var(--color-text-secondary);}
@@ -474,7 +474,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       </div>
       <div class="pin-pp" id="pin-pp">
         <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">測点名</div>
-        <input type="text" id="pin-name" list="pts-dl" placeholder="BM1, No.1...">
+        <input type="text" id="pin-name" list="pts-dl" placeholder="BM1, No.1..." style="font-size:16px;">
         <datalist id="pts-dl"></datalist>
         <div><button onclick="confirmPin()">打つ</button><button onclick="cancelPin()">戻る</button></div>
       </div>
@@ -499,7 +499,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
           <span style="font-size:12px;color:var(--color-text-secondary);">±</span>
           <input type="number" id="tol-coef" step="1" min="1" placeholder="C"
             oninput="markDirty();syncTolDirect();runChecks()" onchange="markDirty();syncTolDirect();runChecks()"
-            style="width:52px;padding:5px 6px;font-size:13px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);text-align:right;">
+            style="width:58px;padding:7px 6px;font-size:16px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);text-align:right;">
           <span style="font-size:12px;color:var(--color-text-secondary);">√n mm</span>
         </div>
         <span style="font-size:12px;color:var(--color-text-secondary);">または</span>
@@ -509,7 +509,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
           <span style="font-size:12px;color:var(--color-text-secondary);">±</span>
           <input type="number" id="tol-direct" step="1" min="1" placeholder="mm"
             oninput="markDirty();clearTolCoef();runChecks()" onchange="markDirty();clearTolCoef();runChecks()"
-            style="width:64px;padding:5px 6px;font-size:13px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);text-align:right;">
+            style="width:70px;padding:7px 6px;font-size:16px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);text-align:right;">
           <span style="font-size:12px;color:var(--color-text-secondary);">mm</span>
         </div>
         <button onclick="clearTolAll()"
