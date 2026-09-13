@@ -1484,17 +1484,35 @@ function renderTbl(){
 // ===== キーボードアクセサリバー =====
 let activeKb=null;
 
-// バーは画面上端に固定する。キーボードは必ず画面下から出るため衝突せず、
-// visualViewport による位置追従が一切不要になる（以前は下端に置いていたため、
-// キーボードの上昇・スクロール・iOSのfixed挙動に追従する処理が必要だった）。
-
+// バーは画面上端に固定する。キーボードは必ず画面下から出るため衝突しない。
+// ただし iOS Safari では、キーボード表示中に position:fixed は「レイアウトビューポート」
+// に貼り付いたままで、実際に見えている領域（ビジュアルビューポート）だけが下へずれる。
+// その結果 fixed 要素が画面外（上）へ追い出される。visualViewport.offsetTop の分だけ
+// top を足して打ち消す。実機計測では bar上端 -338px / vv.offsetTop 338px と完全に一致した。
 let kbHideTimer=null;
+let kbRaf=null, kbLastTop=-1;
+
+function syncKbBarTop(){
+  const bar=document.getElementById('kb-bar');
+  if(!bar||bar.style.display!=='flex'){kbRaf=null;return;}
+  const vv=window.visualViewport;
+  const t=vv?Math.max(0,Math.round(vv.offsetTop)):0;
+  if(t!==kbLastTop){
+    kbLastTop=t;
+    bar.style.top=t+'px';
+    // 画面最上端にあるときだけノッチぶんの余白を足す（ずれている間は不要）
+    bar.style.paddingTop=t>0?'8px':'';
+  }
+  kbRaf=requestAnimationFrame(syncKbBarTop);
+}
 
 function showKbBar(){
   clearTimeout(kbHideTimer);
   const bar=document.getElementById('kb-bar');
   bar.classList.add('open');
   bar.style.display='flex';
+  kbLastTop=-1;
+  if(kbRaf===null)kbRaf=requestAnimationFrame(syncKbBarTop);
 }
 
 function hideKbBar(){
@@ -1502,6 +1520,10 @@ function hideKbBar(){
   const bar=document.getElementById('kb-bar');
   bar.classList.remove('open');
   bar.style.display='none';
+  if(kbRaf!==null){cancelAnimationFrame(kbRaf);kbRaf=null;}
+  kbLastTop=-1;
+  bar.style.top='';
+  bar.style.paddingTop='';
   activeKb=null;
 }
 
