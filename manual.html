@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SiteLogger 取扱説明書 β版</title>
+<title>SiteLogger 取扱説明書</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
@@ -354,7 +354,7 @@
   <div style="max-width:760px;margin:0 auto;text-align:left;margin-bottom:12px;">
     <button onclick="window.location.replace('https://kuryumail369-sudo.github.io/suijun-app/');" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:white;font-size:12px;padding:5px 14px;border-radius:20px;cursor:pointer;font-family:inherit;">← アプリに戻る</button>
   </div>
-  <div class="hero-badge">β版 取扱説明書</div>
+  <div class="hero-badge">取扱説明書</div>
   <h1>📐 SiteLogger</h1>
   <div class="hero-sub">水準測量 現場野帳アプリ — スマートフォン対応 PWA</div>
 </div>
@@ -386,10 +386,10 @@
 <!-- コンテンツ -->
 <div class="content">
 
-  <!-- β版注意喚起 -->
+  <!-- データ保存に関する注意喚起 -->
   <div class="disclaimer">
-    <div class="disclaimer-title">⚠️ β版をご利用の方へ：データ保存に関する注意事項</div>
-    <p>本アプリは現在<strong>β版（試験運用中）</strong>です。予告なく仕様変更・サービス停止が行われる場合があります。</p>
+    <div class="disclaimer-title">⚠️ データ保存に関する重要な注意事項</div>
+    <p>観測データはお使いの端末内にのみ保存されます。次の点に十分ご注意ください。</p>
     <ul style="padding-left:18px;margin-top:6px;">
       <li>観測データはお使いの端末のブラウザ内にのみ保存されます。</li>
       <li>ブラウザの「閲覧データ消去」「キャッシュ削除」「アプリの再インストール」を行うと<strong>データが完全に消去</strong>されます。</li>
@@ -598,7 +598,7 @@
       <h2>📷 液晶OCR（AI自動読み取り）</h2>
     </div>
     <div class="section-body">
-      <p>電子レベルの液晶ディスプレイをカメラで撮影すると、AIが数値を認識してセルに自動入力します。</p>
+      <p>電子レベルの液晶ディスプレイをカメラで撮影すると、AIが数値を読み取り、確認画面に候補として表示します。内容を確認して「✓ この値を入力」をタップすると、セルに入力されます。</p>
 
       <div class="flow">
         <div class="flow-box">📷 タップ</div>
@@ -609,13 +609,17 @@
         <div class="flow-arrow">→</div>
         <div class="flow-box">🔍 AI解析</div>
         <div class="flow-arrow">→</div>
-        <div class="flow-box">✓ 自動入力</div>
+        <div class="flow-box">✓ 確認して入力</div>
       </div>
 
-      <p>解析後、数値が自動でセルに入力されます。値が正しければそのまま「閉じる」、NG なら「📷 再撮影」をタップしてください。</p>
+      <p>解析が終わると読み取り結果が表示されます。<strong>この時点ではまだセルに入力されていません。</strong>液晶の表示と数値が一致していることを確認してから「✓ この値を入力」をタップしてください。読み取りが誤っていれば「📷 再撮影」、入力をやめる場合は「入力せずに閉じる」を選びます。</p>
+      <div class="tip tip-amber">
+        <strong>⚠️ 読み取り結果は必ず確認してください。</strong> AIによる自動読み取りは万全ではなく、誤認識することがあります。測量成果に関わる数値のため、入力前に必ず液晶の表示とご確認ください。
+      </div>
+      <p style="font-size:13px;color:var(--text-sub);">機種によっては標尺読み（Rh）と同時に水平距離（Hd）が表示されます。水平距離も併せて読み取り、参考値として表示します。</p>
 
       <div class="tip tip-amber">
-        <strong>OCRはオンライン必須：</strong> AI解析にインターネット接続が必要です。オフライン時は使用できません。音声入力で代用してください。
+        <strong>OCRはオンライン必須：</strong> AI解析にインターネット接続が必要です。オフライン時は使用できません。手入力または音声入力をご利用ください。
       </div>
       <div class="tip">
         <strong>撮影のコツ：</strong> 液晶全体が画面内に収まるように近づいて撮影。逆光・強い反射を避けると認識精度が上がります。
@@ -707,15 +711,19 @@
       <p>「✓ 点検」タブで閉合差・往復比較・測点別比較を確認できます。</p>
 
       <hr class="divider">
-      <p><strong>許容閉合差の設定</strong></p>
+      <p><strong>許容閉合差の設定（任意基準）</strong></p>
+      <div class="tip tip-amber">
+        <strong>⚠️ 公共測量の許容範囲とは異なります。</strong><br>
+        本アプリの判定は<strong>据付回数 n による任意基準（±C√n mm）</strong>です。公共測量の正式な許容範囲は<strong>観測距離 S（片道km）を用いた別の式</strong>で定められています（例：3級水準測量の往復観測値の較差は 10mm√S、環閉合差は 10mm√S、既知点間の閉合差は 15mm√S）。両者は一致しません。<strong>公共測量の成果判定には、必ず発注者・計画機関の作業規程に従ってください。</strong>
+      </div>
       <table>
-        <tr><th>等級</th><th>係数C</th><th>例（n=4）</th><th>主な用途</th></tr>
-        <tr><td>1級</td><td>2</td><td>±4mm</td><td>精密基準点・ダム</td></tr>
-        <tr><td>2級</td><td>5</td><td>±10mm</td><td>公共測量・縦断</td></tr>
-        <tr><td>3級</td><td>10</td><td>±20mm</td><td>一般土木・道路</td></tr>
-        <tr><td>4級</td><td>20</td><td>±40mm</td><td>概略測量・造成</td></tr>
+        <tr><th>精度の目安</th><th>係数C</th><th>例（n=4）</th><th>想定用途</th></tr>
+        <tr><td>高精度</td><td>2</td><td>±4mm</td><td>精密な基準点・ダム等</td></tr>
+        <tr><td>中精度</td><td>5</td><td>±10mm</td><td>縦断・構造物まわり</td></tr>
+        <tr><td>標準</td><td>10</td><td>±20mm</td><td>一般土木・道路</td></tr>
+        <tr><td>概略</td><td>20</td><td>±40mm</td><td>概略測量・造成</td></tr>
       </table>
-      <p style="font-size:13px;color:var(--text-sub);">等級行をタップすると係数Cが自動入力されます。式は <code>±C√n mm</code>（n = 転点数）。直接mm値で入力することも可能です。</p>
+      <p style="font-size:13px;color:var(--text-sub);">行をタップすると係数Cが自動入力されます。式は <code>±C√n mm</code>（n = 転点数）。直接mm値で入力することも可能です。表の区分は目安であり、公式な等級区分ではありません。</p>
 
       <hr class="divider">
       <p><strong>確認できる内容</strong></p>
@@ -783,7 +791,7 @@
         <tr><td><code>GH = IH_prev - FS</code></td><td>地盤高 = 前器械高 - 前視読定値（転点・閉合点の場合）</td></tr>
         <tr><td><code>GH = IH_prev - IS</code></td><td>地盤高 = 前器械高 - 中間視（中間点の場合）</td></tr>
         <tr><td><code>閉合差 = 実測終点BM - 既知終点BM</code></td><td>（ΣBS - ΣFS の誤差）</td></tr>
-        <tr><td><code>許容閉合差 = ±C√n mm</code></td><td>n = 転点数（ΣFSに加算された行数）</td></tr>
+        <tr><td><code>許容閉合差 = ±C√n mm</code></td><td>n = 転点数（ΣFSに加算された行数）。任意基準であり、公共測量の許容範囲（√S方式）とは異なります</td></tr>
       </table>
 
       <div class="tip tip-amber">
@@ -856,7 +864,7 @@
 
       <div class="tip" style="margin-bottom:12px;">
         <strong>Q. OCRがエラーになる</strong><br>
-        ① インターネット接続を確認 ② 液晶が画面全体に映るよう近づいて再撮影 ③ 反射・逆光を避ける。それでもエラーの場合は音声入力を使用してください。
+        ① インターネット接続を確認 ② 液晶が画面全体に映るよう近づいて再撮影 ③ 反射・逆光を避ける。それでも読み取れない場合は、セルに直接手入力するか、音声入力をご利用ください。
       </div>
 
       <div class="tip" style="margin-bottom:12px;">
@@ -880,7 +888,7 @@
 </div><!-- /content -->
 
 <footer>
-  SiteLogger β版 取扱説明書 &nbsp;|&nbsp; 2026年4月 &nbsp;|&nbsp; お気づきの点は<a href="https://forms.gle/qoXR73eMvkxGerjL6" target="_blank" style="color:var(--blue);">フィードバックフォーム</a>よりお知らせください
+  SiteLogger 取扱説明書 &nbsp;|&nbsp; 2026年9月 &nbsp;|&nbsp; お気づきの点は<a href="https://forms.gle/qoXR73eMvkxGerjL6" target="_blank" style="color:var(--blue);">フィードバックフォーム</a>よりお知らせください
 </footer>
 
 </body>

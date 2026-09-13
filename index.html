@@ -93,13 +93,25 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .otbl th:first-child{text-align:left;}
 .otbl td{padding:3px 4px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:right;vertical-align:top;}
 .otbl td:first-child{text-align:left;}
-.cc{color:var(--color-text-secondary);font-size:12px;vertical-align:middle!important;}
+.cc{color:var(--color-text-primary);font-size:16px;font-weight:600;vertical-align:middle!important;}
 /* 測点名入力 — 広げて複数文字対応 */
-.ni{width:82px;padding:3px 5px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:4px;text-align:right;background:var(--color-background-secondary);color:var(--color-text-primary);}
-.pi{width:90px;padding:3px 6px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:4px;background:var(--color-background-secondary);color:var(--color-text-primary);}
+.ni{width:78px;padding:9px 6px;font-size:18px;border:0.5px solid var(--color-border-secondary);border-radius:6px;text-align:right;background:var(--color-background-secondary);color:var(--color-text-primary);}
+.pi{width:86px;padding:8px 6px;font-size:17px;border:0.5px solid var(--color-border-secondary);border-radius:6px;background:var(--color-background-secondary);color:var(--color-text-primary);}
 .ic{font-size:12px;cursor:pointer;background:none;border:none;padding:2px;opacity:.45;line-height:1;-webkit-tap-highlight-color:transparent;}
 .ic:active{opacity:1;}
 .rd{font-size:12px;cursor:pointer;color:var(--color-text-secondary);background:none;border:none;padding:0 3px;}
+/* 行メニュー（⋯）— 誤タップでの行削除を防ぐため、削除は直接ボタンではなくメニュー内に置く */
+.rowmenu-btn{font-size:20px;line-height:1;cursor:pointer;color:var(--color-text-secondary);background:none;border:none;padding:10px 8px;border-radius:6px;-webkit-tap-highlight-color:transparent;}
+.rowmenu-btn:active{background:var(--color-background-secondary);}
+#rowmenu{display:none;position:fixed;z-index:350;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);overflow:hidden;min-width:210px;}
+#rowmenu .rm-head{font-size:11px;color:var(--color-text-secondary);padding:10px 16px 6px;}
+#rowmenu button{display:block;width:100%;text-align:left;font-size:15px;padding:14px 16px;border:none;background:none;color:var(--color-text-primary);cursor:pointer;font-family:inherit;}
+#rowmenu button:active{background:var(--color-background-secondary);}
+#rowmenu button.danger{color:#C1462F;border-top:0.5px solid var(--color-border-tertiary);}
+#rowmenu-ov{display:none;position:fixed;inset:0;z-index:340;background:transparent;}
+/* GPSバッジ等：見た目は小さいまま、当たり判定だけ広げる */
+.tap-lg{position:relative;}
+.tap-lg::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44px;height:40px;}
 .rd:active{color:#E24B4A;}
 .pt-thumb{width:34px;height:34px;object-fit:cover;border-radius:4px;cursor:pointer;border:0.5px solid var(--color-border-secondary);}
 .pt-cam{width:34px;height:34px;border:1px dashed var(--color-border-secondary);border-radius:4px;cursor:pointer;background:none;font-size:15px;color:var(--color-text-secondary);-webkit-tap-highlight-color:transparent;}
@@ -160,8 +172,9 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .mic-active{color:#E24B4A!important;opacity:1!important;}
 /* ===== キーボードアクセサリバー ===== */
 #kb-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:300;background:var(--color-background-primary);border-top:1px solid var(--color-border-secondary);padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));flex-direction:row;align-items:center;gap:8px;}
-.kb-btn{padding:6px 14px;font-size:13px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-primary);white-space:nowrap;}
+.kb-btn{padding:12px 16px;font-size:15px;min-height:44px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-primary);white-space:nowrap;}
 .kb-btn.p{background:#185FA5;color:#fff;border-color:#185FA5;}
+.kb-btn.rec{background:#FCEBEB;color:#C1462F;border-color:#E24B4A;font-weight:700;}
 /* ===== ピン管理モーダル ===== */
 #pin-modal{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.45);}
 #pin-modal-inner{position:absolute;bottom:0;left:0;right:0;background:var(--color-background-primary);border-radius:16px 16px 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom));max-height:70vh;overflow-y:auto;}
@@ -314,12 +327,17 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <div id="ocr-spin" style="display:none;text-align:center;padding:10px;font-size:13px;color:var(--color-text-secondary);">🔍 解析中...</div>
     <div id="ocr-err" style="display:none;font-size:12px;color:#A32D2D;margin-top:6px;"></div>
     <div id="ocr-res" class="ocr-res">
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">✓ 入力しました</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">読み取り結果 — <span id="ocr-tgt-lbl">—</span> に入力しますか？</div>
       <div style="font-size:26px;font-weight:500;color:#1D9E75;" id="ocr-val">—</div>
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button class="pb p" style="flex:1;" onclick="retryOcr()">📷 再撮影</button>
-        <button class="pb" style="flex:1;" onclick="closeOcr()">閉じる</button>
+      <div id="ocr-dist" style="display:none;font-size:11px;color:var(--color-text-secondary);margin-top:2px;"></div>
+      <div style="font-size:11px;color:#854F0B;background:#FAEEDA;border-radius:6px;padding:6px 8px;margin-top:8px;line-height:1.5;">
+        ⚠️ 自動読み取りは誤認識することがあります。液晶の表示と数値が一致しているか必ず確認してください。
       </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="pb p" style="flex:1.4;font-weight:600;" onclick="confirmOcr()">✓ この値を入力</button>
+        <button class="pb" style="flex:1;" onclick="retryOcr()">📷 再撮影</button>
+      </div>
+      <button class="pb" style="width:100%;margin-top:6px;" onclick="closeOcr()">入力せずに閉じる</button>
     </div>
   </div>
 
@@ -336,7 +354,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <div class="card">
       <span class="slabel">測量情報</span>
       <div style="display:grid;grid-template-columns:3fr 2fr;gap:10px;">
-        <div class="mi"><label>作業名</label><input type="text" id="proj" placeholder="○○道路測量" oninput="markDirty()"></div>
+        <div class="mi"><label>作業名</label><input type="text" id="proj" placeholder="○○道路測量" oninput="markDirty()" onfocus="focusField('proj','text','作業名')" onblur="scheduleKbHide()"></div>
         <div class="mi"><label>測量日</label><input type="date" id="date" oninput="markDirty()"></div>
       </div>
       <div style="display:grid;grid-template-columns:3fr 2fr;gap:10px;margin-top:10px;">
@@ -354,20 +372,17 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="g3" style="margin-top:10px;">
         <div class="mi"><label>起点BM (m)</label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="bm-s" onfocus="this.select()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
-            <button onclick="startVoiceField('bm-s',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
+            <input type="number" id="bm-s" onfocus="this.select();focusField('bm-s','number','起点BM (m)')" onblur="scheduleKbHide()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
           </div>
         </div>
         <div class="mi"><label>終点BM (m)</label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="bm-e" onfocus="this.select()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
-            <button onclick="startVoiceField('bm-e',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
+            <input type="number" id="bm-e" onfocus="this.select();focusField('bm-e','number','終点BM (m)')" onblur="scheduleKbHide()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
           </div>
         </div>
         <div class="mi"><label>器差K (mm) <span id="k-ind" style="display:none;color:#d97706;font-size:10px;">●</span></label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="k-corr" onfocus="this.select()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
-            <button onclick="startVoiceField('k-corr',false)" style="font-size:9px;padding:2px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;">🎤</button>
+            <input type="number" id="k-corr" onfocus="this.select();focusField('k-corr','number','器差K (mm)')" onblur="scheduleKbHide()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
           </div>
         </div>
       </div>
@@ -409,11 +424,11 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
         </table>
       </div>
       <button class="add-btn" onclick="addRow()">+ 測点を追加</button>
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;">🎤 音声入力 &nbsp;📷 液晶OCR &nbsp;📍 GPS取得</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;line-height:1.6;">入力欄をタップすると、画面下に <strong>🎤 音声入力</strong>（測点名・作業名・現場メモにも対応）と <strong>📷 液晶OCR</strong> のボタンが出ます。<br>行の <strong>⋯</strong> から行の挿入・削除ができます。</div>
     </div>
     <div class="card">
       <span class="slabel">現場メモ</span>
-      <textarea class="note" id="memo" placeholder="特記事項・機器番号など..." oninput="markDirty()"></textarea>
+      <textarea class="note" id="memo" placeholder="特記事項・機器番号など..." oninput="markDirty()" onfocus="focusField('memo','text','現場メモ')" onblur="scheduleKbHide()"></textarea>
     </div>
   </div>
 
@@ -471,7 +486,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
   <div id="tab-chk" style="display:none;">
     <!-- 許容閉合差係数 -->
     <div class="card" style="padding:12px 16px;">
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;">▸ 許容閉合差の設定</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;">▸ 許容閉合差の設定（任意基準）</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
         <!-- 係数式 -->
         <div style="display:flex;align-items:center;gap:4px;">
@@ -497,45 +512,48 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
           クリア
         </button>
       </div>
-      <!-- 等級参照（折りたたみ） -->
+      <!-- 係数の目安（折りたたみ） -->
       <button onclick="document.getElementById('grade-tbl').style.display=document.getElementById('grade-tbl').style.display==='none'?'block':'none'"
         style="font-size:11px;padding:3px 10px;border:0.5px solid var(--color-border-secondary);border-radius:20px;cursor:pointer;background:none;color:var(--color-text-secondary);">
-        📋 等級参照
+        📋 係数の目安
       </button>
       <div id="grade-tbl" style="display:none;margin-top:10px;border-top:0.5px solid var(--color-border-tertiary);padding-top:10px;">
+        <div style="font-size:11px;line-height:1.6;color:#854F0B;background:#FAEEDA;border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+          ⚠️ ここでの判定は<strong>据付回数 n による任意基準（±C√n）</strong>です。公共測量の正式な許容範囲は<strong>観測距離 S（片道km）を用いた別の式</strong>で定められており（例：3級水準測量の往復観測値の較差は 10mm√S）、この判定とは一致しません。<strong>公共測量の成果判定には、発注者・計画機関の作業規程に従ってください。</strong>
+        </div>
         <table style="border-collapse:collapse;width:100%;font-size:12px;">
           <tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
-            <th style="text-align:left;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">等級</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">精度の目安</th>
             <th style="text-align:center;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">係数C</th>
             <th style="text-align:center;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">例 (n=4)</th>
-            <th style="text-align:left;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">主な用途</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--color-text-secondary);font-weight:500;">想定用途</th>
           </tr>
           <tr onclick="setTolCoef(2)" style="cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary);" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
-            <td style="padding:5px 8px;color:var(--color-text-primary);">1級</td>
+            <td style="padding:5px 8px;color:var(--color-text-primary);">高精度</td>
             <td style="text-align:center;padding:5px 8px;font-weight:600;color:#185FA5;">2</td>
             <td style="text-align:center;padding:5px 8px;color:var(--color-text-secondary);">±4 mm</td>
-            <td style="padding:5px 8px;color:var(--color-text-secondary);">精密基準点・ダム</td>
+            <td style="padding:5px 8px;color:var(--color-text-secondary);">精密な基準点・ダム等</td>
           </tr>
           <tr onclick="setTolCoef(5)" style="cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary);" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
-            <td style="padding:5px 8px;color:var(--color-text-primary);">2級</td>
+            <td style="padding:5px 8px;color:var(--color-text-primary);">中精度</td>
             <td style="text-align:center;padding:5px 8px;font-weight:600;color:#185FA5;">5</td>
             <td style="text-align:center;padding:5px 8px;color:var(--color-text-secondary);">±10 mm</td>
-            <td style="padding:5px 8px;color:var(--color-text-secondary);">公共測量・縦断</td>
+            <td style="padding:5px 8px;color:var(--color-text-secondary);">縦断・構造物まわり</td>
           </tr>
           <tr onclick="setTolCoef(10)" style="cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary);" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
-            <td style="padding:5px 8px;color:var(--color-text-primary);">3級</td>
+            <td style="padding:5px 8px;color:var(--color-text-primary);">標準</td>
             <td style="text-align:center;padding:5px 8px;font-weight:600;color:#185FA5;">10</td>
             <td style="text-align:center;padding:5px 8px;color:var(--color-text-secondary);">±20 mm</td>
             <td style="padding:5px 8px;color:var(--color-text-secondary);">一般土木・道路</td>
           </tr>
           <tr onclick="setTolCoef(20)" style="cursor:pointer;" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
-            <td style="padding:5px 8px;color:var(--color-text-primary);">4級</td>
+            <td style="padding:5px 8px;color:var(--color-text-primary);">概略</td>
             <td style="text-align:center;padding:5px 8px;font-weight:600;color:#185FA5;">20</td>
             <td style="text-align:center;padding:5px 8px;color:var(--color-text-secondary);">±40 mm</td>
             <td style="padding:5px 8px;color:var(--color-text-secondary);">概略測量・造成</td>
           </tr>
         </table>
-        <div style="font-size:10px;color:var(--color-text-secondary);margin-top:6px;">行をタップすると係数Cが自動入力されます</div>
+        <div style="font-size:10px;color:var(--color-text-secondary);margin-top:6px;">行をタップすると係数Cが自動入力されます。数値は目安であり、公式な等級区分ではありません。</div>
       </div>
     </div>
 
@@ -552,7 +570,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     </div>
     <div class="card">
       <div class="crow"><span style="flex:1;">計算チェック</span><span class="badge" id="ck-c">—</span></div>
-      <div class="crow"><span style="flex:1;" id="ck-cl-label">閉合差 (±C√n mm)</span><span class="badge" id="ck-cl">—</span></div>
+      <div class="crow"><span style="flex:1;" id="ck-cl-label">閉合差（任意基準）</span><span class="badge" id="ck-cl">—</span></div>
       <div class="crow" style="border:none;"><span style="flex:1;">データ完整性</span><span class="badge" id="ck-d">—</span></div>
     </div>
     <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 復路</div>
@@ -567,7 +585,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="sc"><div class="sl">閉合差</div><div class="sv" id="r-cl">—</div></div>
     </div>
     <div class="card" style="margin-bottom:12px;">
-      <div class="crow" style="border:none;"><span style="flex:1;" id="rk-cl-label">閉合差 (±C√n mm)</span><span class="badge" id="rk-cl">—</span></div>
+      <div class="crow" style="border:none;"><span style="flex:1;" id="rk-cl-label">閉合差（任意基準）</span><span class="badge" id="rk-cl">—</span></div>
     </div>
     <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;">▸ 往復比較（路線全体）</div>
     <div class="card">
@@ -613,8 +631,18 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 
 <!-- キーボードアクセサリバー -->
 <div id="kb-bar">
-  <span id="kb-label" style="flex:1;font-size:13px;font-weight:500;color:var(--color-text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+  <span id="kb-label" style="flex:1;font-size:13px;font-weight:600;color:var(--color-text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+  <button class="kb-btn" id="kb-voice" onpointerdown="event.preventDefault()" onclick="kbVoice()">🎤 音声</button>
+  <button class="kb-btn" id="kb-ocr" onpointerdown="event.preventDefault()" onclick="kbOcr()">📷 OCR</button>
   <button class="kb-btn p" onclick="blurKb()">完了</button>
+</div>
+
+<!-- 行メニュー（⋯） -->
+<div id="rowmenu-ov" onclick="closeRowMenu()"></div>
+<div id="rowmenu">
+  <div class="rm-head" id="rowmenu-head"></div>
+  <button onclick="rowMenuInsert()">＋ この下に行を挿入</button>
+  <button class="danger" onclick="rowMenuDelete()">🗑 この行を削除</button>
 </div>
 
 <!-- ピン管理モーダル -->
@@ -851,7 +879,7 @@ function checkStorageUsage(){
 // ===== STATE =====
 let rows=[], rowsReturn=[], rowId=0, rowIdRet=0, viewMode='out';
 let routes=[], currentRouteId=null;
-let ocrTgt=null, ptPhotoId=null, pvId=null;
+let ocrTgt=null, ocrPending=null, ptPhotoId=null, pvId=null;
 let autoSaveTimer=null;
 // マイク関連
 let voiceRec=null;
@@ -860,6 +888,7 @@ function getCurRows(){return viewMode==='out'?rows:rowsReturn;}
 
 // ===== ホーム画面 =====
 function goHome(){
+  hideKbBar();
   saveCurrentState();
   saveToStorage();
   document.getElementById('home-screen').style.display='';
@@ -959,12 +988,15 @@ function fmtInput(el,cb){
 function showTab(n){
   ['obs','sk','chk','exp'].forEach(t=>document.getElementById('tab-'+t).style.display=t===n?'':'none');
   document.querySelectorAll('.t').forEach((b,i)=>b.classList.toggle('active',['obs','sk','chk','exp'][i]===n));
+  // パネルの後片付けは各タブの初期化より先に行う。
+  // 初期化処理で例外が出た場合でも、開いたままのパネルが残らないようにするため。
+  document.getElementById('pv').style.display='none';
+  closeOcr();
+  hideKbBar();
   if(n==='chk')runChecks();
   if(n==='exp')buildPrev();
   if(n==='sk'){renderThumbs();renderPins();}
   if(n==='obs')updateWorkerDatalist();
-  document.getElementById('pv').style.display='none';
-  document.getElementById('ocr').style.display='none';
 }
 
 // ===== DIR =====
@@ -1235,6 +1267,52 @@ function removeRow(id){
 }
 function updateField(idx,field,val){getCurRows()[idx][field]=val;markDirty();updateCalcCells();}
 
+// ===== 行メニュー（⋯） =====
+// 以前は行末に「✕削除」ボタンを16x14pxで直接置いていたが、確認も無く
+// 隣のボタンとの誤タップで観測行が消える危険があったため、メニューに集約した。
+let rowMenuId=null;
+
+function openRowMenu(ev,id){
+  ev.stopPropagation();
+  rowMenuId=id;
+  const r=getCurRows().find(x=>x.id===id);
+  document.getElementById('rowmenu-head').textContent=(r&&r.point)?r.point+' の操作':'この行の操作';
+  const menu=document.getElementById('rowmenu'), ov=document.getElementById('rowmenu-ov');
+  ov.style.display='block';
+  menu.style.display='block';
+  // ボタンの近くに出す。画面外にはみ出す場合は内側へ寄せる。
+  const b=ev.currentTarget.getBoundingClientRect();
+  const mw=menu.offsetWidth, mh=menu.offsetHeight;
+  let left=Math.min(b.right-mw, window.innerWidth-mw-8);
+  let top=b.bottom+6;
+  if(top+mh>window.innerHeight-8) top=Math.max(8,b.top-mh-6);
+  menu.style.left=Math.max(8,left)+'px';
+  menu.style.top=top+'px';
+}
+
+function closeRowMenu(){
+  document.getElementById('rowmenu').style.display='none';
+  document.getElementById('rowmenu-ov').style.display='none';
+  rowMenuId=null;
+}
+
+function rowMenuInsert(){
+  const id=rowMenuId; closeRowMenu();
+  if(id!==null) insertRowAfter(id);
+}
+
+function rowMenuDelete(){
+  const id=rowMenuId; closeRowMenu();
+  if(id===null)return;
+  const r=getCurRows().find(x=>x.id===id);
+  const name=(r&&r.point)?`「${r.point}」`:'この測点';
+  const hasData=r&&(r.bs!==''||r.fs!==''||r.is_!==''||r.photo);
+  const msg=hasData
+    ? `${name}の行を削除します。\n入力済みの観測値・写真も削除され、元に戻せません。\n削除してよろしいですか？`
+    : `${name}の行を削除します。よろしいですか？`;
+  if(confirm(msg)) removeRow(id);
+}
+
 function insertRowAfter(id){
   const arr=getCurRows();
   const idx=arr.findIndex(r=>r.id===id);
@@ -1330,7 +1408,7 @@ function renderTbl(){
     const{ihD,ghV,isFS}=ghData[i];
     const gpsHtml=r.lat!=null
       ?`<div style="font-size:9px;color:#16a34a;margin-top:2px;">📍${r.lat.toFixed(4)},${r.lon.toFixed(4)}</div>`
-      :`<button onclick="getGPS(${r.id})" style="font-size:9px;padding:1px 4px;border:0.5px solid var(--color-border-secondary);border-radius:3px;cursor:pointer;background:none;color:var(--color-text-secondary);margin-top:2px;display:block;">📍GPS</button>`;
+      :`<button class="tap-lg" onclick="getGPS(${r.id})" style="font-size:11px;padding:5px 9px;border:0.5px solid var(--color-border-secondary);border-radius:5px;cursor:pointer;background:none;color:var(--color-text-secondary);display:block;">📍GPS</button>`;
 
     // 写真セル — 各行に独自のfile inputを生成
     const photoCell=r.photo
@@ -1340,35 +1418,32 @@ function renderTbl(){
           <span class="pt-cam" style="display:flex;align-items:center;justify-content:center;">📸</span>
         </label>`;
 
+    // セル下の補助ボタン（🎤📷）は撤去し、フォーカス時に画面下のキーボードバーへ集約する。
+    // 23x14pxのボタンが並ぶ状態は屋外・手袋での誤タップの原因になるため。
     const mk=(field,val)=>`
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
         <input class="ni" type="number" step="0.001" value="${esc(val)}" placeholder="—"
           onfocus="this.select();focusNi(${i},'${field}',${r.id})"
           oninput="updateField(${i},'${field}',this.value)"
           onchange="updateField(${i},'${field}',this.value)"
           onkeydown="if(event.key==='Enter'){blurKb();this.blur();}"
-          onblur="if(this.value!==''){const n=parseFloat(this.value);if(!isNaN(n)){this.value=n.toFixed(3);updateField(${i},'${field}',this.value);}}">
-        <div style="display:flex;gap:3px;margin-top:2px;">
-          <button id="mic-${r.id}-${field}" onclick="startVoice(${r.id},'${field}')"
-            style="font-size:9px;padding:1px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;-webkit-tap-highlight-color:transparent;">🎤</button>
-          <button onclick="captureForCell(${r.id},'${field}')"
-            style="font-size:9px;padding:1px 5px;border:0.5px solid #185FA5;border-radius:3px;cursor:pointer;background:none;color:#185FA5;-webkit-tap-highlight-color:transparent;">📷</button>
-        </div>
+          onblur="if(this.value!==''){const n=parseFloat(this.value);if(!isNaN(n)){this.value=n.toFixed(3);updateField(${i},'${field}',this.value);}}scheduleKbHide();">
       </div>`;
 
     const tr=document.createElement('tr');
     if(isFS)tr.style.color=isRet?'#d97706':'#185FA5';
     const remeasBadge=r.remeasure?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#FAEEDA;color:#854F0B;margin-left:3px;">再測</span>`:'';
     tr.innerHTML=`
-      <td style="vertical-align:top;min-width:92px;">
+      <td style="vertical-align:top;min-width:90px;">
         <div style="display:flex;align-items:center;gap:2px;">
           <input class="pi" type="text" value="${esc(r.point)}" placeholder="BM.1"
+            onfocus="focusPi(${i},${r.id})"
+            onblur="scheduleKbHide()"
             oninput="getCurRows()[${i}].point=this.value;markDirty()"
-            onkeydown="if(event.key==='Enter'){this.blur();}">
+            onkeydown="if(event.key==='Enter'){blurKb();this.blur();}">
           ${remeasBadge}
         </div>
-        <div style="display:flex;gap:3px;margin-top:2px;">
-          <button onclick="startVoicePoint(${r.id})" style="font-size:9px;padding:1px 5px;border:0.5px solid #E24B4A;border-radius:3px;cursor:pointer;background:none;color:#E24B4A;-webkit-tap-highlight-color:transparent;">🎤</button>
+        <div style="display:flex;gap:3px;margin-top:3px;">
           ${gpsHtml}
         </div>
       </td>
@@ -1377,8 +1452,7 @@ function renderTbl(){
       <td class="cc" id="ih-${r.id}">${ihD}</td>
       <td class="cc" id="gh-${r.id}">${ghV!==''?parseFloat(ghV).toFixed(3):''}</td>
       <td>${photoCell}</td>
-      <td><button class="rd" onclick="removeRow(${r.id})" title="削除">✕</button>
-          <button class="rd" onclick="insertRowAfter(${r.id})" title="下に行を挿入" style="margin-top:3px;background:none;color:#185FA5;border-color:#185FA5;font-size:13px;">＋</button></td>`;
+      <td><button class="rowmenu-btn" onclick="openRowMenu(event,${r.id})" title="この行の操作">⋯</button></td>`;
     tb.appendChild(tr);
   });
 }
@@ -1403,24 +1477,81 @@ if(window.visualViewport){
   window.visualViewport.addEventListener('scroll',adjustKbBar);
 }
 
-function focusNi(idx,field,rid){
-  activeKb={idx,field,rid};
-  const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
-  const r=getCurRows()[idx];
-  document.getElementById('kb-label').textContent=(r.point||'測点')+' — '+lbs[field];
+// バーはフォーカスが外れたら自動的に隠す。
+// セル間を移動するときの一瞬のちらつきを避けるため、少し待ってから判定する。
+// バーのボタンは pointerdown で既定動作を止めているためフォーカスが外れず、
+// 押している最中にバーが消えることはない。
+let kbHideTimer=null;
+
+function showKbBar(){
+  clearTimeout(kbHideTimer);
   const bar=document.getElementById('kb-bar');
   bar.style.display='flex';
   bar.style.bottom='0';
   setTimeout(adjustKbBar,100);
 }
-function blurKb(){
-  document.activeElement.blur();
+
+function hideKbBar(){
+  clearTimeout(kbHideTimer);
   const bar=document.getElementById('kb-bar');
   bar.style.display='none';
   bar.style.bottom='0';
   activeKb=null;
 }
-function startVoiceKb(){if(activeKb)startVoice(activeKb.rid,activeKb.field);}
+
+function scheduleKbHide(){
+  clearTimeout(kbHideTimer);
+  kbHideTimer=setTimeout(hideKbBar,150);
+}
+
+function focusNi(idx,field,rid){
+  activeKb={idx,field,rid};
+  const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
+  const r=getCurRows()[idx];
+  document.getElementById('kb-label').textContent=(r&&r.point||'測点')+' — '+(lbs[field]||'');
+  // 数値セルでは音声・OCRの両方が使える
+  document.getElementById('kb-voice').style.display='';
+  document.getElementById('kb-ocr').style.display='';
+  showKbBar();
+}
+
+// 測点名セル用。液晶OCRは数値専用のためバーから隠す。
+function focusPi(idx,rid){
+  activeKb={idx,field:'point',rid};
+  const r=getCurRows()[idx];
+  document.getElementById('kb-label').textContent=(r&&r.point||'測点')+' — 測点名';
+  document.getElementById('kb-voice').style.display='';
+  document.getElementById('kb-ocr').style.display='none';
+  showKbBar();
+}
+
+// 表の外の入力欄（起点BM・作業名・現場メモ等）用。液晶OCRは標尺読み専用のため出さない。
+function focusField(id,mode,label){
+  activeKb={kind:'field',id,mode};
+  document.getElementById('kb-label').textContent=label;
+  document.getElementById('kb-voice').style.display='';
+  document.getElementById('kb-ocr').style.display='none';
+  showKbBar();
+}
+
+// バーの🎤：フォーカス中のセルに応じて音声入力を開始
+function kbVoice(){
+  if(!activeKb)return;
+  if(activeKb.kind==='field') startVoiceField(activeKb.id,activeKb.mode);
+  else if(activeKb.field==='point') startVoicePoint(activeKb.rid);
+  else startVoice(activeKb.rid,activeKb.field);
+}
+
+// バーの📷：フォーカス中のセルに対して液晶OCRを開始
+function kbOcr(){
+  if(!activeKb||activeKb.kind==='field'||activeKb.field==='point')return;
+  captureForCell(activeKb.rid,activeKb.field);
+}
+
+function blurKb(){
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  hideKbBar();
+}
 
 // カメラを直接起動してOCR
 function captureDirectKb(){
@@ -1472,65 +1603,68 @@ function captureForCell(rid,field){
 }
 
 // 測点名の音声入力
-function startVoicePoint(rowId){
+// ===== 音声入力の共通処理 =====
+// 以前は呼び出し元ごとにボタンの見た目を書き換えていたが、セル内の🎤を廃止して
+// バーへ集約したため、録音中の表示もバーのボタン1箇所で管理する。
+function runVoice(onText){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
-  const rec=new SR();
-  rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
-  const btn=event.target;
-  btn.textContent='⏺';btn.style.background='#FCEBEB';
-  const targetArr=getCurRows(); // 押下時点の配列を固定（往路・復路間でidが重複しうるため）
-  rec.onresult=e=>{
-    let t=e.results[0][0].transcript.trim();
-    t=t.replace(/ナンバー/g,'No.').replace(/番号/g,'No.')
-       .replace(/ビーエム/g,'BM').replace(/ベンチマーク/g,'BM')
-       .replace(/アイピー/g,'IP').replace(/ケイピー/g,'KP')
-       .replace(/の/g,'-')
-       .replace(/\s+/g,'');
-    t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
-    t=t.replace(/No\.-/g,'No.');
-    // GPS/BS/FS音声入力と同様、行の位置(index)ではなくidで対象行を探し直す
-    // （認識中に往路⇔復路の切替や行の追加・削除が起きても正しい行に書き込むため）
-    const r=targetArr.find(r=>r.id===rowId);
-    if(r){r.point=t;markDirty();renderTbl();}
-  };
-  const rst=()=>{btn.textContent='🎤';btn.style.background='none';};
-  rec.onerror=e=>{
+  if(voiceRec){voiceRec.stop();voiceRec=null;return;} // 録音中にもう一度押したら停止
+  const btn=document.getElementById('kb-voice');
+  const orig=btn?btn.innerHTML:'';
+  voiceRec=new SR();
+  voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
+  if(btn){btn.innerHTML='⏺ 録音中';btn.classList.add('rec');}
+  const rst=()=>{voiceRec=null;if(btn){btn.innerHTML=orig;btn.classList.remove('rec');}};
+  voiceRec.onresult=e=>{ try{ onText(e.results[0][0].transcript); }catch(err){} };
+  voiceRec.onerror=e=>{
     if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
+    else if(e.error==='network')alert('音声認識にはインターネット接続が必要です。');
     rst();
   };
-  rec.onend=rst;
-  rec.start();
+  voiceRec.onend=rst;
+  voiceRec.start();
+}
+
+// 測点名の読み上げを表記に整える（No. / BM / KP / IP など）
+function normalizePointName(t){
+  t=t.trim()
+     .replace(/ナンバー/g,'No.').replace(/番号/g,'No.')
+     .replace(/ビーエム/g,'BM').replace(/ベンチマーク/g,'BM')
+     .replace(/アイピー/g,'IP').replace(/ケイピー/g,'KP')
+     .replace(/の/g,'-')
+     .replace(/\s+/g,'');
+  t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+  return t.replace(/No\.-/g,'No.');
+}
+
+function startVoicePoint(rowId){
+  const targetArr=getCurRows(); // 押下時点の配列を固定（往路・復路でidが重複しうるため）
+  runVoice(t=>{
+    const r=targetArr.find(r=>r.id===rowId);
+    if(r){r.point=normalizePointName(t);markDirty();renderTbl();}
+  });
 }
 
 // 任意フィールドへの音声入力
-function startVoiceField(fieldId, allowNegative=true){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
+function startVoiceField(fieldId, mode){
   const el=document.getElementById(fieldId);
   if(!el)return;
-  const rec=new SR();
-  rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
-  const btn=event.target;
-  const orig=btn.textContent;
-  btn.textContent='⏺';btn.style.color='#E24B4A';btn.style.background='#FCEBEB';
-  rec.onresult=e=>{
-    const t=e.results[0][0].transcript;
-    const v=voiceToNum(t);
-    if(v!==null){
-      el.value=v.toFixed(3);
-      el.dispatchEvent(new Event('input',{bubbles:true}));
-    } else {
-      alert(`"${t}" — 数値が認識できませんでした`);
+  runVoice(t=>{
+    if(mode==='text'){
+      const v=t.trim();
+      if(!v)return;
+      // 複数行入力（現場メモ）は追記、単一行の項目は置き換え
+      if(el.tagName==='TEXTAREA') el.value = el.value ? el.value.replace(/\s*$/,'')+'\n'+v : v;
+      else el.value = v;
+    }else{
+      const n=voiceToNum(t);
+      if(n===null){alert(`"${t}" — 数値が認識できませんでした`);return;}
+      el.value=n.toFixed(3);
     }
-  };
-  const rst=()=>{btn.textContent=orig;btn.style.color='#E24B4A';btn.style.background='none';};
-  rec.onerror=e=>{
-    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
-    rst();
-  };
-  rec.onend=rst;
-  rec.start();
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  });
 }
 
 // ===== 観測者名管理 =====
@@ -1699,39 +1833,13 @@ function getGPS(rowId){
 // rows/rowsReturnはidが往路・復路間で重複しうるため、対象配列への参照もボタン押下時点で
 // 固定し、待機中に往路⇔復路が切り替わっても正しい配列内で探すようにする。
 function startVoice(rowId,field){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
-  if(voiceRec){voiceRec.stop();voiceRec=null;return;}
-
-  const btn=document.getElementById(`mic-${rowId}-${field}`);
-  const targetArr=getCurRows(); // 押下時点の配列を固定
-
-  voiceRec=new SR();
-  voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
-  if(btn){btn.classList.add('mic-active');btn.textContent='⏺';}
-
-  voiceRec.onresult=e=>{
-    const t=e.results[0][0].transcript;
+  const targetArr=getCurRows();
+  runVoice(t=>{
     const v=voiceToNum(t);
-    if(v!==null){
-      const r=targetArr.find(r=>r.id===rowId);
-      if(r){r[field]=v.toFixed(3);markDirty();renderTbl();}
-    }
-    else alert(`"${t}" — 数値が認識できませんでした`);
-  };
-  const rst=()=>{
-    voiceRec=null;
-    document.querySelectorAll('.ic').forEach(b=>{
-      if(b.textContent==='⏺'){b.textContent='🎤';b.classList.remove('mic-active');}
-    });
-  };
-  voiceRec.onerror=e=>{
-    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
-    else if(e.error==='network')alert('音声認識にはインターネット接続が必要です。');
-    rst();
-  };
-  voiceRec.onend=rst;
-  voiceRec.start();
+    if(v===null){alert(`"${t}" — 数値が認識できませんでした`);return;}
+    const r=targetArr.find(r=>r.id===rowId);
+    if(r){r[field]=v.toFixed(3);markDirty();renderTbl();}
+  });
 }
 
 function voiceToNum(t){
@@ -1754,7 +1862,7 @@ function openOcr(id,field){
   document.getElementById('ocr').style.display='block';
   document.getElementById('ocr').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function closeOcr(){document.getElementById('ocr').style.display='none';ocrTgt=null;}
+function closeOcr(){document.getElementById('ocr').style.display='none';ocrTgt=null;ocrPending=null;}
 function handleOcrF(file){
   if(!file)return;
   const rd=new FileReader();
@@ -1769,46 +1877,100 @@ function handleOcrF(file){
 async function runOcr(du){
   document.getElementById('ocr-spin').style.display='block';
   const b64=du.split(',')[1],mt=du.split(';')[0].split(':')[1];
+  // 電子レベルの液晶は「標尺読み(Rh)」と「水平距離(Hd)」を同時表示する機種が多い。
+  // どちらを返すかAI任せにすると水平距離を標尺読みとして入力してしまうため、
+  // 役割を明示したうえでJSONで両方を受け取り、用途ごとに使い分ける。
+  const prompt=[
+    '電子レベルの液晶ディスプレイの画像です。次のJSONだけを返してください。説明文は不要です。',
+    '{"reading": 標尺読み値, "distance": 水平距離, "note": 補足}',
+    '',
+    '- reading: 標尺の読み値（Rh / BS / FS / 標尺 などのラベルが付いた値、単位m）。数値のみの文字列。',
+    '- distance: 水平距離（Hd / D / 距離 などのラベルが付いた値、単位m）。表示が無ければ null。',
+    '- 水平距離を reading に入れないでください。',
+    '- 標尺読み値が判別できない、または複数の候補があってどれか決められない場合は reading を null にしてください。',
+    '- 単位記号や記号は含めず、数字と小数点のみにしてください。'
+  ].join('\n');
   try{
     const res=await fetch('https://sitelogger-ocr.kuryumail-369.workers.dev/',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:128,
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:256,
         messages:[{role:'user',content:[
           {type:'image',source:{type:'base64',media_type:mt,data:b64}},
-          {type:'text',text:'電子レベルの液晶ディスプレイ画像です。測定値を数値のみ（例:1.234）で返してください。読み取れない場合はERRORと返してください。'}
+          {type:'text',text:prompt}
         ]}]})});
     const d=await res.json();
     document.getElementById('ocr-spin').style.display='none';
     if(d.error)throw new Error(d.error.message);
     const txt=(d.content||[]).map(c=>c.text||'').join('').trim();
-    if(txt==='ERROR'||!txt.match(/[\d.]/)){showOcrErr('数値を読み取れませんでした');return;}
-    const m=txt.match(/-?[\d]+\.[\d]+|-?[\d]+/);
-    if(!m){showOcrErr('数値形式の取得に失敗しました');return;}
-    const val=parseFloat(m[0]).toFixed(3);
-    // 自動入力
-    if(ocrTgt){
-      const arr=ocrTgt.dir==='out'?rows:rowsReturn;
-      const r=arr.find(r=>r.id===ocrTgt.id);
-      if(r){r[ocrTgt.field]=val;markDirty();renderTbl();}
+
+    const parsed=parseOcrResponse(txt);
+    if(parsed.reading===null){
+      showOcrErr('標尺の読み値を判別できませんでした。液晶が画面いっぱいに写るよう近づいて再撮影するか、手入力してください。');
+      return;
     }
-    document.getElementById('ocr-val').textContent=val+' m';
+
+    // 自動入力はしない。読み取った値は候補として保持し、ユーザーが「この値を入力」を押して初めて確定する。
+    ocrPending={reading:parsed.reading, distance:parsed.distance};
+
+    const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
+    const tr=ocrTgt?(getCurRows().find(r=>r.id===ocrTgt.id)||{}):{};
+    document.getElementById('ocr-tgt-lbl').textContent=
+      ocrTgt?`${tr.point||''} の ${lbs[ocrTgt.field]||''}`.trim():'選択中のセル';
+    document.getElementById('ocr-val').textContent=parsed.reading+' m';
+    const dEl=document.getElementById('ocr-dist');
+    if(parsed.distance!==null){
+      dEl.textContent='水平距離 '+parsed.distance+' m（参考）';
+      dEl.style.display='block';
+    }else{
+      dEl.style.display='none';
+    }
     document.getElementById('ocr-res').style.display='block';
   }catch(e){document.getElementById('ocr-spin').style.display='none';showOcrErr('APIエラー: '+e.message);}
 }
+
+// OCR応答（JSON想定・崩れた場合も可能な範囲で救済）を {reading, distance} に正規化する
+function parseOcrResponse(txt){
+  const numOf=v=>{
+    if(v===null||v===undefined)return null;
+    const m=String(v).match(/-?\d+(?:\.\d+)?/);
+    return m?m[0]:null;
+  };
+  // まずJSONとして解釈を試みる
+  const jm=txt.match(/\{[\s\S]*\}/);
+  if(jm){
+    try{
+      const o=JSON.parse(jm[0]);
+      const r=numOf(o.reading);
+      return {reading:r!==null?parseFloat(r).toFixed(3):null, distance:numOf(o.distance)};
+    }catch(e){/* JSONでなければ下のフォールバックへ */}
+  }
+  // フォールバック：Rh等のラベル付き数値を拾う。ラベルが無ければ最初の小数を読み値とみなす。
+  const lab=txt.match(/(?:Rh|BS|FS|標尺)\s*[:：]?\s*(-?\d+\.\d+)/i);
+  if(lab) return {reading:parseFloat(lab[1]).toFixed(3), distance:null};
+  if(/^\s*(ERROR|null)\s*$/i.test(txt)) return {reading:null, distance:null};
+  const any=txt.match(/-?\d+\.\d+/);
+  return {reading:any?parseFloat(any[0]).toFixed(3):null, distance:null};
+}
+
 function showOcrErr(msg){const el=document.getElementById('ocr-err');el.textContent=msg;el.style.display='block';}
 function retryOcr(){
-  // 再撮影：結果を隠してカメラを再起動
+  // 再撮影：前回の読み取り候補を破棄してからカメラを再起動
+  ocrPending=null;
   ['ocr-res','ocr-err'].forEach(x=>document.getElementById(x).style.display='none');
   document.getElementById('ocr-prev').style.display='none';
   const fi=document.getElementById('ocr-fi');
   fi.value='';fi.click();
 }
 function confirmOcr(){
-  if(!ocrTgt)return;
-  const v=parseFloat(document.getElementById('ocr-val').textContent);
-  if(isNaN(v))return;
+  if(!ocrTgt||!ocrPending){closeOcr();return;}
+  const v=parseFloat(ocrPending.reading);
+  if(isNaN(v)){closeOcr();return;}
   const arr=ocrTgt.dir==='out'?rows:rowsReturn;
-  const r=arr.find(r=>r.id===ocrTgt.id);if(r)r[ocrTgt.field]=v.toFixed(3);
+  const r=arr.find(r=>r.id===ocrTgt.id);
+  // 読み取った水平距離は確認画面に参考表示するのみで、保存はしない。
+  // 表示・修正できる欄が無い状態で保存すると、ユーザーが誤読に気づけないため。
+  // 距離を保存するのは、観測表に距離欄を設けるときに合わせて実装する。
+  if(r) r[ocrTgt.field]=v.toFixed(3);
   closeOcr();markDirty();renderTbl();
 }
 
@@ -2286,8 +2448,8 @@ function runChecks(){
   const directV=parseFloat(document.getElementById('tol-direct')?.value);
   const C=getTolCoef();
   if(lbl){
-    if(!isNaN(directV)&&directV>0) lbl.textContent=`閉合差 (±${directV} mm固定)`;
-    else if(C!==null) lbl.textContent=`閉合差 (±${C}√n mm)`;
+    if(!isNaN(directV)&&directV>0) lbl.textContent=`閉合差（任意基準 ±${directV} mm固定）`;
+    else if(C!==null) lbl.textContent=`閉合差（任意基準 ±${C}√n mm）`;
     else lbl.textContent='閉合差判定';
   }
   if(cl!==null&&al!==null){
@@ -2337,8 +2499,8 @@ function runChecks(){
     const C2=getTolCoef();
     const dv2=parseFloat(document.getElementById('tol-direct')?.value);
     if(lbl2){
-      if(!isNaN(dv2)&&dv2>0) lbl2.textContent=`閉合差 (±${dv2} mm固定)`;
-      else if(C2!==null) lbl2.textContent=`閉合差 (±${C2}√n mm)`;
+      if(!isNaN(dv2)&&dv2>0) lbl2.textContent=`閉合差（任意基準 ±${dv2} mm固定）`;
+      else if(C2!==null) lbl2.textContent=`閉合差（任意基準 ±${C2}√n mm）`;
       else lbl2.textContent='閉合差判定';
     }
     if(alMMr!==null){
@@ -2434,6 +2596,9 @@ function printSketch(){
 
 // ===== EXPORT =====
 function buildPrev(){
+  // テキストプレビュー欄(#prev)はUIから撤去済み。要素が無い場合は何もしない。
+  const prevEl=document.getElementById('prev');
+  if(!prevEl)return;
   const{sBS,sFS,diff,ce,cl}=getCalc(),K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000,sb=parseFloat(document.getElementById('bm-s').value)||0;
   let L=['==============================','  SiteLogger','==============================',`作業名: ${document.getElementById('proj').value||''}`,`測量日: ${document.getElementById('date').value||''}`,`担当者: ${document.getElementById('worker').value||''}  天候: ${document.getElementById('wx').value}`];
   if(K)L.push(`器差定数: ${K.toFixed(3)} mm`);
@@ -2445,7 +2610,7 @@ function buildPrev(){
   if(document.getElementById('bm-e').value)L.push(`閉合差=${cl!==null?(cl*1000).toFixed(1)+' mm':'—'}`);
   if(rowsReturn.some(r=>r.bs!==''||r.fs!=='')){const out=calcDir(rows),ret=calcDir(rowsReturn);L.push(`往復較差=${((out.diff+ret.diff)*1000).toFixed(1)} mm  最確値=${((out.diff-ret.diff)/2).toFixed(4)} m`);}
   L.push('==============================');
-  document.getElementById('prev').textContent=L.join('\n');
+  prevEl.textContent=L.join('\n');
 }
 // CSV出力はPro限定機能。以前はここでブラウザ側だけでCSVを組み立てていたが、
 // Pro判定（isPro）がlocalStorageのキャッシュを見ているだけだったため、
@@ -2490,7 +2655,6 @@ function exportErrorMessage(code){
   };
   return msgs[code]||'出力に失敗しました。しばらくしてから再度お試しください。';
 }
-function expTxt(){buildPrev();dlf('suijun_notebook.txt',document.getElementById('prev').textContent,'text/plain');}
 function dlf(fn,txt,mime){const bom=mime==='text/csv'?'\uFEFF':'';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bom+txt],{type:mime+';charset=utf-8'}));a.download=fn;a.click();}
 
 // ===== SERVICE WORKER =====
