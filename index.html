@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SiteLogger">
@@ -174,7 +174,11 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 #kb-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:300;background:var(--color-background-primary);border-top:1px solid var(--color-border-secondary);padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));flex-direction:row;align-items:center;gap:8px;}
 .kb-btn{padding:12px 16px;font-size:15px;min-height:44px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-primary);white-space:nowrap;}
 .kb-btn.p{background:#185FA5;color:#fff;border-color:#185FA5;}
-.kb-btn.rec{background:#FCEBEB;color:#C1462F;border-color:#E24B4A;font-weight:700;}
+.kb-btn.rec{background:#E24B4A;color:#fff;border-color:#E24B4A;font-weight:700;}
+#kb-bar.recording{background:#FCEBEB;border-top:2px solid #E24B4A;}
+#kb-bar.recording #kb-label{color:#C1462F;font-weight:700;}
+@keyframes recpulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+.kb-btn.rec{animation:recpulse 1s ease-in-out infinite;}
 /* ===== ピン管理モーダル ===== */
 #pin-modal{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.45);}
 #pin-modal-inner{position:absolute;bottom:0;left:0;right:0;background:var(--color-background-primary);border-radius:16px 16px 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom));max-height:70vh;overflow-y:auto;}
@@ -1462,16 +1466,39 @@ let activeKb=null;
 
 function adjustKbBar(){
   const bar=document.getElementById('kb-bar');
-  if(bar.style.display==='none'&&!activeKb)return;
+  if(!bar||bar.style.display==='none')return;
   const vv=window.visualViewport;
-  if(vv){
-    // キーボード分だけ上にずらす
-    const offsetBottom=window.innerHeight-vv.height-vv.offsetTop;
-    bar.style.bottom=Math.max(0,offsetBottom)+'px';
-    bar.style.left=vv.offsetLeft+'px';
-    bar.style.right=(window.innerWidth-vv.offsetLeft-vv.width)+'px';
-  }
+  if(!vv)return;
+  // レイアウトビューポートの下端から、実際に見えている領域の下端までの距離
+  // ＝ソフトキーボードが覆っている高さ
+  const gap=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
+  // bottom ではなく transform でずらす。iOSでは position:fixed の bottom が
+  // キーボード表示中に正しく効かないことがあるため。
+  bar.style.transform=gap?`translateY(${-gap}px)`:'';
+  bar.style.left=vv.offsetLeft+'px';
+  bar.style.right=(window.innerWidth-vv.offsetLeft-vv.width)+'px';
 }
+
+// キーボードは200〜400msかけてせり上がるため、表示直後に一度測るだけでは
+// まだ縮んでいない値を拾ってしまい、バーがキーボードの裏に残る。
+// 表示から一定時間は毎フレーム測り直して追従させる。
+let kbTrackUntil=0,kbTracking=false;
+function trackKbBar(ms){
+  kbTrackUntil=performance.now()+ms;
+  if(kbTracking)return;
+  kbTracking=true;
+  const step=()=>{
+    adjustKbBar();
+    const bar=document.getElementById('kb-bar');
+    if(performance.now()<kbTrackUntil&&bar&&bar.style.display!=='none'){
+      requestAnimationFrame(step);
+    }else{
+      kbTracking=false;
+    }
+  };
+  requestAnimationFrame(step);
+}
+
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize',adjustKbBar);
   window.visualViewport.addEventListener('scroll',adjustKbBar);
@@ -1488,7 +1515,8 @@ function showKbBar(){
   const bar=document.getElementById('kb-bar');
   bar.style.display='flex';
   bar.style.bottom='0';
-  setTimeout(adjustKbBar,100);
+  adjustKbBar();
+  trackKbBar(800); // キーボードがせり上がりきるまで追従
 }
 
 function hideKbBar(){
@@ -1496,11 +1524,15 @@ function hideKbBar(){
   const bar=document.getElementById('kb-bar');
   bar.style.display='none';
   bar.style.bottom='0';
+  bar.style.transform='';
   activeKb=null;
 }
 
 function scheduleKbHide(){
   clearTimeout(kbHideTimer);
+  // 音声認識を開始するとブラウザが入力欄のフォーカスを外すため、
+  // ここで隠してしまうと録音中の表示ごとバーが消えてしまう。録音中は維持する。
+  if(voiceRec)return;
   kbHideTimer=setTimeout(hideKbBar,150);
 }
 
@@ -1611,11 +1643,26 @@ function runVoice(onText){
   if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
   if(voiceRec){voiceRec.stop();voiceRec=null;return;} // 録音中にもう一度押したら停止
   const btn=document.getElementById('kb-voice');
+  const bar=document.getElementById('kb-bar');
+  const lbl=document.getElementById('kb-label');
   const orig=btn?btn.innerHTML:'';
+  const origLbl=lbl?lbl.textContent:'';
   voiceRec=new SR();
   voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
+  // 認識開始でフォーカスが外れるため、隠す予約を取り消してバーを出したままにする
+  clearTimeout(kbHideTimer);
+  if(bar){bar.style.display='flex';bar.classList.add('recording');}
   if(btn){btn.innerHTML='⏺ 録音中';btn.classList.add('rec');}
-  const rst=()=>{voiceRec=null;if(btn){btn.innerHTML=orig;btn.classList.remove('rec');}};
+  if(lbl)lbl.textContent='🎧 '+origLbl+' に入力中…';
+  trackKbBar(800); // キーボードが引っ込む動きにも追従させる
+  const rst=()=>{
+    voiceRec=null;
+    clearTimeout(kbHideTimer); // 録音直後にバーが消えないようにする
+    if(bar)bar.classList.remove('recording');
+    if(btn){btn.innerHTML=orig;btn.classList.remove('rec');}
+    if(lbl)lbl.textContent=origLbl;
+    trackKbBar(600);
+  };
   voiceRec.onresult=e=>{ try{ onText(e.results[0][0].transcript); }catch(err){} };
   voiceRec.onerror=e=>{
     if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
