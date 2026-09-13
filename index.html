@@ -171,11 +171,12 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 /* マイク録音中 */
 .mic-active{color:#E24B4A!important;opacity:1!important;}
 /* ===== キーボードアクセサリバー ===== */
-#kb-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:300;background:var(--color-background-primary);border-top:1px solid var(--color-border-secondary);padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));flex-direction:row;align-items:center;gap:8px;}
+#kb-bar{display:none;position:fixed;left:0;right:0;top:0;z-index:300;background:var(--color-background-primary);border-bottom:2px solid var(--color-border-secondary);box-shadow:0 2px 10px rgba(0,0,0,.10);padding:8px 16px;padding-top:calc(8px + env(safe-area-inset-top));flex-direction:row;align-items:center;gap:8px;transform:translateY(-100%);transition:transform .18s ease-out;}
+#kb-bar.open{transform:translateY(0);}
 .kb-btn{padding:12px 16px;font-size:15px;min-height:44px;font-weight:500;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:none;color:var(--color-text-primary);white-space:nowrap;}
 .kb-btn.p{background:#185FA5;color:#fff;border-color:#185FA5;}
 .kb-btn.rec{background:#E24B4A;color:#fff;border-color:#E24B4A;font-weight:700;}
-#kb-bar.recording{background:#FCEBEB;border-top:2px solid #E24B4A;}
+#kb-bar.recording{background:#FCEBEB;border-bottom:2px solid #E24B4A;}
 #kb-bar.recording #kb-label{color:#C1462F;font-weight:700;}
 @keyframes recpulse{0%,100%{opacity:1;}50%{opacity:.45;}}
 .kb-btn.rec{animation:recpulse 1s ease-in-out infinite;}
@@ -428,7 +429,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
         </table>
       </div>
       <button class="add-btn" onclick="addRow()">+ 測点を追加</button>
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;line-height:1.6;">入力欄をタップすると、画面下に <strong>🎤 音声入力</strong>（測点名・作業名・現場メモにも対応）と <strong>📷 液晶OCR</strong> のボタンが出ます。<br>行の <strong>⋯</strong> から行の挿入・削除ができます。</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;line-height:1.6;">入力欄をタップすると、画面上部に <strong>🎤 音声入力</strong>（測点名・作業名・現場メモにも対応）と <strong>📷 液晶OCR</strong> のボタンが出ます。<br>行の <strong>⋯</strong> から行の挿入・削除ができます。</div>
     </div>
     <div class="card">
       <span class="slabel">現場メモ</span>
@@ -1464,67 +1465,24 @@ function renderTbl(){
 // ===== キーボードアクセサリバー =====
 let activeKb=null;
 
-function adjustKbBar(){
-  const bar=document.getElementById('kb-bar');
-  if(!bar||bar.style.display==='none')return;
-  const vv=window.visualViewport;
-  if(!vv)return;
-  // レイアウトビューポートの下端から、実際に見えている領域の下端までの距離
-  // ＝ソフトキーボードが覆っている高さ
-  const gap=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
-  // bottom ではなく transform でずらす。iOSでは position:fixed の bottom が
-  // キーボード表示中に正しく効かないことがあるため。
-  bar.style.transform=gap?`translateY(${-gap}px)`:'';
-  bar.style.left=vv.offsetLeft+'px';
-  bar.style.right=(window.innerWidth-vv.offsetLeft-vv.width)+'px';
-}
+// バーは画面上端に固定する。キーボードは必ず画面下から出るため衝突せず、
+// visualViewport による位置追従が一切不要になる（以前は下端に置いていたため、
+// キーボードの上昇・スクロール・iOSのfixed挙動に追従する処理が必要だった）。
 
-// キーボードは200〜400msかけてせり上がるため、表示直後に一度測るだけでは
-// まだ縮んでいない値を拾ってしまい、バーがキーボードの裏に残る。
-// 表示から一定時間は毎フレーム測り直して追従させる。
-let kbTrackUntil=0,kbTracking=false;
-function trackKbBar(ms){
-  kbTrackUntil=performance.now()+ms;
-  if(kbTracking)return;
-  kbTracking=true;
-  const step=()=>{
-    adjustKbBar();
-    const bar=document.getElementById('kb-bar');
-    if(performance.now()<kbTrackUntil&&bar&&bar.style.display!=='none'){
-      requestAnimationFrame(step);
-    }else{
-      kbTracking=false;
-    }
-  };
-  requestAnimationFrame(step);
-}
-
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize',adjustKbBar);
-  window.visualViewport.addEventListener('scroll',adjustKbBar);
-}
-
-// バーはフォーカスが外れたら自動的に隠す。
-// セル間を移動するときの一瞬のちらつきを避けるため、少し待ってから判定する。
-// バーのボタンは pointerdown で既定動作を止めているためフォーカスが外れず、
-// 押している最中にバーが消えることはない。
 let kbHideTimer=null;
 
 function showKbBar(){
   clearTimeout(kbHideTimer);
   const bar=document.getElementById('kb-bar');
   bar.style.display='flex';
-  bar.style.bottom='0';
-  adjustKbBar();
-  trackKbBar(800); // キーボードがせり上がりきるまで追従
+  requestAnimationFrame(()=>bar.classList.add('open')); // 上からスライドで降ろす
 }
 
 function hideKbBar(){
   clearTimeout(kbHideTimer);
   const bar=document.getElementById('kb-bar');
+  bar.classList.remove('open');
   bar.style.display='none';
-  bar.style.bottom='0';
-  bar.style.transform='';
   activeKb=null;
 }
 
@@ -1654,14 +1612,13 @@ function runVoice(onText){
   if(bar){bar.style.display='flex';bar.classList.add('recording');}
   if(btn){btn.innerHTML='⏺ 録音中';btn.classList.add('rec');}
   if(lbl)lbl.textContent='🎧 '+origLbl+' に入力中…';
-  trackKbBar(800); // キーボードが引っ込む動きにも追従させる
   const rst=()=>{
     voiceRec=null;
-    clearTimeout(kbHideTimer); // 録音直後にバーが消えないようにする
     if(bar)bar.classList.remove('recording');
     if(btn){btn.innerHTML=orig;btn.classList.remove('rec');}
     if(lbl)lbl.textContent=origLbl;
-    trackKbBar(600);
+    // 入力が済んだらバーは閉じる。直したいときは対象のセルをもう一度押せばよい。
+    hideKbBar();
   };
   voiceRec.onresult=e=>{ try{ onText(e.results[0][0].transcript); }catch(err){} };
   voiceRec.onerror=e=>{
