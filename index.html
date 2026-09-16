@@ -288,6 +288,11 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <button class="bk-btn" onclick="backupStart()">💾 バックアップを保存</button>
     <button class="bk-btn" onclick="restorePick()">📥 バックアップから復元</button>
   </div>
+  <!-- 直前の保存内容が残っているときだけ出す巻き戻し導線 -->
+  <div id="undo-row" style="display:none;margin-top:8px;">
+    <button class="bk-btn" style="width:100%;" onclick="undoLastSave()">⏪ 直前の状態に戻す</button>
+    <div id="undo-note" style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin-top:4px;line-height:1.5;"></div>
+  </div>
   <div style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin-top:8px;line-height:1.6;">機種変更・端末の故障に備えて、全路線をファイルに書き出せます（無料）。</div>
   <div style="text-align:center;margin-top:20px;padding-bottom:8px;">
     <a href="manual.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📖 使い方</a>
@@ -1047,6 +1052,7 @@ function goHome(){
   document.getElementById('home-screen').style.display='';
   document.getElementById('obs-screen').style.display='none';
   renderRouteList();
+  updateUndoRow();
 }
 
 function renderRouteList(){
@@ -1412,7 +1418,10 @@ function saveToStorage(){
         existing.routes.forEach(er=>{ if(er&&!knownIds.has(er.id)) routes.push(er); });
       }
     }catch(e){}
-    localStorage.setItem('suijun_v06',JSON.stringify({routes,currentRouteId,v:6}));
+    const nextStr=JSON.stringify({routes,currentRouteId,v:6});
+    const prevStr=localStorage.getItem('suijun_v06');
+    localStorage.setItem('suijun_v06',nextStr); // 本体の保存を最優先
+    stashPrev(prevStr,nextStr);
     const ind=document.getElementById('save-ind');ind.textContent='✓';ind.style.color='';
   }catch(e){
     const ind2=document.getElementById('save-ind');
@@ -1432,6 +1441,77 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden') flushSaveNow();
 });
 window.addEventListener('pagehide',flushSaveNow);
+// ===== 直前の保存内容（1世代だけ）=====
+// バックアップ機能は「押さなければ効かない」。押し忘れた人を守る仕組みが別に要る。
+// 保存のたびに書き換える前の内容を1世代だけ退避しておき、何かがデータを壊しても
+// 1回分は巻き戻せるようにする。写真・スケッチはIndexedDB側なのでここには含まれず、
+// 観測データだけなので容量は数十KB程度に収まる。
+const PREV_KEY='suijun_v06_prev';
+function stashPrev(prevStr,nextStr){
+  if(!prevStr||prevStr===nextStr)return;
+  try{
+    localStorage.setItem(PREV_KEY,JSON.stringify({at:Date.now(),data:prevStr}));
+  }catch(e){
+    // 容量不足などで退避に失敗したら、中途半端に古いものを残さず消す。
+    // 本体の保存は既に済んでいるので、ここで失敗しても実害はない。
+    try{localStorage.removeItem(PREV_KEY);}catch(e2){}
+  }
+  updateUndoRow();
+}
+function readPrev(){
+  try{
+    const raw=localStorage.getItem(PREV_KEY);
+    if(!raw)return null;
+    const wrap=JSON.parse(raw);
+    const d=JSON.parse(wrap.data);
+    if(!d||!Array.isArray(d.routes))return null;
+    return {at:wrap.at,data:wrap.data,parsed:d};
+  }catch(e){return null;}
+}
+function updateUndoRow(){
+  const row=document.getElementById('undo-row');
+  if(!row)return;
+  const p=readPrev();
+  if(!p){row.style.display='none';return;}
+  const cur=localStorage.getItem('suijun_v06');
+  if(cur===p.data){row.style.display='none';return;} // 中身が同じなら出す意味がない
+  row.style.display='block';
+  const t=new Date(p.at);
+  const hh=String(t.getHours()).padStart(2,'0'), mm=String(t.getMinutes()).padStart(2,'0');
+  const rs=p.parsed.routes;
+  const rowsTotal=rs.reduce((n,r)=>n+((r.rows||[]).length)+((r.rowsReturn||[]).length),0);
+  document.getElementById('undo-note').textContent=
+    `${hh}:${mm} 時点の内容（${rs.length}路線・${rowsTotal}行）に戻せます`;
+}
+// 直前の内容と今の内容を入れ替える。入れ替えなので、戻しすぎたらもう一度押せば元に戻る。
+function undoLastSave(){
+  const p=readPrev();
+  if(!p){alert('戻せる内容がありません。');return;}
+  const t=new Date(p.at);
+  const rs=p.parsed.routes;
+  const names=rs.slice(0,5).map(r=>r.name||'（名称なし）').join('、')+(rs.length>5?' ほか':'');
+  const rowsTotal=rs.reduce((n,r)=>n+((r.rows||[]).length)+((r.rowsReturn||[]).length),0);
+  if(!confirm(
+    `${t.toLocaleString()} 時点の内容に戻します。\n\n`+
+    `路線 ${rs.length}件：${names}\n観測行 合計${rowsTotal}行\n\n`+
+    `※写真とスケッチは巻き戻しの対象外です（消えません）\n`+
+    `※戻しすぎた場合は、もう一度このボタンを押すと元に戻ります\n\n`+
+    `よろしいですか？`))return;
+  const cur=localStorage.getItem('suijun_v06');
+  try{
+    localStorage.setItem('suijun_v06',p.data);
+    if(cur)localStorage.setItem(PREV_KEY,JSON.stringify({at:Date.now(),data:cur}));
+  }catch(e){alert('巻き戻しに失敗しました。');return;}
+  // 画面に残っている値で上書きし返さないよう、路線の選択を解除してから読み直す
+  routes=p.parsed.routes;
+  currentRouteId=null;rows=[];rowsReturn=[];obsLoaded=false;
+  clearTimeout(autoSaveTimer);
+  document.getElementById('home-screen').style.display='';
+  document.getElementById('obs-screen').style.display='none';
+  renderRouteList();updateUndoRow();
+  alert('直前の状態に戻しました。');
+}
+
 function loadFromStorage(){
   try{
     const d=JSON.parse(localStorage.getItem('suijun_v06')||localStorage.getItem('suijun_v05')||'null');
@@ -3588,6 +3668,7 @@ if(!loaded||routes.length===0){
 }
 // ホーム画面を表示
 renderRouteList();
+updateUndoRow();
 // ライセンスUI更新・オンライン検証
 updateLicenseUI();
 const _lic = getLicense();
