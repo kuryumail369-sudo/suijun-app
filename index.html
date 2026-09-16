@@ -327,10 +327,13 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
         <button class="upgrade-key-btn" onclick="applyLicenseKey()">適用</button>
       </div>
       <div class="upgrade-key-msg" id="license-key-msg"></div>
-      <div id="license-release-row" style="display:none;margin-top:14px;text-align:center;">
-        <button type="button" onclick="releaseLicense()" style="background:none;border:none;color:var(--color-text-secondary);font-size:12px;text-decoration:underline;cursor:pointer;padding:4px;">この端末からキーを外す</button>
-        <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.5;margin-top:2px;">キーを入れ直すときや、別の端末に移すときに使います。<br>契約は解約されません。</div>
-      </div>
+    </div>
+    <!-- キーの入れ替え。ひとまとまりの枠にして、何のための操作かを見出しで示す。
+         下線つきの小さな文字だと注釈に見えて、押せることも用途も伝わらなかった。 -->
+    <div id="license-release-row" style="display:none;margin:16px 20px 0;padding:12px 14px;border:0.5px solid var(--color-border-secondary);border-radius:12px;background:var(--color-background-secondary);">
+      <div style="font-size:12.5px;font-weight:600;color:var(--color-text-primary);margin-bottom:3px;">キーを入れ直す／別の端末に移す</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.55;margin-bottom:9px;">この端末からキーを外して、無料プランの表示に戻します。契約は解約されず、観測データも消えません。</div>
+      <button type="button" onclick="releaseLicense()" style="display:block;width:100%;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:10px;font-size:13px;padding:10px;cursor:pointer;font-family:inherit;color:var(--color-text-secondary);">この端末からキーを外す</button>
     </div>
     <button class="upgrade-close" onclick="closeUpgrade()">閉じる</button>
     <div style="text-align:center;padding:12px 20px 0;font-size:11px;color:var(--color-text-secondary);line-height:1.6;">
@@ -988,7 +991,8 @@ function updateLicenseUI(){
       btn.textContent='契約を管理';
       btn.onclick=openBillingPortal;
       // キーの入れ替え・解除のためにアップグレード画面へ入れる導線を残す
-      sub.innerHTML='すべての機能が使えます　<a href="#" onclick="showUpgrade();return false;" style="color:var(--color-text-secondary);">ライセンスキーの変更</a>';
+      // 小さな枠つきのラベルにする。ただの文字色違いだと、押せることに気づけない。
+      sub.innerHTML='すべての機能が使えます<br><a href="#" onclick="showUpgrade();return false;" style="display:inline-block;margin-top:4px;padding:2px 9px;border:0.5px solid currentColor;border-radius:999px;font-size:10.5px;text-decoration:none;color:inherit;opacity:.85;">ライセンスキーの変更</a>';
     } else {
       icon.textContent='🔓';
       title.textContent='無料プランをご利用中';
