@@ -327,8 +327,9 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
         <button class="upgrade-key-btn" onclick="applyLicenseKey()">適用</button>
       </div>
       <div class="upgrade-key-msg" id="license-key-msg"></div>
-      <div id="license-release-row" style="display:none;margin-top:10px;text-align:center;">
-        <button type="button" onclick="releaseLicense()" style="background:none;border:none;color:var(--color-text-secondary);font-size:12px;text-decoration:underline;cursor:pointer;padding:4px;">この端末のライセンスを解除</button>
+      <div id="license-release-row" style="display:none;margin-top:14px;text-align:center;">
+        <button type="button" onclick="releaseLicense()" style="background:none;border:none;color:var(--color-text-secondary);font-size:12px;text-decoration:underline;cursor:pointer;padding:4px;">この端末からキーを外す</button>
+        <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.5;margin-top:2px;">キーを入れ直すときや、別の端末に移すときに使います。<br>契約は解約されません。</div>
       </div>
     </div>
     <button class="upgrade-close" onclick="closeUpgrade()">閉じる</button>
@@ -928,12 +929,12 @@ function showUpgrade(){
 // 同じキーを入れ直せばそのまま元に戻る（別端末へ移すときは切り替え機能を使う）。
 // キーを間違えて入れた場合の入れ替えや、動作確認のための出口としても使う。
 function releaseLicense(){
-  if(!confirm('この端末からライセンスキーを外します。\n無料プランの表示に戻りますが、契約は解約されません。\n同じキーを入力すればいつでも戻せます。\n\nよろしいですか？'))return;
+  if(!confirm('この端末からライセンスキーを外します。\n\n・表示は無料プランに戻ります\n・Stripeの契約は解約されません（課金は続きます）\n・同じキーを入力すればいつでも元に戻ります\n・観測データやスケッチは消えません\n\nよろしいですか？'))return;
   localStorage.removeItem('suijun_license');
   localStorage.removeItem('suijun_pro_cache');
   document.getElementById('license-key-input').value='';
   const msg=document.getElementById('license-key-msg');
-  msg.textContent='ライセンスを解除しました。';msg.style.color='var(--color-text-secondary)';
+  msg.textContent='キーを外しました。上の欄にキーを入力すると、またProに戻せます。';msg.style.color='var(--color-text-secondary)';
   const rr=document.getElementById('license-release-row');
   if(rr)rr.style.display='none';
   updateLicenseUI();
@@ -987,7 +988,7 @@ function updateLicenseUI(){
       btn.textContent='契約を管理';
       btn.onclick=openBillingPortal;
       // キーの入れ替え・解除のためにアップグレード画面へ入れる導線を残す
-      sub.innerHTML='すべての機能が使えます　<a href="#" onclick="showUpgrade();return false;" style="color:var(--color-text-secondary);">キーの管理</a>';
+      sub.innerHTML='すべての機能が使えます　<a href="#" onclick="showUpgrade();return false;" style="color:var(--color-text-secondary);">ライセンスキーの変更</a>';
     } else {
       icon.textContent='🔓';
       title.textContent='無料プランをご利用中';
