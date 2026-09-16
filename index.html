@@ -1324,7 +1324,22 @@ function hydratePhotosForCurrentRoute(){
 }
 
 // ===== ROUTE DATA =====
+// 観測画面に路線を読み込んだかどうか。これが false の間は saveCurrentState() を
+// 走らせてはいけない。
+//
+// 【このフラグが無いと何が起きたか】
+// 起動直後は routes と currentRouteId は復元されるが、rows は空、入力欄も空のまま
+// ホーム画面が表示される（路線は開かれていない）。この状態で saveToStorage() が
+// 走ると、saveCurrentState() が「空の rows と空の入力欄」を currentRouteId の路線へ
+// 書き込み、その路線の観測データを丸ごと消してしまう。
+// saveToStorage() は visibilitychange と pagehide でも呼ばれるため、
+// 「アプリを開く → 路線を開かずに画面を閉じる・別アプリに切り替える・端末をロックする」
+// だけでデータが消えていた。再読み込みを繰り返すほど確実に踏む。
+let obsLoaded=false;
+
 function saveCurrentState(){
+  // 路線を開いていないのに保存すると、空データで上書きしてしまう
+  if(!obsLoaded)return;
   const r=routes.find(r=>r.id===currentRouteId);if(!r)return;
   // 写真は容量の大きいIndexedDBへ退避し、localStorageには含めない（5MB容量超過によるデータ消失を防止）
   if(currentRouteId){
@@ -1373,6 +1388,9 @@ function loadCurrentState(){
   document.getElementById('tol-direct').value=r.tolDirect||'';
   document.getElementById('memo').value=r.memo||'';
   hydratePhotosForCurrentRoute();
+  // ここまで来て初めて、rowsと入力欄が路線の中身と一致した状態になる。
+  // 以後の保存は安全。
+  obsLoaded=true;
 }
 
 // ===== STORAGE =====
@@ -1667,7 +1685,7 @@ async function restoreApply(mode){
     routes=next;
     // 画面に残っている旧路線の入力値が復元後のデータを上書きしないよう、
     // 現在の路線選択をいったん解除してホーム画面へ戻す。
-    currentRouteId=null;rows=[];rowsReturn=[];
+    currentRouteId=null;rows=[];rowsReturn=[];obsLoaded=false;
     skDirtyRoute=null;clearTimeout(skSaveTimer);pages=[];curPage=0;newSkPage();
     localStorage.setItem('suijun_v06',JSON.stringify({routes,currentRouteId:null,v:6}));
     bkClose();
@@ -3603,7 +3621,57 @@ updateWorkerDatalist();
     start();
   }
   window.addEventListener('hashchange',boot); // 開いたまま #debug を足しても効くように
+  // 保存データの状態をそのまま読み出して表示する（読むだけで、一切書き換えない）。
+  // 「データが消えた」と思ったとき、本当に消えたのか、読み込みに失敗しているだけなのかを
+  // 実機で切り分けるために使う。
+  function storageReport(){
+    var out=[];
+    try{
+      var raw=localStorage.getItem('suijun_v06')||localStorage.getItem('suijun_v05');
+      if(!raw){
+        out.push('suijun_v06: 無し ← 保存データが存在しない');
+      }else{
+        out.push('suijun_v06: '+raw.length+'文字');
+        try{
+          var d=JSON.parse(raw);
+          var rs=(d&&d.routes)||[];
+          out.push('保存されている路線: '+rs.length+'件');
+          rs.slice(0,8).forEach(function(r,i){
+            var n=(r&&r.rows&&r.rows.length)||0, nr=(r&&r.rowsReturn&&r.rowsReturn.length)||0;
+            out.push('  '+(i+1)+'. '+((r&&r.name)||'(名称なし)')+' 往'+n+'行 復'+nr+'行');
+          });
+          if(rs.length>8)out.push('  …ほか'+(rs.length-8)+'件');
+        }catch(e){ out.push('JSON解析に失敗: '+e.message+' ← データは在るが壊れている'); }
+      }
+    }catch(e){ out.push('localStorage読み取り不可: '+e.message); }
+    out.push('画面上の路線数: '+((window.routes&&window.routes.length)||(typeof routes!=='undefined'?routes.length:'?')));
+    out.push('ライセンス: '+(localStorage.getItem('suijun_license')?'あり':'なし'));
+    try{
+      var req=indexedDB.open('sitelogger_photos_db');
+      req.onsuccess=function(){
+        var db=req.result, names=[];
+        try{
+          ['photos','sketches'].forEach(function(s){
+            if(!db.objectStoreNames.contains(s)){names.push(s+':無し');return;}
+            var c=db.transaction(s,'readonly').objectStore(s).count();
+            c.onsuccess=function(){ names.push(s+':'+c.result+'件'); render(out.concat(names)); };
+          });
+        }catch(e){}
+      };
+    }catch(e){}
+    render(out);
+  }
+  function render(lines){
+    var p=document.getElementById('dbg2');
+    if(!p){
+      p=document.createElement('div');p.id='dbg2';
+      p.style.cssText='position:fixed;left:6px;right:6px;top:6px;z-index:9999;background:rgba(20,20,22,.94);color:#FFD43B;font:11px/1.5 ui-monospace,monospace;padding:8px 10px;border-radius:8px;white-space:pre-wrap;max-height:45vh;overflow:auto;';
+      document.body.appendChild(p);
+    }
+    p.textContent='【保存データの状態】\n'+lines.join('\n');
+  }
   function start(){
+  try{ storageReport(); }catch(e){}
   var el=document.getElementById('dbg');
   el.style.display='block';
   function culprit(node){
