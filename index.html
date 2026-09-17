@@ -427,17 +427,17 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="g3" style="margin-top:10px;">
         <div class="mi"><label>起点BM (m)</label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="bm-s" onfocus="this.select();focusField('bm-s','number','起点BM (m)')" onblur="scheduleKbHide()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
+            <input type="number" id="bm-s" onfocus="this.select();focusField('bm-s','number','起点BM (m)')" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
           </div>
         </div>
         <div class="mi"><label>終点BM (m)</label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="bm-e" onfocus="this.select();focusField('bm-e','number','終点BM (m)')" onblur="scheduleKbHide()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
+            <input type="number" id="bm-e" onfocus="this.select();focusField('bm-e','number','終点BM (m)')" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
           </div>
         </div>
         <div class="mi"><label>器差K (mm) <span id="k-ind" style="display:none;color:#d97706;font-size:10px;">●</span></label>
           <div style="display:flex;gap:3px;align-items:center;">
-            <input type="number" id="k-corr" onfocus="this.select();focusField('k-corr','number','器差K (mm)')" onblur="scheduleKbHide()" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
+            <input type="number" id="k-corr" onfocus="this.select();focusField('k-corr','number','器差K (mm)')" step="0.001" placeholder="0.000" oninput="markDirty();renderTbl()" onchange="markDirty();renderTbl()" onblur="fmtInput(this,()=>{markDirty();renderTbl();})" style="flex:1;">
           </div>
         </div>
       </div>
@@ -1039,7 +1039,10 @@ let routes=[], currentRouteId=null;
 let ocrTgt=null, ocrPending=null, ptPhotoId=null, pvId=null;
 let autoSaveTimer=null;
 // マイク関連
-let voiceRec=null;
+let voiceRec=null;      // 実行中の音声認識オブジェクト
+let voiceBusy=false;    // 開始から後片付けが済むまで true
+let voiceWatchdog=null; // onend が来ないときに強制終了させる保険
+let voiceStopping=false;// 停止を頼んでから実際に終わるまでの短い区間
 
 function getCurRows(){return viewMode==='out'?rows:rowsReturn;}
 
@@ -1139,7 +1142,11 @@ function createRoute(){
 }
 
 // 小数点以下3桁フォーマット
+// 呼び出し元（起点BM・終点BM・器差K）は以前 onblur 属性を2つ並べて書いていたため、
+// HTMLの仕様で最初の1つ（scheduleKbHide）だけが採用され、この整形は一度も
+// 動いていなかった。属性を1つに統合したので、キーボードバーの後片付けもここで行う。
 function fmtInput(el,cb){
+  scheduleKbHide();
   if(el.value==='')return;
   const n=parseFloat(el.value);
   if(!isNaN(n)){el.value=n.toFixed(3);if(cb)cb();}
@@ -1352,8 +1359,11 @@ function saveCurrentState(){
     rows.forEach(row=>{ if(row.photo) savePhotoToDB('out',row.id,row.photo); });
     rowsReturn.forEach(row=>{ if(row.photo) savePhotoToDB('ret',row.id,row.photo); });
   }
-  r.rows=rows.map(r=>({...r,photo:null}));
-  r.rowsReturn=rowsReturn.map(r=>({...r,photo:null}));
+  // 保存時にも小数第3位へ揃える。ここを通しておかないと、CSVや成果表PDFに
+  // 「9」と「9.000」が混在した表が出てしまう（成果物としては見苦しい）。
+  const tidy=row=>({...row,photo:null,bs:norm3(row.bs),fs:norm3(row.fs),is_:norm3(row.is_)});
+  r.rows=rows.map(tidy);
+  r.rowsReturn=rowsReturn.map(tidy);
   r.proj=document.getElementById('proj').value;
   r.date=document.getElementById('date').value;
   r.worker=document.getElementById('worker').value;
@@ -1799,6 +1809,20 @@ function removeRow(id){
 }
 function updateField(idx,field,val){getCurRows()[idx][field]=val;markDirty();updateCalcCells();}
 
+// 観測値の表記を小数第3位に揃える。
+// 入力欄の onblur でも整形しているが、blurが起きないまま表が描き直される経路
+// （行の挿入・削除、往復の切り替え、視準距離のON/OFFなど）があり、そのとき
+// 「9」のような入力途中の表記がそのまま残っていた。表示と保存の両方でここを通す。
+// 空欄はそのまま空欄。数値として読めない文字列は触らずに返す。
+function norm3(v){
+  if(v===null||v===undefined)return '';
+  const s=String(v).trim();
+  if(s==='')return '';
+  const n=parseFloat(s);
+  if(!isFinite(n))return s;
+  return n.toFixed(3);
+}
+
 // 「視準距離も記録する」のON/OFF
 function toggleDistCol(){
   markDirty();
@@ -2021,7 +2045,7 @@ function renderTbl(){
           onblur="scheduleKbHide()">`:'';
       return `
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-        <input class="ni" type="number" step="0.001" value="${esc(val)}" placeholder="—"
+        <input class="ni" type="number" step="0.001" value="${esc(norm3(val))}" placeholder="—"
           onfocus="this.select();focusNi(${i},'${field}',${r.id})"
           oninput="updateField(${i},'${field}',this.value)"
           onchange="updateField(${i},'${field}',this.value)"
@@ -2112,6 +2136,9 @@ function scheduleKbHide(){
 }
 
 function focusNi(idx,field,rid){
+  // 録音の途中で別のセルへ移った場合も、ここまでの聞き取りを確定させて終わらせる
+  // （結果は録音を始めたセルに入る）。放置すると次の音声入力が始められなくなる。
+  stopVoice();
   activeKb={idx,field,rid};
   const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
   const r=getCurRows()[idx];
@@ -2125,6 +2152,9 @@ function focusNi(idx,field,rid){
 // 視準距離セル用。距離は音声で入れられるようにし、OCRは読み値セル側から
 // まとめて取り込む（同じ画面に読み値と距離が両方映っているため）。
 function focusDist(idx,field,rid){
+  // 録音の途中で別のセルへ移った場合も、ここまでの聞き取りを確定させて終わらせる
+  // （結果は録音を始めたセルに入る）。放置すると次の音声入力が始められなくなる。
+  stopVoice();
   activeKb={idx,field,rid};
   const r=getCurRows()[idx];
   const lb=field==='distBs'?'後視の距離 (m)':'前視の距離 (m)';
@@ -2136,6 +2166,9 @@ function focusDist(idx,field,rid){
 
 // 測点名セル用。液晶OCRは数値専用のためバーから隠す。
 function focusPi(idx,rid){
+  // 録音の途中で別のセルへ移った場合も、ここまでの聞き取りを確定させて終わらせる
+  // （結果は録音を始めたセルに入る）。放置すると次の音声入力が始められなくなる。
+  stopVoice();
   activeKb={idx,field:'point',rid};
   const r=getCurRows()[idx];
   document.getElementById('kb-label').textContent=(r&&r.point||'測点')+' — 測点名';
@@ -2146,6 +2179,9 @@ function focusPi(idx,rid){
 
 // 表の外の入力欄（起点BM・作業名・現場メモ等）用。液晶OCRは標尺読み専用のため出さない。
 function focusField(id,mode,label){
+  // 録音の途中で別のセルへ移った場合も、ここまでの聞き取りを確定させて終わらせる
+  // （結果は録音を始めたセルに入る）。放置すると次の音声入力が始められなくなる。
+  stopVoice();
   activeKb={kind:'field',id,mode};
   document.getElementById('kb-label').textContent=label;
   document.getElementById('kb-voice').style.display='';
@@ -2168,6 +2204,9 @@ function kbOcr(){
 }
 
 function blurKb(){
+  // 言い終わる前に「完了」を押した場合も、ここまでの聞き取りは確定させて終わらせる。
+  // 止めずに放置すると認識が宙に浮き、次の音声入力が始められなくなる。
+  stopVoice();
   if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
   hideKbBar();
 }
@@ -2225,38 +2264,94 @@ function captureForCell(rid,field){
 // ===== 音声入力の共通処理 =====
 // 以前は呼び出し元ごとにボタンの見た目を書き換えていたが、セル内の🎤を廃止して
 // バーへ集約したため、録音中の表示もバーのボタン1箇所で管理する。
-function runVoice(onText){
+// 外から安全に録音を止める。stop()は「ここまでに聞き取った内容を確定させて終わる」
+// 動作なので、言い終わる前に完了ボタンを押した場合でも入力は活きる。
+// 端末によってはstop()が例外を投げることがあるため、そのときはabort()で強制終了する。
+function stopVoice(){
+  if(!voiceRec)return;
+  voiceStopping=true; // 停止を頼んだ直後の🎤は「もう一度停止」ではなく「次の録音」の意図
+  try{ voiceRec.stop(); }
+  catch(e){ try{ voiceRec.abort(); }catch(e2){} }
+}
+
+function runVoice(onText,retry){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('音声入力非対応です。\nAndroidはChrome、iPhoneはSafariをお使いください。');return;}
-  if(voiceRec){voiceRec.stop();voiceRec=null;return;} // 録音中にもう一度押したら停止
+
+  // 録音中にもう一度押したら停止（トグル）。
+  // ただし、すでに停止を頼んだあと（完了ボタン・別セルへの移動）は違う。
+  // そこでの🎤は「次の録音を始めたい」という意図なので、停止として扱わない。
+  if(voiceRec&&!voiceStopping){ stopVoice(); return; }
+
+  // 直前の認識の後始末が済んでいないあいだは、新しく始めない。
+  // ここで構わずstart()すると端末がInvalidStateErrorを投げ、その例外で
+  // 後片付けの処理ごと飛んでしまい、voiceRecが埋まったまま残る。
+  // 以後どれだけ🎤を押しても「停止」の分岐に入るだけで、音声入力が
+  // 二度と使えなくなっていた（完了ボタンや別セルへ移った直後に起きる）。
+  // 押した操作を捨てるとユーザーには無反応に見えるので、少し待って一度だけ再試行する。
+  if(voiceBusy||voiceRec){
+    const n=(retry||0);
+    if(n<4)setTimeout(()=>{ runVoice(onText,n+1); },300);
+    return;
+  }
+
   const btn=document.getElementById('kb-voice');
   const bar=document.getElementById('kb-bar');
   const lbl=document.getElementById('kb-label');
   const orig=btn?btn.innerHTML:'';
   const origLbl=lbl?lbl.textContent:'';
-  voiceRec=new SR();
-  voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=false;
+
+  // 録音を始めた時点の対象セル。認識の終了通知は数百ミリ秒遅れて届くため、
+  // その間にユーザーが別のセルへ移っていることがある。そのとき後片付けで
+  // バーを閉じてしまうと、移った先のセルの状態（activeKb）まで消えてしまい、
+  // そこで🎤を押しても何も起きない ＝「音声入力が使えない」状態になっていた。
+  const kbAtStart=activeKb;
+  let done=false;
+  const rst=(keepBar)=>{
+    if(done)return; // onend と onerror が両方来ても一度しか走らせない
+    done=true;
+    clearTimeout(voiceWatchdog);voiceWatchdog=null;
+    voiceRec=null;voiceBusy=false;voiceStopping=false;
+    if(bar)bar.classList.remove('recording');
+    if(btn){btn.innerHTML=orig;btn.classList.remove('rec');}
+    // 対象セルが変わっていなければ表示を元に戻してバーを閉じる。
+    // 変わっていれば、今の対象セルの表示をそのまま残す。
+    if(activeKb===kbAtStart){
+      if(lbl)lbl.textContent=origLbl;
+      // 入力が済んだらバーは閉じる。直したいときは対象のセルをもう一度押せばよい。
+      if(!keepBar)hideKbBar();
+    }
+  };
+
+  const rec=new SR();
+  rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;
+  rec.onresult=e=>{ try{ onText(e.results[0][0].transcript); }catch(err){} };
+  rec.onerror=e=>{
+    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
+    else if(e.error==='network')alert('音声認識にはインターネット接続が必要です。');
+    rst();
+  };
+  rec.onend=rst;
+
+  voiceRec=rec;voiceBusy=true;
   // 認識開始でフォーカスが外れるため、隠す予約を取り消してバーを出したままにする
   clearTimeout(kbHideTimer);
   if(bar){bar.style.display='flex';bar.classList.add('recording');}
   if(btn){btn.innerHTML='⏺ 録音中';btn.classList.add('rec');}
   if(lbl)lbl.textContent='🎧 '+origLbl+' に入力中…';
-  const rst=()=>{
-    voiceRec=null;
-    if(bar)bar.classList.remove('recording');
-    if(btn){btn.innerHTML=orig;btn.classList.remove('rec');}
-    if(lbl)lbl.textContent=origLbl;
-    // 入力が済んだらバーは閉じる。直したいときは対象のセルをもう一度押せばよい。
-    hideKbBar();
-  };
-  voiceRec.onresult=e=>{ try{ onText(e.results[0][0].transcript); }catch(err){} };
-  voiceRec.onerror=e=>{
-    if(e.error==='not-allowed')alert('マイクが許可されていません。\nブラウザの設定からマイクを許可してください。');
-    else if(e.error==='network')alert('音声認識にはインターネット接続が必要です。');
-    rst();
-  };
-  voiceRec.onend=rst;
-  voiceRec.start();
+
+  try{
+    rec.start();
+  }catch(e){
+    // 端末がまだマイクを解放していない等。状態を元に戻す。
+    // このときバーは閉じない（利用者は対象のセルにいるままなので、すぐ押し直せる）。
+    rst(true);
+    return;
+  }
+
+  // onend が来ないまま終わる端末・状況があるため、一定時間で必ず後片付けする。
+  // これが無いと voiceBusy が立ちっぱなしになり、音声入力が固まったままになる。
+  voiceWatchdog=setTimeout(()=>{ try{rec.abort();}catch(e){} rst(); },20000);
 }
 
 // 測点名の読み上げを表記に整える（No. / BM / KP / IP など）
