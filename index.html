@@ -125,6 +125,10 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 /* ===== パネル ===== */
 .panel{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:1rem;margin-bottom:1rem;}
 .dz{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);padding:1.2rem;text-align:center;cursor:pointer;background:var(--color-background-primary);}
+/* 液晶OCRで入力した欄に出す小さな印。撮っていない欄には出ないので行は太らない */
+.ocr-badge{border:0.5px solid var(--color-border-secondary);border-radius:6px;background:transparent;
+  color:var(--color-text-secondary);font-size:10px;font-family:inherit;line-height:1;
+  padding:4px 7px;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
 .ocr-res{margin-top:10px;padding:10px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);display:none;}
 
 /* ===== ボタン ===== */
@@ -359,7 +363,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <button class="pb" onclick="closePV()">閉じる</button>
     </div>
     <img id="pv-img" style="max-width:100%;max-height:260px;border-radius:var(--border-radius-md);display:block;margin:0 auto;">
-    <div style="margin-top:10px;"><button class="pb p" onclick="retakePhoto()">📸 撮り直す</button></div>
+    <div style="margin-top:10px;" id="pv-retake"><button class="pb p" onclick="retakePhoto()">📸 撮り直す</button></div>
   </div>
 
   <!-- OCRパネル -->
@@ -1267,6 +1271,99 @@ function openPhotoDB(){
   return _photoDbPromise;
 }
 function photoDbKey(routeId,dir,rowId){return `${routeId}__${dir}__${rowId}`;}
+
+// ===== 液晶OCRで撮った画像 =====
+// 「成果表のこの値は、機械が何を表示していたのか」を後から示せるようにするための控え。
+// 測点写真（📷）とは別物なので、キーの区切りを1つ増やして同じstoreに同居させる。
+//   測点写真   routeId__dir__rowId          （3分割）
+//   液晶の控え routeId__dir__rowId__field   （4分割）
+// 既存の読み出しは3分割のものだけを拾うため、混ざっても互いに影響しない。
+function ocrDbKey(routeId,dir,rowId,field){return `${routeId}__${dir}__${rowId}__${field}`;}
+
+// 液晶の数字が読めれば足りるので、保存前に思い切って縮める。
+// iPhoneの写真は1枚2〜4MBあり、そのまま貯めると端末もバックアップも耐えられない。
+// 長辺800px・JPEG品質60%で、1枚おおむね50〜100KBに収まる。
+function shrinkImage(dataUrl,maxSide,quality){
+  return new Promise(resolve=>{
+    try{
+      const im=new Image();
+      im.onload=()=>{
+        try{
+          const long=Math.max(im.width,im.height)||1;
+          const sc=Math.min(1,(maxSide||800)/long);
+          const w=Math.max(1,Math.round(im.width*sc)), h=Math.max(1,Math.round(im.height*sc));
+          const c=document.createElement('canvas');c.width=w;c.height=h;
+          const cx=c.getContext('2d');
+          cx.fillStyle='#000';cx.fillRect(0,0,w,h); // 透過対策（JPEGは透過を持てない）
+          cx.drawImage(im,0,0,w,h);
+          resolve(c.toDataURL('image/jpeg',quality||0.6));
+        }catch(e){resolve(dataUrl);} // 縮小に失敗しても元画像で続行
+      };
+      im.onerror=()=>resolve(dataUrl);
+      im.src=dataUrl;
+    }catch(e){resolve(dataUrl);}
+  });
+}
+
+// 路線を開いている間だけ、メモリ上に持つ液晶画像。
+// 行オブジェクト(rows)には入れない。rowsはlocalStorageに保存されるため、
+// 画像を混ぜると容量上限（約5MB）をすぐ超えてデータ消失を招く。
+let ocrImgs={out:{},ret:{}};
+
+async function saveOcrImgToDB(dir,rowId,field,dataUrl){
+  if(!currentRouteId||!dataUrl)return;
+  try{
+    const db=await openPhotoDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PHOTO_STORE,'readwrite');
+      tx.objectStore(PHOTO_STORE).put({key:ocrDbKey(currentRouteId,dir,rowId,field),data:dataUrl});
+      tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+    });
+  }catch(e){console.warn('液晶画像の保存に失敗しました(IndexedDB)',e);}
+}
+async function deleteOcrImgFromDB(routeId,dir,rowId,field){
+  if(!routeId)return;
+  try{
+    const db=await openPhotoDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PHOTO_STORE,'readwrite');
+      tx.objectStore(PHOTO_STORE).delete(ocrDbKey(routeId,dir,rowId,field));
+      tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+    });
+  }catch(e){}
+}
+function getOcrImg(dir,rowId,field){
+  const m=ocrImgs[dir];
+  return (m&&m[rowId]&&m[rowId][field])||null;
+}
+function setOcrImgMem(dir,rowId,field,dataUrl){
+  if(!ocrImgs[dir])ocrImgs[dir]={};
+  if(!ocrImgs[dir][rowId])ocrImgs[dir][rowId]={};
+  if(dataUrl)ocrImgs[dir][rowId][field]=dataUrl;
+  else delete ocrImgs[dir][rowId][field];
+}
+async function loadOcrImgsForRoute(routeId){
+  const map={out:{},ret:{}};
+  if(!routeId)return map;
+  try{
+    const db=await openPhotoDB();
+    return await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PHOTO_STORE,'readonly');
+      const req=tx.objectStore(PHOTO_STORE).getAll();
+      req.onsuccess=()=>{
+        (req.result||[]).forEach(rec=>{
+          const parts=(rec.key||'').split('__');
+          if(parts.length!==4||parts[0]!==routeId||!map[parts[1]])return;
+          const rid=Number(parts[2]);
+          if(!map[parts[1]][rid])map[parts[1]][rid]={};
+          map[parts[1]][rid][parts[3]]=rec.data;
+        });
+        resolve(map);
+      };
+      req.onerror=()=>reject(req.error);
+    });
+  }catch(e){return map;}
+}
 async function savePhotoToDB(dir,rowId,dataUrl){
   if(!currentRouteId||!dataUrl)return;
   try{
@@ -1331,6 +1428,14 @@ function hydratePhotosForCurrentRoute(){
     rows.forEach(r=>{ if(map.out[r.id]!==undefined){r.photo=map.out[r.id];changed=true;} });
     rowsReturn.forEach(r=>{ if(map.ret[r.id]!==undefined){r.photo=map.ret[r.id];changed=true;} });
     if(changed) renderTbl();
+  }).catch(()=>{});
+  // 液晶OCRの控えも読み込む。こちらは行オブジェクトではなく別のメモリに置く
+  // （rowsはlocalStorageに保存されるため、画像を混ぜてはいけない）。
+  ocrImgs={out:{},ret:{}};
+  loadOcrImgsForRoute(routeId).then(map=>{
+    if(currentRouteId!==routeId)return;
+    ocrImgs=map;
+    renderTbl();
   }).catch(()=>{});
 }
 
@@ -1544,10 +1649,11 @@ async function writePhotos(list,idMap){
     list.forEach(p=>{
       if(!p||!p.key||!p.data)return;
       const parts=String(p.key).split('__');
-      if(parts.length!==3)return;
+      // 3分割＝測点写真、4分割＝液晶OCRの控え。どちらも路線IDだけ読み替える。
+      if(parts.length!==3&&parts.length!==4)return;
       const nid=idMap[parts[0]];
       if(!nid)return;
-      st.put({key:nid+'__'+parts[1]+'__'+parts[2],data:p.data});
+      st.put({key:[nid].concat(parts.slice(1)).join('__'),data:p.data});
     });
     tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);
   });
@@ -1763,6 +1869,11 @@ function removeRow(id){
   if(viewMode==='out')rows=rows.filter(r=>r.id!==id);
   else rowsReturn=rowsReturn.filter(r=>r.id!==id);
   deletePhotoFromDB(currentRouteId,dir,id);
+  // その行に紐づく液晶の控えも一緒に消す（行が無くなれば見る手段も無くなるため）
+  ['bs','fs','is_'].forEach(f=>{
+    setOcrImgMem(dir,id,f,null);
+    deleteOcrImgFromDB(currentRouteId,dir,id,f);
+  });
   markDirty();renderTbl();
 }
 function updateField(idx,field,val){getCurRows()[idx][field]=val;markDirty();updateCalcCells();}
@@ -2001,6 +2112,11 @@ function renderTbl(){
           onchange="updateField(${i},'${df}',this.value)"
           onkeydown="if(event.key==='Enter'){blurKb();this.blur();}"
           onblur="scheduleKbHide()">`:'';
+      // 液晶OCRで入力した欄には、その時の液晶写真を見るための小さな印を出す。
+      // 撮っていない欄には何も出ないので、行が無駄に高くならない。
+      const hasOcr=!!getOcrImg(isRet?'ret':'out',r.id,field);
+      const ocrBadge=hasOcr?`
+        <button type="button" class="ocr-badge" onclick="openOcrImg(${r.id},'${field}','${isRet?'ret':'out'}')" title="読み取り時の液晶を見る">📷 液晶</button>`:'';
       return `
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
         <input class="ni" type="number" step="0.001" value="${esc(norm3(val))}" placeholder="—"
@@ -2008,7 +2124,7 @@ function renderTbl(){
           oninput="updateField(${i},'${field}',this.value)"
           onchange="updateField(${i},'${field}',this.value)"
           onkeydown="if(event.key==='Enter'){blurKb();this.blur();}"
-          onblur="if(this.value!==''){const n=parseFloat(this.value);if(!isNaN(n)){this.value=n.toFixed(3);updateField(${i},'${field}',this.value);}}scheduleKbHide();">${distInput}
+          onblur="if(this.value!==''){const n=parseFloat(this.value);if(!isNaN(n)){this.value=n.toFixed(3);updateField(${i},'${field}',this.value);}}scheduleKbHide();">${distInput}${ocrBadge}
       </div>`;
     };
 
@@ -2596,7 +2712,7 @@ async function runOcr(du){
     }
 
     // 自動入力はしない。読み取った値は候補として保持し、ユーザーが「この値を入力」を押して初めて確定する。
-    ocrPending={reading:parsed.reading, distance:parsed.distance};
+    ocrPending={reading:parsed.reading, distance:parsed.distance, img:du};
 
     const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
     const tr=ocrTgt?(getCurRows().find(r=>r.id===ocrTgt.id)||{}):{};
@@ -2657,6 +2773,16 @@ function confirmOcr(){
   const arr=ocrTgt.dir==='out'?rows:rowsReturn;
   const r=arr.find(r=>r.id===ocrTgt.id);
   if(r) r[ocrTgt.field]=v.toFixed(3);
+  // 読み取りに使った液晶の画像を、その欄の控えとして残す。
+  // 値を採用したときだけ残す（再撮影・取りやめの画像は不要なので捨てる）。
+  if(r&&ocrPending.img){
+    const tgt={dir:ocrTgt.dir,id:ocrTgt.id,field:ocrTgt.field};
+    shrinkImage(ocrPending.img,800,0.6).then(small=>{
+      setOcrImgMem(tgt.dir,tgt.id,tgt.field,small);
+      saveOcrImgToDB(tgt.dir,tgt.id,tgt.field,small);
+      renderTbl();
+    });
+  }
   // 水平距離は「視準距離も記録する」がONのときだけ保存する。
   // 表示・修正できる欄が無い状態で保存すると、ユーザーが誤読に気づけないため。
   if(r && document.getElementById('use-dist').checked && ocrPending.distance!==null){
@@ -2689,11 +2815,31 @@ function openPV(id){
   const r=arr.find(r=>r.id===id);if(!r||!r.photo)return;
   document.getElementById('pv-title').textContent='測点写真 — '+(r.point||'測点');
   document.getElementById('pv-img').src=r.photo;
+  const rt=document.getElementById('pv-retake');if(rt)rt.style.display='';
   document.getElementById('ocr').style.display='none';
   document.getElementById('pv').style.display='block';
   document.getElementById('pv').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function closePV(){document.getElementById('pv').style.display='none';pvId=null;}
+function closePV(){document.getElementById('pv').style.display='none';pvId=null;
+  // 液晶の控えを開いていた場合に備えて、測点写真用の表示に戻しておく
+  const rt=document.getElementById('pv-retake');if(rt)rt.style.display='';
+}
+
+// 液晶OCRの控えを表示する。測点写真と同じビューアを使い回す。
+function openOcrImg(rowId,field,dir){
+  const img=getOcrImg(dir,rowId,field);
+  if(!img){alert('この欄には液晶の画像が残っていません。');return;}
+  const arr=dir==='out'?rows:rowsReturn;
+  const r=arr.find(x=>x.id===rowId)||{};
+  const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
+  pvId=null; // 「撮り直す」は測点写真用の機能なので、ここでは無効にする
+  document.getElementById('pv-title').textContent='読み取り時の液晶 — '+((r.point||'測点')+' '+(lbs[field]||'')).trim();
+  document.getElementById('pv-img').src=img;
+  const rt=document.getElementById('pv-retake');if(rt)rt.style.display='none';
+  document.getElementById('ocr').style.display='none';
+  document.getElementById('pv').style.display='block';
+  document.getElementById('pv').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function retakePhoto(){
   if(!pvId)return;
   // ビューアを閉じて該当行のfile inputをクリック
