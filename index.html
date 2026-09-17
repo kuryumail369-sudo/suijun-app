@@ -386,10 +386,19 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <div id="ocr-err" style="display:none;font-size:12px;color:#A32D2D;margin-top:6px;line-height:1.6;white-space:pre-wrap;"></div>
     <div id="ocr-res" class="ocr-res">
       <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">読み取り結果 — <span id="ocr-tgt-lbl">—</span> に入力しますか？</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);">標尺の読み値</div>
       <div style="font-size:26px;font-weight:500;color:#1D9E75;" id="ocr-val">—</div>
+      <!-- 距離欄に実際に入る場合は、読み値と同じ大きさで出す。
+           以前は小さいグレーの1行だったため、大きく出る読み値だけを確認して
+           距離は読み飛ばされていた。液晶の下段は文字が小さく誤読しやすいので
+           （実機で Hd 12.53 を 14.63 と読んだ例があった）、入る値は同じ重みで見せる。 -->
+      <div id="ocr-dist-box" style="display:none;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-secondary);">
+        <div style="font-size:11px;color:var(--color-text-secondary);">水平距離 — 距離欄に入ります</div>
+        <div style="font-size:26px;font-weight:500;color:#1D9E75;" id="ocr-dist-val">—</div>
+      </div>
       <div id="ocr-dist" style="display:none;font-size:12px;line-height:1.5;color:var(--color-text-secondary);margin-top:4px;"></div>
       <div style="font-size:11px;color:#854F0B;background:#FAEEDA;border-radius:6px;padding:6px 8px;margin-top:8px;line-height:1.5;">
-        ⚠️ 自動読み取りは誤認識することがあります。液晶の表示と数値が一致しているか必ず確認してください。
+        ⚠️ 自動読み取りは誤認識することがあります。<span id="ocr-warn-both"></span>液晶の表示と数値が一致しているか必ず確認してください。
       </div>
       <div style="display:flex;gap:8px;margin-top:8px;">
         <button class="pb p" style="flex:1.4;font-weight:600;" onclick="confirmOcr()">✓ この値を入力</button>
@@ -2768,14 +2777,24 @@ async function runOcr(du){
       ocrTgt?`${tr.point||''} の ${lbs[ocrTgt.field]||''}`.trim():'選択中のセル';
     document.getElementById('ocr-val').textContent=parsed.reading+' m';
     const dEl=document.getElementById('ocr-dist');
+    const dBox=document.getElementById('ocr-dist-box');
+    const warnBoth=document.getElementById('ocr-warn-both');
     const useDist=!!document.getElementById('use-dist').checked;
-    if(parsed.distance!==null){
-      dEl.textContent=useDist
-        ? '水平距離 '+parsed.distance+' m ← 距離欄にも入力します'
-        : '水平距離 '+parsed.distance+' m（参考。「視準距離も記録する」をONにすると距離欄に入ります）';
-      dEl.style.display='block';
-    }else{
+    // 実際に入力される値だけを大きく出す。入らない値（参考表示）は小さいままでよい。
+    if(parsed.distance!==null&&useDist){
+      document.getElementById('ocr-dist-val').textContent=parsed.distance+' m';
+      dBox.style.display='block';
       dEl.style.display='none';
+      warnBoth.textContent='読み値と水平距離の両方について、';
+    }else if(parsed.distance!==null){
+      dBox.style.display='none';
+      dEl.textContent='水平距離 '+parsed.distance+' m（参考。「視準距離も記録する」をONにすると距離欄に入ります）';
+      dEl.style.display='block';
+      warnBoth.textContent='';
+    }else{
+      dBox.style.display='none';
+      dEl.style.display='none';
+      warnBoth.textContent='';
     }
     document.getElementById('ocr-res').style.display='block';
   }catch(e){document.getElementById('ocr-spin').style.display='none';showOcrErr('APIエラー: '+e.message);}
