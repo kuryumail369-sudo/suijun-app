@@ -379,7 +379,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     </div>
     <img id="ocr-prev" style="max-width:100%;max-height:130px;border-radius:8px;margin-top:8px;display:none;">
     <div id="ocr-spin" style="display:none;text-align:center;padding:10px;font-size:13px;color:var(--color-text-secondary);">🔍 解析中...</div>
-    <div id="ocr-err" style="display:none;font-size:12px;color:#A32D2D;margin-top:6px;"></div>
+    <div id="ocr-err" style="display:none;font-size:12px;color:#A32D2D;margin-top:6px;line-height:1.6;white-space:pre-wrap;"></div>
     <div id="ocr-res" class="ocr-res">
       <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;">読み取り結果 — <span id="ocr-tgt-lbl">—</span> に入力しますか？</div>
       <div style="font-size:26px;font-weight:500;color:#1D9E75;" id="ocr-val">—</div>
@@ -2744,7 +2744,12 @@ async function runOcr(du){
 
     const parsed=parseOcrResponse(txt);
     if(parsed.reading===null){
-      showOcrErr('標尺の読み値を判別できませんでした。液晶が画面いっぱいに写るよう近づいて再撮影するか、手入力してください。');
+      // 読めなかった理由はAI自身が一番よく知っている。従来はその返事を捨てていたため、
+      // 「暗い」「ぶれている」「液晶が小さい」のどれなのか利用者にも開発側にも分からず、
+      // 撮り直しても同じ失敗を繰り返していた。AIの補足をそのまま見せる。
+      const why=(parsed.note||txt||'').trim().slice(0,200);
+      showOcrErr('標尺の読み値を判別できませんでした。液晶が画面いっぱいに写るよう近づいて再撮影するか、手入力してください。'
+        +(why?'\n\nAIの見立て：'+why:''));
       return;
     }
 
@@ -2783,7 +2788,8 @@ function parseOcrResponse(txt){
     try{
       const o=JSON.parse(jm[0]);
       const r=numOf(o.reading);
-      return {reading:r!==null?parseFloat(r).toFixed(3):null, distance:numOf(o.distance)};
+      return {reading:r!==null?parseFloat(r).toFixed(3):null, distance:numOf(o.distance),
+              note:(o.note!==undefined&&o.note!==null)?String(o.note):''};
     }catch(e){/* JSONでなければ下のフォールバックへ */}
   }
   // フォールバック：Rh等のラベル付き数値を拾う。ラベルが無ければ最初の小数を読み値とみなす。
