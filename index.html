@@ -375,7 +375,11 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <div class="dz" onclick="document.getElementById('ocr-fi').click()">
       <div style="font-size:22px;margin-bottom:4px;">📷</div>
       <div style="font-size:13px;color:var(--color-text-secondary);">タップして撮影・選択</div>
-      <input type="file" id="ocr-fi" accept="image/*" capture="environment" style="display:none" onchange="handleOcrF(this.files[0])">
+      <!-- captureは付けない。付けるとiPhoneではカメラしか開かず、写真ライブラリから
+           選べなくなる（ボタンには「撮影・選択」と書いてあるのに選択できなかった）。
+           現場で撮っておいた液晶写真を、あとで机で読み込ませたい場面があるため、
+           どちらも選べるようにしておく。その場で撮るならバーの📷ボタンが直接カメラを開く。 -->
+      <input type="file" id="ocr-fi" accept="image/*" style="display:none" onchange="handleOcrF(this.files[0])">
     </div>
     <img id="ocr-prev" style="max-width:100%;max-height:130px;border-radius:8px;margin-top:8px;display:none;">
     <div id="ocr-spin" style="display:none;text-align:center;padding:10px;font-size:13px;color:var(--color-text-secondary);">🔍 解析中...</div>
@@ -738,7 +742,9 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 </div><!-- /obs-screen -->
 
 <!-- 隠しファイル入力 (スケッチ写真読込) -->
-<input type="file" id="sk-fi" accept="image/*" capture="environment" style="display:none" onchange="loadSkPhoto(this.files[0])">
+<!-- 下地は地図のスクリーンショットを使いたいことが多い。captureを付けると
+     カメラしか開かず、保存済みの画像を選べなくなるため付けない。 -->
+<input type="file" id="sk-fi" accept="image/*" style="display:none" onchange="loadSkPhoto(this.files[0])">
 
 <!-- キーボードアクセサリバー -->
 
