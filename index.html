@@ -1588,7 +1588,35 @@ async function backupStart(){
     `<button class="bk-cancel" onclick="bkClose()">キャンセル</button>`);
 }
 
-function bkSave(withPhotos){
+// ファイルを端末に保存する。
+// iPhoneのSafariは <a download> を必ずしもダウンロードとして扱わず、
+// 中身を表示するだけのプレビュー画面を出して止まることがある。利用者から見ると
+// 「保存したはずのファイルがどこにも無い」状態になり、実際これで見失っていた。
+// そこで、共有シート（"ファイル"に保存 が選べる標準のあの画面）が使える端末では
+// そちらを優先する。使えない端末では従来どおりのダウンロードにする。
+async function bkDeliverFile(blob,name){
+  try{
+    const file=new File([blob],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({files:[file],title:name});
+        return 'shared';
+      }catch(e){
+        // 利用者が共有シートを閉じただけなら、勝手にダウンロードし直さない
+        if(e&&e.name==='AbortError')return 'canceled';
+        // それ以外（共有に失敗）はダウンロードへ切り替える
+      }
+    }
+  }catch(e){ /* File未対応の端末。ダウンロードへ */ }
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),20000);
+  return 'downloaded';
+}
+
+async function bkSave(withPhotos){
   const photos=withPhotos?(_bkPhotos||[]):[];
   const sketches=withPhotos?(_bkSketches||[]):[];
   let json;
@@ -1596,17 +1624,18 @@ function bkSave(withPhotos){
     json=JSON.stringify(bkPayload(photos,sketches));
   }catch(e){
     bkClose();
-    alert('バックアップの作成に失敗しました。「観測データのみ」でもう一度お試しください。');
+    alert('バックアップの作成に失敗しました。「観測データのみ保存」でもう一度お試しください。');
     return;
   }
   bkClose();
+  const name='SiteLogger_backup_'+bkStamp()+'.json';
   try{
-    const blob=new Blob([json],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download='SiteLogger_backup_'+bkStamp()+'.json';
-    document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),20000);
+    const how=await bkDeliverFile(new Blob([json],{type:'application/json'}),name);
+    if(how==='shared'){
+      alert('バックアップを保存しました。\n\n'+name);
+    }else if(how==='downloaded'){
+      alert('バックアップを書き出しました。\n\n'+name+'\n\n保存先が出てこない場合は、画面下の共有ボタン（□に↑）から「"ファイル"に保存」を選んでください。');
+    }
   }catch(e){
     alert('ファイルの書き出しに失敗しました。端末の空き容量をご確認ください。');
   }
