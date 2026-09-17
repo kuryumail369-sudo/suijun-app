@@ -762,7 +762,11 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 </div>
 
 <!-- バックアップ・復元 -->
-<input type="file" id="bk-fi" accept="application/json,.json" style="display:none" onchange="restoreFile(this.files[0])">
+<!-- accept は指定しない。iOSのファイル選択はこの指定の解釈が厳しく、
+     バックアップの.jsonが「対象外」と判断されて選べない（グレー表示になる）ことがある。
+     選ばれたファイルは restoreFile() で中身を検査して弾いているため、
+     ここで絞り込まなくても誤ったファイルを読み込む心配はない。 -->
+<input type="file" id="bk-fi" style="display:none" onchange="restoreFile(this.files[0])">
 <div id="bk-ov" onclick="if(event.target===this)bkClose()">
   <div id="bk-box">
     <div id="bk-title"></div>
