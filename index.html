@@ -2669,10 +2669,19 @@ function handleOcrF(file){
   if(!file)return;
   const rd=new FileReader();
   rd.onload=e=>{
-    const img=document.getElementById('ocr-prev');img.src=e.target.result;img.style.display='block';
+    const img=document.getElementById('ocr-prev');
     document.getElementById('ocr-res').style.display='none';
     document.getElementById('ocr-err').style.display='none';
-    runOcr(e.target.result);
+    // 送る前に縮める。以前は撮ったままの大きさ（3〜4MB）を送っていたため、
+    //   ・現場の携帯回線で送信に数十秒かかる
+    //   ・大きすぎる写真はWorker側の上限に当たって「画像サイズが大きすぎます」で失敗する
+    //   ・画像が大きいほどAPIの料金もかさむ
+    // という三重の損をしていた。液晶の数字を読むのに元の解像度は要らない。
+    // 長辺1600pxは7セグの読み取りに十分な余裕があり、送信量は10分の1以下になる。
+    shrinkImage(e.target.result,1600,0.8).then(small=>{
+      img.src=small;img.style.display='block';
+      runOcr(small);
+    });
   };
   rd.readAsDataURL(file);
 }
