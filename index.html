@@ -2701,17 +2701,36 @@ async function runOcr(du){
     '- 標尺読み値が判別できない、または複数の候補があってどれか決められない場合は reading を null にしてください。',
     '- 単位記号や記号は含めず、数字と小数点のみにしてください。'
   ].join('\n');
+  // 送信サイズを控えておく。失敗したとき「縮小が効いていたのか」「回線の問題か」を
+  // 画面上で切り分けられるようにするため。
+  const sentKB=Math.round(b64.length*3/4/1024);
+  let res;
   try{
-    const res=await fetch('https://sitelogger-ocr.kuryumail-369.workers.dev/',{method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:256,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:mt,data:b64}},
-          {type:'text',text:prompt}
-        ]}]})});
-    const d=await res.json();
+    try{
+      res=await fetch('https://sitelogger-ocr.kuryumail-369.workers.dev/',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:256,
+          messages:[{role:'user',content:[
+            {type:'image',source:{type:'base64',media_type:mt,data:b64}},
+            {type:'text',text:prompt}
+          ]}]})});
+    }catch(netErr){
+      // サーバーまで届いていない（圏外・回線が不安定・通信の中断など）。
+      // ここを分けておかないと、サーバーが返したエラーと区別がつかない。
+      document.getElementById('ocr-spin').style.display='none';
+      showOcrErr('サーバーに接続できませんでした。電波の良い場所で、もう一度お試しください。（送信サイズ '+sentKB+' KB）');
+      return;
+    }
+    let d;
+    try{
+      d=await res.json();
+    }catch(parseErr){
+      document.getElementById('ocr-spin').style.display='none';
+      showOcrErr('サーバーから予期しない応答が返りました（HTTP '+res.status+'）。少し時間をおいてお試しください。');
+      return;
+    }
     document.getElementById('ocr-spin').style.display='none';
-    if(d.error)throw new Error(d.error.message);
+    if(d.error)throw new Error(d.error.message+'（送信サイズ '+sentKB+' KB）');
     const txt=(d.content||[]).map(c=>c.text||'').join('').trim();
 
     const parsed=parseOcrResponse(txt);
