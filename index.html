@@ -2665,6 +2665,11 @@ function openOcr(id,field){
   document.getElementById('ocr').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function closeOcr(){document.getElementById('ocr').style.display='none';ocrTgt=null;ocrPending=null;}
+// AIへ送る画像の大きさ。読み取り精度と送信量のつり合いを取るための値。
+// 読めないときは上げる、遅いときは下げる、という調整点をここ1か所にまとめている。
+const OCR_MAX_SIDE=2000;
+const OCR_QUALITY=0.85;
+
 function handleOcrF(file){
   if(!file)return;
   const rd=new FileReader();
@@ -2677,8 +2682,12 @@ function handleOcrF(file){
     //   ・大きすぎる写真はWorker側の上限に当たって「画像サイズが大きすぎます」で失敗する
     //   ・画像が大きいほどAPIの料金もかさむ
     // という三重の損をしていた。液晶の数字を読むのに元の解像度は要らない。
-    // 長辺1600pxは7セグの読み取りに十分な余裕があり、送信量は10分の1以下になる。
-    shrinkImage(e.target.result,1600,0.8).then(small=>{
+    // ただし縮めすぎると読めなくなる。電子レベルの液晶は低コントラストで、
+    // 写真の中で液晶が占める面積も小さいことが多い。1600px・品質0.8では
+    // 数字の輪郭がJPEGで潰れ、実機で「読み値を判別できません」が出た。
+    // 2000px・品質0.85なら送信量は元の3分の1程度に収まりつつ、余裕が残る。
+    // 精度が足りなければこの2つの数字を上げる（上限はWorker側の約6MB）。
+    shrinkImage(e.target.result,OCR_MAX_SIDE,OCR_QUALITY).then(small=>{
       img.src=small;img.style.display='block';
       runOcr(small);
     });
