@@ -1579,12 +1579,12 @@ async function backupStart(){
   if(nPhotos)media.push('写真 '+nPhotos+'枚');
   if(nSkPages)media.push('スケッチ '+nSkPages+'枚');
   const fullBtn=media.length
-    ?`<button class="bk-choice" onclick="bkSave(true)"><b>📷 画像も含める（推奨）</b><em>路線 ${nRoutes}件・${media.join('・')} ／ 約 ${bkSize(baseSize+photoSize+skSize)}</em></button>`
+    ?`<button class="bk-choice" onclick="bkSave(true)"><b>📷 画像も含めて保存（推奨）</b><em>路線 ${nRoutes}件・${media.join('・')} ／ 約 ${bkSize(baseSize+photoSize+skSize)}</em></button>`
     :`<div class="bk-note">この端末に保存されている写真・スケッチはありません。</div>`;
   bkOpen('バックアップを保存',
-    `<div class="bk-note">全路線の観測値・測点名・GPS座標・メモを1つのファイルに書き出します。書き出したファイルは「ファイル」アプリなどに保存され、別の端末での復元に使えます。</div>`+
+    `<div class="bk-note"><b>下のどちらかを押すと、その場でファイルが書き出されます。</b><br>全路線の観測値・測点名・GPS座標・メモが1つのファイルにまとまります。書き出したファイルは「ファイル」アプリの<b>ダウンロード</b>に保存され、別の端末での復元に使えます。</div>`+
     fullBtn+
-    `<button class="bk-choice" onclick="bkSave(false)"><b>📄 観測データのみ</b><em>路線 ${nRoutes}件（写真・スケッチなし） ／ 約 ${bkSize(baseSize)}</em></button>`+
+    `<button class="bk-choice" onclick="bkSave(false)"><b>📄 観測データのみ保存</b><em>路線 ${nRoutes}件（写真・スケッチなし） ／ 約 ${bkSize(baseSize)}</em></button>`+
     `<button class="bk-cancel" onclick="bkClose()">キャンセル</button>`);
 }
 
