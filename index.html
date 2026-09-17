@@ -288,15 +288,6 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <button class="bk-btn" onclick="backupStart()">💾 バックアップを保存</button>
     <button class="bk-btn" onclick="restorePick()">📥 バックアップから復元</button>
   </div>
-  <!-- 入力ぶんが減ったときだけ出す巻き戻し導線。普段は表示されない。 -->
-  <div id="undo-row" style="display:none;margin-top:10px;padding:10px 12px;border:0.5px solid #E8C99B;border-radius:12px;background:#FDF6EC;">
-    <div style="display:flex;align-items:flex-start;gap:8px;">
-      <div style="font-size:16px;line-height:1.3;">⚠️</div>
-      <div id="undo-note" style="flex:1;font-size:12px;color:#7A4E07;line-height:1.55;"></div>
-      <button type="button" onclick="dismissUndo()" aria-label="閉じる" style="background:none;border:none;color:#9A7B45;font-size:15px;line-height:1;padding:2px 4px;cursor:pointer;">✕</button>
-    </div>
-    <button class="bk-btn" style="width:100%;margin-top:8px;" onclick="undoLastSave()">⏪ 減る前の状態に戻す</button>
-  </div>
   <div style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin-top:8px;line-height:1.6;">機種変更・端末の故障に備えて、全路線をファイルに書き出せます（無料）。</div>
   <div style="text-align:center;margin-top:20px;padding-bottom:8px;">
     <a href="manual.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📖 使い方</a>
@@ -1059,7 +1050,6 @@ function goHome(){
   document.getElementById('home-screen').style.display='';
   document.getElementById('obs-screen').style.display='none';
   renderRouteList();
-  updateUndoRow();
 }
 
 function renderRouteList(){
@@ -1432,10 +1422,7 @@ function saveToStorage(){
         existing.routes.forEach(er=>{ if(er&&!knownIds.has(er.id)) routes.push(er); });
       }
     }catch(e){}
-    const nextStr=JSON.stringify({routes,currentRouteId,v:6});
-    const prevStr=localStorage.getItem('suijun_v06');
-    localStorage.setItem('suijun_v06',nextStr); // 本体の保存を最優先
-    stashPrev(prevStr,nextStr);
+    localStorage.setItem('suijun_v06',JSON.stringify({routes,currentRouteId,v:6}));
     const ind=document.getElementById('save-ind');ind.textContent='✓';ind.style.color='';
   }catch(e){
     const ind2=document.getElementById('save-ind');
@@ -1460,113 +1447,6 @@ window.addEventListener('pagehide',flushSaveNow);
 // 保存のたびに書き換える前の内容を1世代だけ退避しておき、何かがデータを壊しても
 // 1回分は巻き戻せるようにする。写真・スケッチはIndexedDB側なのでここには含まれず、
 // 観測データだけなので容量は数十KB程度に収まる。
-const PREV_KEY='suijun_v06_prev';
-let undoDismissed=false; // 「×」で閉じたら、次に減るまでは出さない
-
-// 入力済みの中身の量を数える。巻き戻しを出すかどうかの判断だけに使うので、
-// 厳密である必要はなく「減ったかどうか」が分かればよい。
-function dataScore(rs){
-  let n=0;
-  (rs||[]).forEach(r=>{
-    n++; // 路線そのもの
-    [...(r.rows||[]),...(r.rowsReturn||[])].forEach(x=>{
-      if(!x)return;
-      ['point','bs','fs','is_'].forEach(f=>{ if(String(x[f]==null?'':x[f]).trim()!=='')n++; });
-    });
-  });
-  return n;
-}
-
-// 退避は「中身が減ったとき」だけ行う。
-// 以前は保存のたびに退避していたが、保存は入力中も1.2秒ごとに走るため
-// 「直前」が数秒前を指すだけで、利用者には何が戻るのか分からなかった。
-// 減ったときだけ残せば、出てくる場面が「事故が起きたとき」に限られ、
-// ボタンの意味も「消えたぶんを取り戻す」と一本に定まる。
-function stashPrev(prevStr,nextStr){
-  if(!prevStr||prevStr===nextStr)return;
-  let before,after;
-  try{
-    before=dataScore(JSON.parse(prevStr).routes);
-    after=dataScore(JSON.parse(nextStr).routes);
-  }catch(e){return;}
-  if(after>=before)return; // 増えた・変わらないときは何もしない
-  try{
-    localStorage.setItem(PREV_KEY,JSON.stringify({at:Date.now(),data:prevStr,before,after}));
-    undoDismissed=false;
-  }catch(e){
-    // 容量不足などで退避に失敗したら、中途半端に古いものを残さず消す。
-    // 本体の保存は既に済んでいるので、ここで失敗しても実害はない。
-    try{localStorage.removeItem(PREV_KEY);}catch(e2){}
-  }
-  updateUndoRow();
-}
-function readPrev(){
-  try{
-    const raw=localStorage.getItem(PREV_KEY);
-    if(!raw)return null;
-    const wrap=JSON.parse(raw);
-    const d=JSON.parse(wrap.data);
-    if(!d||!Array.isArray(d.routes))return null;
-    return {at:wrap.at,data:wrap.data,parsed:d,before:wrap.before,after:wrap.after};
-  }catch(e){return null;}
-}
-function dismissUndo(){ undoDismissed=true; updateUndoRow(); }
-
-function updateUndoRow(){
-  const row=document.getElementById('undo-row');
-  if(!row)return;
-  const p=readPrev();
-  const cur=localStorage.getItem('suijun_v06');
-  if(!p||undoDismissed||cur===p.data){row.style.display='none';return;}
-  // 退避したあとに入力が戻っている（今のほうが多い）なら、もう出す必要はない
-  let nowScore=0;
-  try{ nowScore=dataScore(JSON.parse(cur).routes); }catch(e){}
-  if(typeof p.before==='number'&&nowScore>=p.before){row.style.display='none';return;}
-  row.style.display='block';
-  const t=new Date(p.at);
-  const hh=String(t.getHours()).padStart(2,'0'), mm=String(t.getMinutes()).padStart(2,'0');
-  const lost=(typeof p.before==='number'&&typeof p.after==='number')?(p.before-p.after):null;
-  document.getElementById('undo-note').innerHTML=
-    `<strong>${hh}:${mm} に入力ぶんが減りました。</strong>`+
-    (lost!==null?`（${lost}か所）`:'')+
-    `<br>意図した削除ならそのままで構いません。`;
-}
-
-// 減る前の状態と今の状態を入れ替える。入れ替えなので、戻しすぎたらもう一度押せば元に戻る。
-function undoLastSave(){
-  const p=readPrev();
-  if(!p){alert('戻せる内容がありません。');return;}
-  const t=new Date(p.at);
-  const rs=p.parsed.routes;
-  const names=rs.slice(0,5).map(r=>r.name||'（名称なし）').join('、')+(rs.length>5?' ほか':'');
-  const rowsTotal=rs.reduce((n,r)=>n+((r.rows||[]).length)+((r.rowsReturn||[]).length),0);
-  if(!confirm(
-    `${t.toLocaleString()} の直前（入力が減る前）の状態に戻します。\n\n`+
-    `路線 ${rs.length}件：${names}\n観測行 合計${rowsTotal}行\n\n`+
-    `※そのあとに入力した内容は、いったん外れます\n`+
-    `※写真とスケッチは巻き戻しの対象外です（消えません）\n`+
-    `※戻しすぎた場合は、もう一度このボタンを押すと元に戻ります\n\n`+
-    `よろしいですか？`))return;
-  const cur=localStorage.getItem('suijun_v06');
-  let curScore=0;
-  try{ curScore=dataScore(JSON.parse(cur).routes); }catch(e){}
-  try{
-    localStorage.setItem('suijun_v06',p.data);
-    // 入れ替えたぶんを退避し直す。押し間違えても戻せるようにするため、
-    // ここだけは「減ったときだけ」の条件を外して必ず残す。
-    if(cur)localStorage.setItem(PREV_KEY,JSON.stringify({at:Date.now(),data:cur,before:dataScore(p.parsed.routes),after:curScore}));
-  }catch(e){alert('巻き戻しに失敗しました。');return;}
-  // 画面に残っている値で上書きし返さないよう、路線の選択を解除してから読み直す
-  routes=p.parsed.routes;
-  currentRouteId=null;rows=[];rowsReturn=[];obsLoaded=false;
-  undoDismissed=false;
-  clearTimeout(autoSaveTimer);
-  document.getElementById('home-screen').style.display='';
-  document.getElementById('obs-screen').style.display='none';
-  renderRouteList();updateUndoRow();
-  alert('入力が減る前の状態に戻しました。');
-}
-
 function loadFromStorage(){
   try{
     const d=JSON.parse(localStorage.getItem('suijun_v06')||localStorage.getItem('suijun_v05')||'null');
@@ -3808,7 +3688,6 @@ if(!loaded||routes.length===0){
 }
 // ホーム画面を表示
 renderRouteList();
-updateUndoRow();
 // ライセンスUI更新・オンライン検証
 updateLicenseUI();
 const _lic = getLicense();
