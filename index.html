@@ -239,6 +239,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .license-banner-title{font-size:13px;font-weight:600;margin-bottom:2px;}
 .license-banner-sub{font-size:11px;opacity:.8;}
 .license-banner-btn{background:#fff;color:#185FA5;border:none;border-radius:8px;font-size:12px;font-weight:600;padding:7px 14px;cursor:pointer;flex-shrink:0;font-family:inherit;}
+#shareapp-qr svg{width:200px;height:200px;display:block;}
 .upgrade-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;display:flex;align-items:flex-end;justify-content:center;}
 .upgrade-modal{background:var(--color-background-primary);border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:0 0 32px;max-height:92vh;overflow-y:auto;}
 .upgrade-modal-handle{width:36px;height:4px;background:var(--color-border-secondary);border-radius:2px;margin:12px auto 16px;}
@@ -298,6 +299,28 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <a href="terms.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">利用規約</a>
     <a href="terms.html#tab-privacy" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">プライバシーポリシー</a>
     <a href="https://forms.gle/qoXR73eMvkxGerjL6" target="_blank" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">💬 フィードバック</a>
+    <a href="javascript:void(0)" onclick="showShareApp()" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📣 このアプリを紹介する</a>
+  </div>
+</div>
+
+<!-- 紹介モーダル（QRコード） -->
+<!-- QRコードはSVGとして埋め込んである。外部の生成サービスを呼ぶと、圏外の現場では
+     出せなくなるうえ、アクセス先が第三者に渡ってしまう。中身は紹介ページのURL固定。 -->
+<div id="shareapp-modal" class="upgrade-modal-overlay" style="display:none;" onclick="if(event.target===this)closeShareApp()">
+  <div class="upgrade-modal">
+    <div class="upgrade-modal-handle"></div>
+    <div class="upgrade-modal-header">
+      <div class="upgrade-modal-title">このアプリを紹介する</div>
+      <div class="upgrade-modal-sub">相手にこのQRコードを読み取ってもらってください</div>
+    </div>
+    <div style="text-align:center;padding:20px 20px 4px;">
+      <div id="shareapp-qr" style="display:inline-block;background:#fff;padding:12px;border-radius:12px;border:1px solid var(--color-border-secondary);line-height:0;"></div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-top:12px;word-break:break-all;" id="shareapp-url"></div>
+    </div>
+    <button class="upgrade-btn-primary" onclick="shareAppLink()">🔗 リンクを送る</button>
+    <button class="upgrade-btn-primary" id="shareapp-copy" style="background:var(--color-background-secondary);color:var(--color-text-primary);border:1px solid var(--color-border-secondary);margin-top:0;" onclick="copyAppLink()">📋 リンクをコピー</button>
+    <div style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin:8px 20px 0;line-height:1.6;">紹介ページが開きます。そこからアプリを使い始められます。無料で1路線まで使えます。</div>
+    <button class="upgrade-btn-primary" style="background:none;color:var(--color-text-secondary);border:none;font-size:13px;margin-top:4px;" onclick="closeShareApp()">閉じる</button>
   </div>
 </div>
 
@@ -967,6 +990,44 @@ function releaseLicense(){
 }
 function closeUpgrade(){
   document.getElementById('upgrade-modal').style.display='none';
+}
+
+// ===== このアプリを紹介する =====
+// 知り合いに勧めるとき、URLを口で伝えるのは現場では無理がある。QRコードなら
+// 相手のカメラを向けてもらうだけで済む。QRは固定のSVGとして埋め込んであるので、
+// 電波が無い現場でも表示できる。
+const SHARE_URL='https://sitelogger.zui.works/landing.html';
+const SHARE_QR_SVG='<svg viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect width="33" height="33" fill="#fff"/><path d="M2 2h7v1h-7zM11 2h3v1h-3zM15 2h8v1h-8zM24 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h2v1h-2zM15 3h3v1h-3zM20 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM30 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM13 4h2v1h-2zM17 4h1v1h-1zM19 4h2v1h-2zM24 4h1v1h-1zM26 4h3v1h-3zM30 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM13 5h2v1h-2zM16 5h2v1h-2zM20 5h1v1h-1zM24 5h1v1h-1zM26 5h3v1h-3zM30 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM12 6h2v1h-2zM16 6h3v1h-3zM24 6h1v1h-1zM26 6h3v1h-3zM30 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h3v1h-3zM15 7h3v1h-3zM19 7h3v1h-3zM24 7h1v1h-1zM30 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h7v1h-7zM11 9h4v1h-4zM19 9h2v1h-2zM22 9h1v1h-1zM2 10h1v1h-1zM5 10h1v1h-1zM7 10h2v1h-2zM10 10h3v1h-3zM15 10h4v1h-4zM22 10h2v1h-2zM25 10h1v1h-1zM2 11h1v1h-1zM5 11h1v1h-1zM12 11h2v1h-2zM15 11h2v1h-2zM18 11h1v1h-1zM22 11h3v1h-3zM27 11h1v1h-1zM30 11h1v1h-1zM3 12h1v1h-1zM5 12h1v1h-1zM7 12h5v1h-5zM13 12h3v1h-3zM18 12h2v1h-2zM21 12h9v1h-9zM2 13h6v1h-6zM9 13h2v1h-2zM12 13h6v1h-6zM20 13h1v1h-1zM22 13h2v1h-2zM25 13h1v1h-1zM28 13h2v1h-2zM2 14h1v1h-1zM4 14h1v1h-1zM6 14h3v1h-3zM10 14h4v1h-4zM15 14h1v1h-1zM17 14h3v1h-3zM21 14h1v1h-1zM23 14h2v1h-2zM27 14h1v1h-1zM29 14h2v1h-2zM2 15h1v1h-1zM4 15h2v1h-2zM7 15h1v1h-1zM9 15h1v1h-1zM12 15h1v1h-1zM14 15h2v1h-2zM19 15h5v1h-5zM2 16h1v1h-1zM8 16h1v1h-1zM12 16h1v1h-1zM14 16h1v1h-1zM16 16h1v1h-1zM18 16h1v1h-1zM20 16h1v1h-1zM23 16h1v1h-1zM25 16h6v1h-6zM4 17h1v1h-1zM6 17h2v1h-2zM9 17h1v1h-1zM11 17h3v1h-3zM15 17h5v1h-5zM22 17h1v1h-1zM24 17h1v1h-1zM27 17h1v1h-1zM29 17h1v1h-1zM3 18h1v1h-1zM5 18h5v1h-5zM11 18h2v1h-2zM14 18h1v1h-1zM19 18h1v1h-1zM22 18h2v1h-2zM25 18h1v1h-1zM29 18h1v1h-1zM3 19h1v1h-1zM6 19h1v1h-1zM9 19h3v1h-3zM14 19h1v1h-1zM16 19h1v1h-1zM18 19h2v1h-2zM22 19h4v1h-4zM27 19h1v1h-1zM30 19h1v1h-1zM2 20h1v1h-1zM4 20h1v1h-1zM6 20h1v1h-1zM8 20h2v1h-2zM12 20h1v1h-1zM14 20h1v1h-1zM18 20h3v1h-3zM22 20h5v1h-5zM29 20h2v1h-2zM6 21h2v1h-2zM9 21h1v1h-1zM11 21h2v1h-2zM14 21h1v1h-1zM19 21h3v1h-3zM25 21h2v1h-2zM29 21h2v1h-2zM2 22h1v1h-1zM4 22h2v1h-2zM7 22h3v1h-3zM13 22h2v1h-2zM17 22h2v1h-2zM22 22h5v1h-5zM28 22h1v1h-1zM10 23h3v1h-3zM14 23h2v1h-2zM18 23h3v1h-3zM22 23h1v1h-1zM26 23h1v1h-1zM28 23h3v1h-3zM2 24h7v1h-7zM11 24h1v1h-1zM13 24h1v1h-1zM15 24h2v1h-2zM18 24h3v1h-3zM22 24h1v1h-1zM24 24h1v1h-1zM26 24h1v1h-1zM29 24h1v1h-1zM2 25h1v1h-1zM8 25h1v1h-1zM10 25h1v1h-1zM12 25h1v1h-1zM14 25h4v1h-4zM20 25h1v1h-1zM22 25h1v1h-1zM26 25h3v1h-3zM2 26h1v1h-1zM4 26h3v1h-3zM8 26h1v1h-1zM12 26h1v1h-1zM16 26h1v1h-1zM18 26h3v1h-3zM22 26h5v1h-5zM2 27h1v1h-1zM4 27h3v1h-3zM8 27h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM21 27h1v1h-1zM24 27h6v1h-6zM2 28h1v1h-1zM4 28h3v1h-3zM8 28h1v1h-1zM12 28h3v1h-3zM16 28h1v1h-1zM18 28h1v1h-1zM21 28h1v1h-1zM26 28h3v1h-3zM30 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM11 29h4v1h-4zM17 29h6v1h-6zM26 29h1v1h-1zM29 29h1v1h-1zM2 30h7v1h-7zM10 30h1v1h-1zM14 30h4v1h-4zM19 30h1v1h-1zM22 30h3v1h-3zM26 30h1v1h-1zM29 30h1v1h-1z" fill="#0f172a"/></svg>';
+function showShareApp(){
+  const box=document.getElementById('shareapp-qr');
+  if(box&&!box.innerHTML)box.innerHTML=SHARE_QR_SVG;
+  const u=document.getElementById('shareapp-url');
+  if(u)u.textContent=SHARE_URL;
+  document.getElementById('shareapp-modal').style.display='flex';
+}
+function closeShareApp(){
+  document.getElementById('shareapp-modal').style.display='none';
+}
+async function shareAppLink(){
+  const data={title:'SiteLogger（水準測量 現場野帳）',text:'水準測量の野帳アプリです。',url:SHARE_URL};
+  if(navigator.share){
+    try{ await navigator.share(data); return; }catch(e){ if(e&&e.name==='AbortError')return; }
+  }
+  copyAppLink();
+}
+async function copyAppLink(){
+  const btn=document.getElementById('shareapp-copy');
+  const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent='✅ コピーしました'; setTimeout(()=>{btn.textContent=o;},1600); } };
+  try{
+    await navigator.clipboard.writeText(SHARE_URL); done(); return;
+  }catch(e){}
+  // clipboard APIが使えない環境（古いSafari・http接続など）向けの手段
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=SHARE_URL;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);done();
+  }catch(e){ alert('コピーできませんでした。次のURLを手で控えてください。\n'+SHARE_URL); }
 }
 // Stripeカスタマーポータルを開く（解約・支払い方法の変更など、ユーザー自身で行える）
 async function openBillingPortal(){
@@ -2537,9 +2598,10 @@ async function expPhotoReport(){
   const original=btn?btn.textContent:'';
   if(btn){btn.textContent='生成中…';btn.disabled=true;}
   try{
+    const repRows=await rowsForReport(rows);
     const res=await fetch(LICENSE_WORKER_BASE+'/export/photo-report',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:getLicense(),deviceId:getDeviceId(),data:{proj,date,worker,routeName,K,sb,rows}})
+      body:JSON.stringify({key:getLicense(),deviceId:getDeviceId(),data:{proj,date,worker,routeName,K,sb,rows:repRows}})
     });
     const result=await res.json();
     if(result.ok){
@@ -2573,14 +2635,15 @@ async function shareData(){
   let csv, htmlContent;
   try{
     const key=getLicense(), deviceId=getDeviceId();
+    const repRows=await rowsForReport(rows);
     const [csvRes, photoRes] = await Promise.all([
       fetch(LICENSE_WORKER_BASE+'/export/csv',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({key,deviceId,data:{proj,date,worker,K,sb,eb,rows,rowsReturn}})
+        body:JSON.stringify({key,deviceId,data:{proj,date,worker,K,sb,eb,rows:rowsNoPhoto(rows),rowsReturn:rowsNoPhoto(rowsReturn)}})
       }).then(r=>r.json()),
       fetch(LICENSE_WORKER_BASE+'/export/photo-report',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({key,deviceId,data:{proj,date,worker,routeName,K,sb,rows}})
+        body:JSON.stringify({key,deviceId,data:{proj,date,worker,routeName,K,sb,rows:repRows}})
       }).then(r=>r.json())
     ]);
     if(!csvRes.ok){alert(exportErrorMessage(csvRes.error));return;}
@@ -2866,18 +2929,51 @@ function confirmOcr(){
 }
 
 // ===== 写真 — 各行にinputを直接持たせる方式に変更 =====
+// 測点写真の保存サイズ。撮ったままの3〜4MBを貯めると、
+//   ・端末のIndexedDBが数十MB〜100MB超に膨らむ
+//   ・バックアップファイルが巨大になり、共有も復元も重くなる
+//   ・写真レポートが十数MBになり、メールで送れない
+// という三重の負担になる。測点の状況が分かればよい用途なので、長辺1600pxで足りる。
+const PHOTO_MAX_SIDE=1600, PHOTO_QUALITY=0.75;
+// レポートに載せるときはさらに小さくてよい（印刷でも1000pxあれば十分）。
+// 送信量も減るので、現場の携帯回線での生成が速くなる。
+const REPORT_MAX_SIDE=1000, REPORT_QUALITY=0.7;
+
 function handleRowPhoto(input,id){
   const file=input.files[0];if(!file)return;
   const dir=viewMode==='out'?'out':'ret';
   const rd=new FileReader();
   rd.onload=e=>{
-    const arr=viewMode==='out'?rows:rowsReturn;
-    const r=arr.find(r=>r.id===id);if(r)r.photo=e.target.result;
-    renderTbl();
-    savePhotoToDB(dir,id,e.target.result); // 即時にIndexedDBへ保存（アプリを閉じても消えない）
-    markDirty();
+    shrinkImage(e.target.result,PHOTO_MAX_SIDE,PHOTO_QUALITY).then(small=>{
+      const arr=dir==='out'?rows:rowsReturn;
+      const r=arr.find(r=>r.id===id);if(r)r.photo=small;
+      renderTbl();
+      savePhotoToDB(dir,id,small); // 即時にIndexedDBへ保存（アプリを閉じても消えない）
+      markDirty();
+    });
   };
   rd.readAsDataURL(file);
+}
+
+// CSVに写真は不要。送信量を減らすため、写真を外した配列を渡す。
+function rowsNoPhoto(arr){
+  return (arr||[]).map(r=>r&&r.photo?{...r,photo:null}:r);
+}
+
+// 写真レポート用に、行の写真だけを小さく差し替えた配列を作る。
+// 以前に撮った大きい写真もここを通るので、過去のデータにも効く。
+async function rowsForReport(arr){
+  const out=[];
+  for(const r of (arr||[])){
+    if(r&&r.photo){
+      let small=r.photo;
+      try{ small=await shrinkImage(r.photo,REPORT_MAX_SIDE,REPORT_QUALITY); }catch(e){}
+      out.push({...r,photo:small});
+    }else{
+      out.push(r);
+    }
+  }
+  return out;
 }
 function openPV(id){
   pvId={id,dir:viewMode};
@@ -3788,7 +3884,7 @@ function printReport(){
   const distTh=hasDistData()?'<th>距離 後/前(m)</th>':'';
   const freeFooter=_pro?'':`
 <div class="sl-freenote">無料プランのため、下の1行が印刷されます。Proプランにすると表示されません。</div>
-<div class="sl-credit">この成果表は SiteLogger（水準測量 現場野帳）で作成されました　https://kuryumail369-sudo.github.io/suijun-app/</div>`;
+<div class="sl-credit">この成果表は SiteLogger（水準測量 現場野帳）で作成されました　https://sitelogger.zui.works/</div>`;
   const proj=document.getElementById('proj').value||'',date=document.getElementById('date').value||'',worker=document.getElementById('worker').value||'',wx=document.getElementById('wx').value;
   const K=parseFloat(document.getElementById('k-corr').value)||0,kM=K/1000,sb=parseFloat(document.getElementById('bm-s').value)||0,eb=document.getElementById('bm-e').value;
   const routeName=routes.find(r=>r.id===currentRouteId)?.name||'';
@@ -3894,7 +3990,7 @@ async function expCSV(){
   try{
     const res=await fetch(LICENSE_WORKER_BASE+'/export/csv',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:getLicense(),deviceId:getDeviceId(),data:{proj,date,worker,K,sb,eb,rows,rowsReturn}})
+      body:JSON.stringify({key:getLicense(),deviceId:getDeviceId(),data:{proj,date,worker,K,sb,eb,rows:rowsNoPhoto(rows),rowsReturn:rowsNoPhoto(rowsReturn)}})
     });
     const result=await res.json();
     if(result.ok){
