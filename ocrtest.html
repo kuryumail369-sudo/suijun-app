@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SiteLogger — 液晶OCRの精度比較</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+  :root{ --blue:#185FA5; --bg:#F7F8FA; --surface:#fff; --border:#E2E6ED;
+         --text:#1A1E2A; --sub:#6B7280; --ok:#1D9E75; --ng:#B91C1C; --warn:#B45309; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.8;}
+  .hero{background:linear-gradient(135deg,#0D3F73 0%,#185FA5 60%,#2A7FD4 100%);color:#fff;padding:36px 20px 28px;text-align:center;}
+  .hero h1{font-size:clamp(19px,5vw,26px);font-weight:700;}
+  .hero-sub{font-size:13px;opacity:.75;margin-top:4px;}
+  .wrap{max-width:860px;margin:20px auto 60px;padding:0 16px;}
+  .note{font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.8;}
+  .bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+  button{font-family:inherit;font-size:14px;font-weight:600;padding:11px 18px;border-radius:10px;
+         border:none;background:var(--blue);color:#fff;cursor:pointer;}
+  button.sub{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+  button:disabled{opacity:.5;cursor:default;}
+  .status{font-size:13px;color:var(--sub);}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:12px;overflow:hidden;
+        border:1px solid var(--border);margin-bottom:16px;}
+  th,td{border-bottom:1px solid #F1F3F7;padding:8px 10px;font-size:12px;text-align:left;vertical-align:top;}
+  th{background:#EEF4FB;color:var(--blue);font-weight:700;font-size:11px;white-space:nowrap;}
+  td.num{white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .ok{color:var(--ok);font-weight:700;}
+  .ng{color:var(--ng);font-weight:700;}
+  .warn{color:var(--warn);font-weight:700;}
+  .score{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;}
+  .score h2{font-size:13px;color:var(--blue);margin-bottom:8px;}
+  .score .line{font-size:13px;}
+  footer{text-align:center;padding:24px 16px;font-size:12px;color:var(--sub);border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🔍 液晶OCRの精度比較</h1>
+  <div class="hero-sub">同じ12枚の実写を、モデルを変えて読ませて比べる</div>
+</div>
+
+<div class="wrap">
+  <p class="note">
+    samples フォルダの実機写真12枚を、アプリと同じ手順（長辺2000pxに縮小 → OCR Workerへ送信）で読み取ります。<br>
+    正解はすべて <strong>読み値 1.055 m / 距離 12.53 m</strong> です。12番（ぶれ強め）は人間でも読めないため、
+    <strong>「読めない」と返すのが正解</strong>として数えます。<br>
+    APIの利用制限（20回/分）に触れないよう、1枚ごとに間を置いて送ります。12枚で1分ほどかかります。
+  </p>
+
+  <div class="bar">
+    <button class="sub" data-model="haiku">haiku で実行</button>
+    <button class="sub" data-model="sonnet">sonnet で実行</button>
+    <button class="sub" data-model="opus">opus で実行</button>
+    <span class="status" id="status"></span>
+  </div>
+
+  <div id="scores"></div>
+  <div id="out"></div>
+</div>
+
+<footer>SiteLogger — ZUI（ズイ）　<a href="index.html" style="color:var(--sub);">アプリに戻る</a></footer>
+
+<script>
+const OCR_URL = 'https://sitelogger-ocr.kuryumail-369.workers.dev/';
+const OCR_MAX_SIDE = 2000;
+const OCR_QUALITY  = 0.85;
+const GAP_MS = 3400;          // 20回/分の制限に触れないための間隔
+
+const EXPECT_READING  = '1.055';
+const EXPECT_DISTANCE = '12.53';
+
+// ファイル名と、正解の扱い。12番だけは「読めない」が正解。
+const SAMPLES = [
+  {f:'level_lcd_01_中距離_曇り.jpg',        cond:'中距離・曇り',        unreadable:false},
+  {f:'level_lcd_02_やや遠い_曇り.jpg',      cond:'やや遠い・曇り',      unreadable:false},
+  {f:'level_lcd_03_中距離_曇り.jpg',        cond:'中距離・曇り',        unreadable:false},
+  {f:'level_lcd_04_中距離_わずかに斜め.jpg', cond:'中距離・斜め',       unreadable:false},
+  {f:'level_lcd_05_接写_白飛び気味.jpg',    cond:'接写・白飛び',        unreadable:false},
+  {f:'level_lcd_06_接写_ぶれ.jpg',          cond:'接写・ぶれ',          unreadable:false},
+  {f:'level_lcd_07_近距離_やや暗い.jpg',    cond:'近距離・暗い',        unreadable:false},
+  {f:'level_lcd_08_近距離_標準.jpg',        cond:'近距離・標準',        unreadable:false},
+  {f:'level_lcd_09_近距離_反射あり.jpg',    cond:'近距離・反射',        unreadable:false},
+  {f:'level_lcd_10_中距離_標準.jpg',        cond:'中距離・標準',        unreadable:false},
+  {f:'level_lcd_11_近距離_影あり.jpg',      cond:'近距離・影',          unreadable:false},
+  {f:'level_lcd_12_接写_ぶれ強め.jpg',      cond:'接写・ぶれ強め',      unreadable:true},
+];
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const results = {};   // modelKey -> 配列
+
+// アプリの shrinkImage と同じ考え方（長辺を maxSide に収め、JPEGで書き出す）
+function shrink(dataUrl, maxSide, quality){
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => {
+      let {width:w, height:h} = im;
+      const long = Math.max(w, h);
+      if(long > maxSide){ const r = maxSide / long; w = Math.round(w*r); h = Math.round(h*r); }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const g = c.getContext('2d');
+      g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+      g.drawImage(im, 0, 0, w, h);
+      res(c.toDataURL('image/jpeg', quality));
+    };
+    im.onerror = () => rej(new Error('画像を読み込めませんでした'));
+    im.src = dataUrl;
+  });
+}
+
+async function loadAsDataUrl(path){
+  const r = await fetch(path);
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  const blob = await r.blob();
+  return await new Promise((res, rej) => {
+    const rd = new FileReader();
+    rd.onload = e => res(e.target.result);
+    rd.onerror = () => rej(new Error('読み込みに失敗しました'));
+    rd.readAsDataURL(blob);
+  });
+}
+
+// アプリの parseOcrResponse と同じ扱い
+function parseOcr(txt){
+  if(typeof txt !== 'string') return null;
+  const m = txt.match(/\{[\s\S]*\}/);
+  if(!m) return null;
+  try{
+    const o = JSON.parse(m[0]);
+    return {
+      reading:  o.reading  == null ? null : String(o.reading),
+      distance: o.distance == null ? null : String(o.distance),
+      note:     o.note == null ? '' : String(o.note),
+    };
+  }catch(e){ return null; }
+}
+
+async function askOcr(dataUrl, modelKey){
+  const comma = dataUrl.indexOf(',');
+  const media = (dataUrl.slice(5, dataUrl.indexOf(';')) || 'image/jpeg');
+  const b64   = dataUrl.slice(comma + 1);
+  const r = await fetch(OCR_URL, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      modelKey,
+      messages: [{ role:'user', content: [
+        { type:'image', source:{ type:'base64', media_type: media, data: b64 } }
+      ]}],
+    }),
+  });
+  const d = await r.json();
+  if(d && d.error) return { error: d.error.message + (d.error.model ? '（' + d.error.model + '）' : '') };
+  const txt = d && d.content && d.content[0] && d.content[0].text;
+  return { parsed: parseOcr(txt), raw: txt, usage: d && d.usage };
+}
+
+function judge(sample, out){
+  // 返ってきた結果を、現場で使えるかどうかで3段階に分ける
+  if(out.error) return {mark:'err', label:'通信/APIエラー'};
+  const p = out.parsed;
+  if(!p) return {mark:'err', label:'応答を解釈できない'};
+  if(sample.unreadable){
+    return p.reading === null
+      ? {mark:'ok',  label:'読めないと返した（正解）'}
+      : {mark:'bad', label:'読めない写真に値を返した'};
+  }
+  if(p.reading === null)      return {mark:'miss', label:'読めないと返した'};
+  if(p.reading === EXPECT_READING) return {mark:'ok', label:'一致'};
+  return {mark:'bad', label:'誤読'};
+}
+
+function render(){
+  const keys = Object.keys(results);
+  const out = document.getElementById('out');
+  const sc  = document.getElementById('scores');
+  if(!keys.length) return;
+
+  // 集計
+  sc.innerHTML = '';
+  for(const k of keys){
+    const rows = results[k];
+    const done = rows.filter(r => r.res);
+    const ok   = done.filter(r => r.judge.mark === 'ok').length;
+    const bad  = done.filter(r => r.judge.mark === 'bad').length;
+    const miss = done.filter(r => r.judge.mark === 'miss').length;
+    const err  = done.filter(r => r.judge.mark === 'err').length;
+    const dist = done.filter(r => r.res.parsed && r.res.parsed.distance === EXPECT_DISTANCE).length;
+    const box = document.createElement('div');
+    box.className = 'score';
+    box.innerHTML = '<h2>' + k + '</h2>' +
+      '<div class="line">正しく読めた <span class="ok">' + ok + '</span> / ' + done.length + '　' +
+      '<span class="ng">誤読 ' + bad + '</span>　' +
+      '<span class="warn">読めないと返した ' + miss + '</span>　' +
+      'エラー ' + err + '</div>' +
+      '<div class="line">距離も一致 ' + dist + ' / ' + done.length + '</div>';
+    sc.appendChild(box);
+  }
+
+  // 明細
+  let html = '<table><tr><th>#</th><th>条件</th>';
+  for(const k of keys) html += '<th>' + k + '：読み値</th><th>' + k + '：距離</th><th>' + k + '：判定</th>';
+  html += '</tr>';
+  SAMPLES.forEach((s, i) => {
+    html += '<tr><td class="num">' + String(i+1).padStart(2,'0') + '</td><td>' + s.cond +
+            (s.unreadable ? '<br><span class="warn">読めないのが正解</span>' : '') + '</td>';
+    for(const k of keys){
+      const r = results[k][i];
+      if(!r || !r.res){ html += '<td class="num">…</td><td class="num">…</td><td>…</td>'; continue; }
+      const p = r.res.parsed;
+      const cls = r.judge.mark === 'ok' ? 'ok' : (r.judge.mark === 'miss' ? 'warn' : 'ng');
+      html += '<td class="num">' + (r.res.error ? '—' : (p && p.reading !== null ? p.reading : '—')) + '</td>';
+      html += '<td class="num">' + (r.res.error ? '—' : (p && p.distance !== null ? p.distance : '—')) + '</td>';
+      html += '<td class="' + cls + '">' + (r.res.error ? r.res.error : r.judge.label) + '</td>';
+    }
+    html += '</tr>';
+  });
+  html += '</table>';
+  out.innerHTML = html;
+}
+
+async function run(modelKey){
+  const st = document.getElementById('status');
+  document.querySelectorAll('button[data-model]').forEach(b => b.disabled = true);
+  results[modelKey] = SAMPLES.map(s => ({sample:s, res:null, judge:null}));
+  render();
+
+  for(let i = 0; i < SAMPLES.length; i++){
+    const s = SAMPLES[i];
+    st.textContent = modelKey + '：' + (i+1) + '枚目 / ' + SAMPLES.length + '（' + s.cond + '）';
+    let res;
+    try{
+      const src   = await loadAsDataUrl('samples/' + s.f);
+      const small = await shrink(src, OCR_MAX_SIDE, OCR_QUALITY);
+      res = await askOcr(small, modelKey);
+    }catch(e){
+      res = { error: String(e.message || e) };
+    }
+    results[modelKey][i].res = res;
+    results[modelKey][i].judge = judge(s, res);
+    render();
+    if(i < SAMPLES.length - 1) await sleep(GAP_MS);
+  }
+
+  st.textContent = modelKey + '：完了';
+  document.querySelectorAll('button[data-model]').forEach(b => b.disabled = false);
+}
+
+document.querySelectorAll('button[data-model]').forEach(b => {
+  b.addEventListener('click', () => run(b.dataset.model));
+});
+</script>
+</body>
+</html>
