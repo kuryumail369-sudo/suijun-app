@@ -44,9 +44,12 @@
 
 <div class="wrap">
   <p class="note">
+    <strong>※ 現在、モデルの選択は無効です。</strong>どのボタンを押しても、Workerに設定されている本番のモデル
+    （haiku）で読み取ります。モデルを比べたいときは、sitelogger-ocr.worker.js に MODEL_CHOICES と pickModel を
+    一時的に戻し、比較が済んだらまた外してください（2026年9月の比較結果はWorkerの冒頭に記録してあります）。<br><br>
     samples フォルダの実機写真12枚を、アプリと同じ手順（長辺2000pxに縮小 → OCR Workerへ送信）で読み取ります。<br>
-    正解はすべて <strong>読み値 1.055 m / 距離 12.53 m</strong> です。12番（ぶれ強め）は人間でも読めないため、
-    <strong>「読めない」と返すのが正解</strong>として数えます。<br>
+    正解はすべて <strong>読み値 1.055 m / 距離 12.53 m</strong> です。12番（ぶれ強め）は当初「読めないのが正解」と
+    していましたが、実際には読み取れる写真だったため、他と同じ扱いに改めました。<br>
     APIの利用制限（20回/分）に触れないよう、1枚ごとに間を置いて送ります。12枚で1分ほどかかります。
   </p>
 
@@ -67,12 +70,13 @@
 const OCR_URL = 'https://sitelogger-ocr.kuryumail-369.workers.dev/';
 const OCR_MAX_SIDE = 2000;
 const OCR_QUALITY  = 0.85;
-const GAP_MS = 3400;          // 20回/分の制限に触れないための間隔
+const GAP_MS = 6000;          // 20回/分の制限に触れないための間隔（連続で別モデルも試すため余裕をとる）
 
 const EXPECT_READING  = '1.055';
 const EXPECT_DISTANCE = '12.53';
 
-// ファイル名と、正解の扱い。12番だけは「読めない」が正解。
+// ファイル名と条件。当初12番だけ「読めないのが正解」としていたが、
+// 実際には読み取れる写真だったので、全件を同じ扱いにしている。
 const SAMPLES = [
   {f:'level_lcd_01_中距離_曇り.jpg',        cond:'中距離・曇り',        unreadable:false},
   {f:'level_lcd_02_やや遠い_曇り.jpg',      cond:'やや遠い・曇り',      unreadable:false},
@@ -85,7 +89,7 @@ const SAMPLES = [
   {f:'level_lcd_09_近距離_反射あり.jpg',    cond:'近距離・反射',        unreadable:false},
   {f:'level_lcd_10_中距離_標準.jpg',        cond:'中距離・標準',        unreadable:false},
   {f:'level_lcd_11_近距離_影あり.jpg',      cond:'近距離・影',          unreadable:false},
-  {f:'level_lcd_12_接写_ぶれ強め.jpg',      cond:'接写・ぶれ強め',      unreadable:true},
+  {f:'level_lcd_12_接写_ぶれ強め.jpg',      cond:'接写・ぶれ強め',      unreadable:false},
 ];
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
