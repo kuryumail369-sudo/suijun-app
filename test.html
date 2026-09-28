@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SiteLogger — 自己診断</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+  :root{ --blue:#185FA5; --bg:#F7F8FA; --surface:#fff; --border:#E2E6ED;
+         --text:#1A1E2A; --sub:#6B7280; --ok:#1D9E75; --ng:#B91C1C; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.8;}
+  .hero{background:linear-gradient(135deg,#0D3F73 0%,#185FA5 60%,#2A7FD4 100%);color:#fff;padding:36px 20px 28px;text-align:center;}
+  .hero h1{font-size:clamp(20px,5vw,28px);font-weight:700;}
+  .hero-sub{font-size:13px;opacity:.75;margin-top:4px;}
+  .wrap{max-width:760px;margin:20px auto 60px;padding:0 16px;}
+  .bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+  button{font-family:inherit;font-size:14px;font-weight:600;padding:11px 20px;border-radius:10px;
+         border:none;background:var(--blue);color:#fff;cursor:pointer;}
+  button:disabled{opacity:.5;cursor:default;}
+  .summary{font-size:15px;font-weight:700;}
+  .summary.ok{color:var(--ok);} .summary.ng{color:var(--ng);}
+  .group{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;}
+  .group > h2{font-size:13px;font-weight:700;color:var(--blue);background:#EEF4FB;padding:10px 16px;border-bottom:1px solid var(--border);}
+  .case{display:flex;gap:10px;padding:9px 16px;border-bottom:1px solid #F1F3F7;font-size:13px;align-items:flex-start;}
+  .case:last-child{border-bottom:none;}
+  .mark{flex-shrink:0;font-weight:700;width:18px;}
+  .mark.ok{color:var(--ok);} .mark.ng{color:var(--ng);}
+  .case .why{display:block;color:var(--ng);font-size:12px;margin-top:2px;}
+  .note{font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.8;}
+  footer{text-align:center;padding:24px 16px;font-size:12px;color:var(--sub);border-top:1px solid var(--border);}
+  iframe{position:absolute;width:420px;height:900px;left:-9999px;top:0;border:0;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🩺 SiteLogger 自己診断</h1>
+  <div class="hero-sub">アプリを直したあと、壊れていないかを確かめるページ</div>
+</div>
+
+<div class="wrap">
+  <p class="note">
+    このページは、同じフォルダの index.html を読み込んで、実際の関数を呼び出して確かめます。
+    観測データには触れません（診断中だけ保存先をメモリ上の入れ物に差し替えます）。<br>
+    アプリを直したあと、必ずここを開いて全部 ✓ になることを確かめてください。
+  </p>
+
+  <div class="bar">
+    <button id="run">診断をはじめる</button>
+    <span class="summary" id="summary"></span>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<footer>SiteLogger — ZUI（ズイ）　<a href="index.html" style="color:var(--sub);">アプリに戻る</a></footer>
+
+<iframe id="app"></iframe>
+
+<script>
+// ===== ごく小さなテスト土台 =====
+// 外部のライブラリは使わない。現場で使うものではないので依存は増やさない。
+const groups = [];
+let cur = null;
+
+function group(name, fn){ cur = {name, cases:[]}; groups.push(cur); fn(); }
+function check(name, fn){ cur.cases.push({name, fn}); }
+
+function eq(actual, expected, label){
+  const a = JSON.stringify(actual), b = JSON.stringify(expected);
+  if(a !== b) throw new Error((label? label+'：' : '') + '期待 ' + b + ' / 実際 ' + a);
+}
+function ok(cond, msg){ if(!cond) throw new Error(msg || '条件を満たしませんでした'); }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ===== 診断の中身 =====
+// W = iframeの中のwindow（＝アプリ本体）。アプリの関数をそのまま呼ぶ。
+let W;
+
+function defineTests(){
+  groups.length = 0;
+
+  // アプリ側の let / const で宣言された値（rows・SHARE_URL など）は
+  // window の下にぶら下がらないため、外から W.rows のようには触れない。
+  // iframe の中で式を評価すれば、それらにも届く。
+  const ev = expr => W.eval(expr);
+
+  group('計算', () => {
+    check('器械高と地盤高が求まる（K=0）', () => {
+      // BM 10.000 から BS 1.500 → IH 11.500、FS 1.200 の転点で GH 10.300
+      const rows = [
+        {id:1, point:'BM1', bs:'1.500', fs:'',      is_:''},
+        {id:2, point:'TP1', bs:'1.000', fs:'1.200', is_:''},
+        {id:3, point:'BM2', bs:'',      fs:'0.800', is_:''},
+      ];
+      const r = W.calcGH(rows, 10.000, 0);
+      eq(r[0].ihD, '11.500', '1行目のIH');
+      eq(r[0].ghV, '10.000', '1行目のGH');
+      eq(r[1].ghV, '10.300', '2行目のGH');
+      eq(r[1].ihD, '11.300', '2行目のIH');
+      eq(r[2].ghV, '10.500', '3行目のGH');
+    });
+
+    check('器差Kが読み値に加算される', () => {
+      const rows = [
+        {id:1, point:'BM1', bs:'1.500', fs:'', is_:''},
+        {id:2, point:'BM2', bs:'', fs:'1.200', is_:''},
+      ];
+      // K=+2mm → BS・FSの両方に0.002m加算されるので、高低差は変わらない
+      const r0 = W.calcGH(rows, 10.000, 0);
+      const r2 = W.calcGH(rows, 10.000, 0.002);
+      eq(r0[1].ghV, '10.300', 'K=0のGH');
+      eq(r2[1].ghV, '10.300', 'K=2mmのGH');
+      eq(r2[0].ihD, '11.502', 'K=2mmのIH');
+    });
+
+    check('中間視は地盤高を進めない', () => {
+      const rows = [
+        {id:1, point:'BM1', bs:'1.500', fs:'',      is_:''},
+        {id:2, point:'家屋A', bs:'',    fs:'',      is_:'1.000'},
+        {id:3, point:'BM2', bs:'',      fs:'1.200', is_:''},
+      ];
+      const r = W.calcGH(rows, 10.000, 0);
+      eq(r[1].ghV, '10.500', '中間視のGH');
+      eq(r[1].ihD, '',       '中間視ではIHを出さない');
+      eq(r[2].ghV, '10.300', '中間視の次の転点のGH');
+    });
+
+    check('転点かどうかの判定', () => {
+      const arr = [
+        {id:1, point:'BM1',  bs:'1.500', fs:''},
+        {id:2, point:'家屋A', bs:'',      fs:'1.000'},
+        {id:3, point:'TP1',  bs:'1.000', fs:'1.200'},
+        {id:4, point:'BM2',  bs:'',      fs:'0.800'},
+      ];
+      eq(W.isTurningPoint(arr[1], arr, 1), false, '中間の任意点');
+      eq(W.isTurningPoint(arr[2], arr, 2), true,  'BSとFSが同じ行');
+      eq(W.isTurningPoint(arr[3], arr, 3), true,  '末尾の閉合点');
+    });
+
+    check('ΣBS・ΣFS・閉合差', () => {
+      const arr = [
+        {id:1, point:'BM1',  bs:'1.500', fs:''},
+        {id:2, point:'家屋A', bs:'',      fs:'1.000'},  // 中間視なのでΣFSに入らない
+        {id:3, point:'TP1',  bs:'1.000', fs:'1.200'},
+        {id:4, point:'BM2',  bs:'',      fs:'0.800'},
+      ];
+      const d = W.calcDir(arr);
+      eq(d.sBS.toFixed(3), '2.500', 'ΣBS');
+      eq(d.sFS.toFixed(3), '2.000', 'ΣFS');
+      eq(d.n, 2, '測点数');
+      eq(d.diff.toFixed(3), '0.500', '高低差');
+    });
+
+    check('許容閉合差の式（C√n）', () => {
+      W.document.getElementById('tol-direct').value = '';
+      W.document.getElementById('tol-coef').value = '10';
+      eq(Math.round(W.getTolMM(4) * 1000) / 1000, 20, 'C=10・n=4');
+      W.document.getElementById('tol-direct').value = '15';
+      eq(W.getTolMM(4), 15, '直接mm入力が優先される');
+      W.document.getElementById('tol-direct').value = '';
+      W.document.getElementById('tol-coef').value = '';
+    });
+  });
+
+  group('数値の整形', () => {
+    check('小数第3位まで揃える', () => {
+      eq(W.norm3('9'),     '9.000');
+      eq(W.norm3('1.2'),   '1.200');
+      eq(W.norm3('1.2367'),'1.237');
+      eq(W.norm3(''),      '');
+      eq(W.norm3(null),    '');
+    });
+    check('数値でないものはそのまま返す', () => {
+      eq(W.norm3('あいう'), 'あいう');
+    });
+    check('空欄と0を取り違えない', () => {
+      eq(W.safeNum(''), null, '空欄');
+      eq(W.safeNum('0'), 0,   'ゼロ');
+    });
+  });
+
+  group('観測データの保存', () => {
+    check('路線を開かずに保存しても中身が消えない（データ消失バグ）', () => {
+      // 2026年9月に見つかった不具合の再発防止。
+      // 路線を開いていない状態で保存が走ると、空の行で上書きされて中身が消えていた。
+      const r = ev(`(() => {
+        routes = [{id:'r1', name:'路線A', proj:'現場A', rows:[
+          {id:1, point:'BM1', bs:'1.100', fs:'', is_:''},
+          {id:2, point:'BM2', bs:'', fs:'1.200', is_:''},
+        ], rowsReturn:[]}];
+        currentRouteId = 'r1';
+        obsLoaded = false;          // ＝ホーム画面にいる状態
+        rows = []; rowsReturn = [];
+        saveCurrentState();
+        return {n: routes[0].rows.length, bs: routes[0].rows[0].bs};
+      })()`);
+      eq(r.n, 2, '行数');
+      eq(r.bs, '1.100', '最初のBS');
+    });
+
+    check('路線を開いていれば保存される', () => {
+      const r = ev(`(() => {
+        obsLoaded = true;
+        rows = [{id:1, point:'BM1', bs:'2.222', fs:'', is_:''}];
+        rowsReturn = [];
+        saveCurrentState();
+        obsLoaded = false;
+        return {n: routes[0].rows.length, bs: routes[0].rows[0].bs};
+      })()`);
+      eq(r.n, 1, '行数');
+      eq(r.bs, '2.222', '保存されたBS');
+    });
+
+    check('保存時に小数第3位へ揃えられる', () => {
+      const bs = ev(`(() => {
+        obsLoaded = true;
+        rows = [{id:1, point:'BM1', bs:'3', fs:'', is_:''}];
+        rowsReturn = [];
+        saveCurrentState();
+        obsLoaded = false;
+        return routes[0].rows[0].bs;
+      })()`);
+      eq(bs, '3.000');
+    });
+
+    check('写真は本文の保存先に入れない（容量あふれ防止）', () => {
+      const photo = ev(`(() => {
+        obsLoaded = true;
+        rows = [{id:1, point:'BM1', bs:'1.000', fs:'', is_:'', photo:'data:image/jpeg;base64,AAAA'}];
+        rowsReturn = [];
+        saveCurrentState();
+        obsLoaded = false;
+        return routes[0].rows[0].photo;
+      })()`);
+      eq(photo, null, '保存された写真');
+    });
+  });
+
+  group('ライセンスキー', () => {
+    check('表記ゆれを吸収する', () => {
+      const want = 'SL-ABCD-1234-EFGH';
+      eq(W.normalizeLicenseKey('SL-ABCD-1234-EFGH'), want, 'そのまま');
+      eq(W.normalizeLicenseKey('slabcd1234efgh'),    want, 'ハイフン無し・小文字');
+      eq(W.normalizeLicenseKey('  SL-ABCD-1234-EFGH  '), want, '前後の空白');
+      eq(W.normalizeLicenseKey('ＳＬ－ＡＢＣＤ－１２３４－ＥＦＧＨ'), want, '全角');
+    });
+    check('形式が違うものは壊さない', () => {
+      eq(W.normalizeLicenseKey('BETA-0001'), 'BETA-0001');
+    });
+  });
+
+  group('音声入力', () => {
+    check('読み上げから数値を取り出す', () => {
+      eq(W.voiceToNum('1.234'),        1.234, '素の数値');
+      eq(W.voiceToNum('１．２３４'),    1.234, '全角');
+      eq(W.voiceToNum('マイナス1.5'),  -1.5,  'マイナス');
+      eq(W.voiceToNum('あいうえお'),    null,  '数値が無い');
+    });
+    check('測点名の整形', () => {
+      eq(W.normalizePointName('ビーエム いち'), 'BMいち', 'BMへの言い換え');
+      eq(W.normalizePointName('ナンバー3'),     'No.3',   'ナンバー');
+      eq(W.normalizePointName('ＢＭ１'),        'BM1',    '全角数字');
+    });
+  });
+
+  group('液晶OCRの応答', () => {
+    check('JSONを読み取る', () => {
+      const r = W.parseOcrResponse('{"reading":"1.055","distance":"12.53","note":""}');
+      eq(r.reading, '1.055', '読み値');
+      eq(r.distance, '12.53', '距離');
+    });
+    check('読めなかったときは reading が null', () => {
+      const r = W.parseOcrResponse('{"reading":null,"distance":null,"note":"不鮮明"}');
+      eq(r.reading, null, '読み値');
+      eq(r.note, '不鮮明', 'AIの見立て');
+    });
+    check('壊れた応答でも落ちない', () => {
+      const r = W.parseOcrResponse('これはJSONではありません');
+      ok(r === null || typeof r === 'object', '例外を投げない');
+    });
+  });
+
+  group('書き出すファイル名', () => {
+    check('SiteLoggerと種類と路線名と日付が入る', () => {
+      const name = ev(`(() => {
+        routes = [{id:'r1', name:'国道230号', rows:[], rowsReturn:[]}];
+        currentRouteId = 'r1';
+        document.getElementById('date').value = '2026-09-19';
+        return outName('観測データ','csv');
+      })()`);
+      eq(name, 'SiteLogger_観測データ_国道230号_2026-09-19.csv');
+    });
+    check('ファイル名に使えない文字を取り除く', () => {
+      eq(W.safeName('A/B:C*D?E"F<G>H|I'), 'ABCDEFGHI');
+    });
+    check('路線名が長すぎても切り詰める', () => {
+      const long = 'あ'.repeat(100);
+      ok(W.safeName(long).length <= 24, '24文字以内');
+    });
+  });
+
+  group('写真の大きさ', () => {
+    check('保存用に縮小される', async () => {
+      const src = makeTestImage(W, 2400, 1800);
+      const max = ev('PHOTO_MAX_SIDE');
+      const small = await W.shrinkImage(src, max, ev('PHOTO_QUALITY'));
+      const d = await imgSize(small);
+      ok(Math.max(d.w, d.h) <= max, '長辺 ' + Math.max(d.w,d.h) + 'px（上限 ' + max + '）');
+      ok(small.length < src.length, '元より小さい');
+    });
+    check('レポート用にさらに縮小される', async () => {
+      const src = makeTestImage(W, 2400, 1800);
+      const max = ev('REPORT_MAX_SIDE');
+      const rep = await W.rowsForReport([{id:1, photo:src}]);
+      const d = await imgSize(rep[0].photo);
+      ok(Math.max(d.w, d.h) <= max, '長辺 ' + Math.max(d.w,d.h) + 'px（上限 ' + max + '）');
+    });
+    check('CSVには写真を渡さない', () => {
+      const out = W.rowsNoPhoto([{id:1, photo:'data:image/jpeg;base64,AAAA'}]);
+      eq(out[0].photo, null);
+    });
+  });
+
+  group('紹介用のリンク', () => {
+    check('紹介ページを指している', () => {
+      const url = ev('SHARE_URL');
+      ok(/^https:\/\//.test(url), 'httpsで始まる：' + url);
+      ok(url.indexOf('landing') >= 0, '紹介ページを指す：' + url);
+    });
+    check('QRコードが埋め込まれている', () => {
+      const svg = ev('SHARE_QR_SVG');
+      ok(svg.indexOf('<svg') === 0, 'SVGが入っている');
+      ok(svg.length > 500, '中身がある');
+    });
+  });
+
+  group('診断そのものの安全確認', () => {
+    check('本物の保存先に書き込んでいない', () => {
+      // 自己診断モードでは、アプリ側のlocalStorageは差し替えられている。
+      // このページ（親）の本物のlocalStorageに観測データが混ざっていないことを確かめる。
+      ok(ev('SELFTEST') === true, 'アプリが自己診断モードで動いている');
+      const mine = localStorage.getItem('suijun_v06');
+      ok(mine === null || mine === undefined, '親のlocalStorageに観測データが無い');
+    });
+  });
+}
+
+// ===== 補助 =====
+function makeTestImage(win, w, h){
+  const c = win.document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  // 単色だと圧縮が効きすぎて比較にならないので、細かい模様を描く
+  for(let i=0;i<w;i+=8){
+    g.fillStyle = 'hsl(' + (i % 360) + ',70%,50%)';
+    g.fillRect(i, 0, 8, h);
+  }
+  return c.toDataURL('image/jpeg', 0.95);
+}
+function imgSize(dataUrl){
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => res({w: im.width, h: im.height});
+    im.onerror = () => rej(new Error('画像を読めませんでした'));
+    im.src = dataUrl;
+  });
+}
+
+// ===== 実行 =====
+async function run(){
+  const btn = document.getElementById('run');
+  const out = document.getElementById('out');
+  const sum = document.getElementById('summary');
+  btn.disabled = true; out.innerHTML = ''; sum.textContent = 'アプリを読み込んでいます…'; sum.className = 'summary';
+
+  const frame = document.getElementById('app');
+  await new Promise((res, rej) => {
+    frame.onload = res;
+    frame.onerror = () => rej(new Error('index.html を読み込めませんでした'));
+    frame.src = 'index.html?selftest=1&t=' + Date.now();
+  });
+  await sleep(600);              // 起動処理が終わるのを待つ
+  W = frame.contentWindow;
+
+  if(!W || typeof W.calcGH !== 'function'){
+    sum.textContent = '× アプリを読み込めませんでした';
+    sum.className = 'summary ng';
+    out.innerHTML = '<div class="note">test.html は index.html と同じフォルダに置き、' +
+                    'ローカルのファイルを直接開くのではなく、GitHub PagesなどのURLから開いてください。</div>';
+    btn.disabled = false; return;
+  }
+
+  defineTests();
+  let pass = 0, fail = 0;
+
+  for(const g of groups){
+    const box = document.createElement('div');
+    box.className = 'group';
+    box.innerHTML = '<h2>' + g.name + '</h2>';
+    out.appendChild(box);
+    for(const c of g.cases){
+      let err = null;
+      try { await c.fn(); } catch(e){ err = e; }
+      const row = document.createElement('div');
+      row.className = 'case';
+      if(err){
+        fail++;
+        row.innerHTML = '<span class="mark ng">×</span><span>' + c.name +
+                        '<span class="why">' + String(err.message || err) + '</span></span>';
+      } else {
+        pass++;
+        row.innerHTML = '<span class="mark ok">✓</span><span>' + c.name + '</span>';
+      }
+      box.appendChild(row);
+      sum.textContent = '診断中… ' + (pass + fail) + '件';
+    }
+  }
+
+  sum.textContent = fail === 0
+    ? '✓ ' + pass + '件すべて合格'
+    : '× ' + fail + '件が不合格（合格 ' + pass + '件）';
+  sum.className = 'summary ' + (fail === 0 ? 'ok' : 'ng');
+  btn.disabled = false;
+}
+
+document.getElementById('run').addEventListener('click', run);
+</script>
+</body>
+</html>
