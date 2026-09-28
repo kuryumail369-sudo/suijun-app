@@ -826,6 +826,27 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 
 <script>
 
+// ===== 自己診断モード =====
+// index.html?selftest=1 で開いたときだけ、保存先を本物からメモリ上の入れ物に差し替える。
+// test.html がこのモードでこのページをiframeに読み込み、実際の関数を呼んで動作を確かめる。
+// これが無いと、テストを走らせるたびに利用者の観測データを壊してしまう。
+// 判定は最初の1回だけ。以後 SELFTEST を見て分岐する。
+const SELFTEST = location.search.indexOf('selftest=1') >= 0;
+if (SELFTEST) {
+  const mem = Object.create(null);
+  const shim = {
+    getItem(k){ return Object.prototype.hasOwnProperty.call(mem,k) ? mem[k] : null; },
+    setItem(k,v){ mem[k]=String(v); shim[k]=String(v); },
+    removeItem(k){ delete mem[k]; delete shim[k]; },
+    clear(){ for(const k of Object.keys(mem)){ delete mem[k]; delete shim[k]; } },
+    key(i){ return Object.keys(mem)[i] ?? null; },
+    get length(){ return Object.keys(mem).length; },
+  };
+  try {
+    Object.defineProperty(window, 'localStorage', { configurable: true, value: shim });
+  } catch (e) { /* 差し替えられない環境ではテストを諦める（本物には触らせない） */ }
+}
+
 // ===== 汎用エスケープ関数 =====
 // 測点名・路線名・作業名・担当者名・現場メモなどはユーザーの自由入力であり、
 // これをそのままHTMLに埋め込むとXSS（HTMLインジェクション）の危険がある。
@@ -1327,7 +1348,8 @@ function applyReturnPoints(pts){
 // ===== 写真ストレージ（IndexedDB） =====
 // 写真Base64はlocalStorage（5MB上限）ではなくIndexedDB（数十〜数百MB規模）に保存する。
 // これによりlocalStorageの容量超過によるデータ消失を防ぐ。
-const PHOTO_DB_NAME='sitelogger_photos_db';
+// 自己診断モードでは別のデータベースを使う（利用者の写真に触れないため）
+const PHOTO_DB_NAME = SELFTEST ? 'sitelogger_photos_db_selftest' : 'sitelogger_photos_db';
 const PHOTO_STORE='photos';
 const SK_STORE='sketches';   // v2で追加：スケッチを路線ごとに保存する
 let _photoDbPromise=null;
@@ -2514,7 +2536,9 @@ function normalizePointName(t){
      .replace(/アイピー/g,'IP').replace(/ケイピー/g,'KP')
      .replace(/の/g,'-')
      .replace(/\s+/g,'');
-  t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+  // 数字だけでなく英字も半角へ。「ＢＭ１」がそのまま残ると、転点の判定
+  // （/^(BM|KP|TP|IP)/）に引っかからない（自己診断で発見）。
+  t=t.replace(/[Ａ-Ｚａ-ｚ０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
   return t.replace(/No\.-/g,'No.');
 }
 
@@ -2726,6 +2750,9 @@ function startVoice(rowId,field){
 
 function voiceToNum(t){
   t=t.replace(/マイナス|マイナ|minus/gi,'-');
+  // 音声認識は小数点を全角の「．」で返すことがある。半角に直さないと
+  // 「１．２３４」が 1 として取り込まれてしまう（自己診断で発見）。
+  t=t.replace(/[．]/g,'.').replace(/[，,]/g,'');
   t=t.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
   const m=t.match(/-?[\d]+\.[\d]+|-?[\d]+/);
   return m?parseFloat(m[0]):null;
