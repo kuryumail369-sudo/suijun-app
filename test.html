@@ -77,6 +77,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 // ===== 診断の中身 =====
 // W = iframeの中のwindow（＝アプリ本体）。アプリの関数をそのまま呼ぶ。
 let W;
+// 診断を始める前の観測データ。終わったあとに見比べて、触っていないことを確かめる。
+let storeBefore = null;
 
 function defineTests(){
   groups.length = 0;
@@ -339,10 +341,12 @@ function defineTests(){
   group('診断そのものの安全確認', () => {
     check('本物の保存先に書き込んでいない', () => {
       // 自己診断モードでは、アプリ側のlocalStorageは差し替えられている。
-      // このページ（親）の本物のlocalStorageに観測データが混ざっていないことを確かめる。
+      // 確かめるべきは「観測データが無いこと」ではなく「診断の前後で変わっていないこと」。
+      // 実際にこの端末でアプリを使っていれば観測データはあって当たり前なので、
+      // 有無で判定すると、使っている人ほど必ず×になってしまう。
       ok(ev('SELFTEST') === true, 'アプリが自己診断モードで動いている');
-      const mine = localStorage.getItem('suijun_v06');
-      ok(mine === null || mine === undefined, '親のlocalStorageに観測データが無い');
+      const now = localStorage.getItem('suijun_v06');
+      ok(now === storeBefore, '診断の前後で観測データが変わっていない');
     });
   });
 }
@@ -374,6 +378,8 @@ async function run(){
   const out = document.getElementById('out');
   const sum = document.getElementById('summary');
   btn.disabled = true; out.innerHTML = ''; sum.textContent = 'アプリを読み込んでいます…'; sum.className = 'summary';
+
+  try{ storeBefore = localStorage.getItem('suijun_v06'); }catch(e){ storeBefore = null; }
 
   const frame = document.getElementById('app');
   await new Promise((res, rej) => {
