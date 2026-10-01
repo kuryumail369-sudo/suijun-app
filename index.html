@@ -1136,7 +1136,7 @@ function checkStorageUsage(){
     if(banner){
       if(total > 3.5*1024*1024){ // 3.5MB超で警告
         banner.style.display='block';
-        banner.textContent=`⚠️ ストレージ使用量が ${usageMB}MB に達しています（上限約5MB）。写真レポートをダウンロードしてデータをバックアップしてください。`;
+        banner.textContent=`⚠️ ストレージ使用量が ${usageMB}MB に達しています（上限約5MB）。「出力」タブの「全データをバックアップ」でファイルに書き出してください。`;
       } else {
         banner.style.display='none';
       }
@@ -1628,6 +1628,10 @@ function markDirty(){
   clearTimeout(autoSaveTimer);
   autoSaveTimer=setTimeout(()=>saveToStorage(),1200);
 }
+// 保存失敗の案内は「一度だけ」。backupStart() は内部で flushSaveNow()→saveToStorage()
+// を呼ぶため、失敗が続く状況ではフラグを立てないと無限に呼び合う。
+// 保存が成功したらフラグを戻し、次に失敗したときはまた案内する。
+let _saveFailNotified=false;
 function saveToStorage(){
   saveCurrentState();
   try{
@@ -1641,11 +1645,20 @@ function saveToStorage(){
       }
     }catch(e){}
     localStorage.setItem('suijun_v06',JSON.stringify({routes,currentRouteId,v:6}));
-    const ind=document.getElementById('save-ind');ind.textContent='✓';ind.style.color='';
+    const ind=document.getElementById('save-ind');ind.textContent='✓';ind.style.color='';ind.style.fontWeight='';
+    _saveFailNotified=false;
+    try{ checkStorageUsage(); }catch(e3){}
   }catch(e){
     const ind2=document.getElementById('save-ind');
     ind2.textContent='⚠ 保存失敗';ind2.style.color='#E24B4A';ind2.style.fontWeight='600';
-    if(confirm('⚠️ データの保存に失敗しました。\nストレージの空き容量が不足している可能性があります。\n\n今すぐCSVをダウンロードしてバックアップしますか？')){expCSV();}
+    if(_saveFailNotified) return;
+    _saveFailNotified=true;
+    // 緊急退避は必ずオフライン・無料プランでも動く手段にすること。
+    // CSV出力はWorker経由かつPro限定のため、電波の無い現場や無料ユーザーでは
+    // ここで何も保存できず、データを失う結果になる。バックアップは完全にローカル。
+    if(confirm('⚠️ データの保存に失敗しました。\nストレージの空き容量が不足している可能性があります。\n\n今すぐバックアップファイルを書き出しますか？\n（電波がなくても保存できます）')){
+      setTimeout(()=>{ try{ backupStart(); }catch(e2){} },0);
+    }
   }
 }
 // アプリがバックグラウンドに回る／閉じられる瞬間に即座に保存する。
