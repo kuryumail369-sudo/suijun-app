@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SiteLogger — 特定商取引法に基づく表記</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --blue: #185FA5;
+    --blue-light: #EEF4FB;
+    --border: #E2E6ED;
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --text: #1A1E2A;
+    --text-sub: #6B7280;
+    --red: #B91C1C;
+    --red-light: #FEF2F2;
+    --amber-light: #FFFBEB;
+    --amber-border: #F59E0B;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(24,95,165,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.85;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #0D3F73 0%, #185FA5 60%, #2A7FD4 100%);
+    color: white;
+    padding: 44px 24px 36px;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 3px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .hero h1 { font-size: clamp(22px,5vw,32px); font-weight: 700; margin-bottom: 6px; }
+  .hero-sub { font-size: 13px; opacity: 0.7; }
+
+  /* タブナビ */
+  .tab-nav {
+    display: flex;
+    max-width: 760px;
+    margin: 24px auto 0;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-sub);
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--blue);
+    color: white;
+    border-color: var(--blue);
+  }
+
+  .content {
+    max-width: 760px;
+    margin: 16px auto 60px;
+    padding: 0 16px;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* 警告バナー */
+  .warn-banner {
+    background: var(--red-light);
+    border: 1.5px solid #FCA5A5;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--red);
+    font-weight: 500;
+    line-height: 1.7;
+  }
+  .warn-banner strong { font-weight: 700; display: block; margin-bottom: 4px; }
+
+  /* セクション */
+  .section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--blue-light);
+  }
+  .section-num {
+    background: var(--blue);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 14px; font-weight: 700; color: var(--blue); }
+  .section-body { padding: 18px 20px; }
+
+  .section-body p { margin-bottom: 10px; font-size: 13px; color: var(--text); }
+  .section-body p:last-child { margin-bottom: 0; }
+
+  .section-body ol, .section-body ul {
+    padding-left: 20px;
+    margin: 8px 0 12px;
+  }
+  .section-body li { font-size: 13px; margin-bottom: 5px; line-height: 1.7; }
+
+  .emph {
+    background: var(--amber-light);
+    border-left: 3px solid var(--amber-border);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 13px;
+    color: #78350F;
+    font-weight: 500;
+  }
+
+  .strong-box {
+    background: var(--red-light);
+    border: 1px solid #FCA5A5;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 13px;
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  /* 更新日 */
+  .meta {
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-bottom: 12px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 28px 16px;
+    font-size: 12px;
+    color: var(--text-sub);
+    border-top: 1px solid var(--border);
+  }
+</style>
+<style>
+  .tokusho-table { width:100%; border-collapse:collapse; }
+  .tokusho-table th, .tokusho-table td {
+    border:1px solid var(--border); padding:12px 14px; font-size:13px;
+    text-align:left; vertical-align:top; line-height:1.8;
+  }
+  .tokusho-table th {
+    background:var(--blue-light); color:var(--blue); font-weight:700;
+    width:34%; white-space:nowrap;
+  }
+  .todo { background:#FEF2F2; color:var(--red); font-weight:700; }
+  @media (max-width:560px){
+    .tokusho-table th, .tokusho-table td { display:block; width:100%; white-space:normal; }
+    .tokusho-table th { border-bottom:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="max-width:760px;margin:0 auto;text-align:left;margin-bottom:12px;">
+    <button onclick="location.href='https://sitelogger.zui.works/';" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:white;font-size:12px;padding:5px 14px;border-radius:20px;cursor:pointer;font-family:inherit;">← アプリに戻る</button>
+  </div>
+  <div class="hero-badge">法的文書</div>
+  <h1>📐 SiteLogger</h1>
+  <div class="hero-sub">特定商取引法に基づく表記</div>
+</div>
+
+<div class="content">
+  <div class="meta">最終更新日：2026年10月1日</div>
+
+  <div class="section">
+    <div class="section-body" style="padding:0;">
+      <table class="tokusho-table">
+        <tr><th>販売業者</th><td>田中 勇次<br><span style="color:var(--text-sub);font-size:12px;">屋号：ZUI（ズイ）</span></td></tr>
+        
+        <tr><th>所在地</th><td>〒152-0035<br>東京都目黒区自由が丘二丁目十六番十二号 RJ3</td></tr>
+        <tr><th>電話番号</th><td>050-5343-7214<br><span style="color:var(--text-sub);font-size:12px;">留守番電話での受付となります。お問い合わせはメールにて承っておりますので、そちらをご利用いただけますと幸いです。</span></td></tr>
+        <tr><th>メールアドレス</th><td>info@zui.works</td></tr>
+        <tr><th>販売URL</th><td>https://sitelogger.zui.works/</td></tr>
+        <tr><th>販売価格</th><td>
+          SiteLogger Pro　月額 980円（税込）<br>
+          無料プランは0円でご利用いただけます（路線1件まで、出力機能に制限あり）。
+        </td></tr>
+        <tr><th>商品代金以外の必要料金</th><td>
+          本サービスのご利用にかかる通信料は、お客様のご負担となります。<br>
+          そのほかに当方へお支払いいただく費用はありません。
+        </td></tr>
+        <tr><th>支払方法</th><td>クレジットカード決済（Stripe）</td></tr>
+        <tr><th>支払時期</th><td>
+          初回：お申込み手続きの完了時に決済されます。<br>
+          2回目以降：毎月、初回決済日に対応する日に自動的に決済されます。
+        </td></tr>
+        <tr><th>商品の引渡時期</th><td>
+          決済の完了後、ただちにライセンスキーをご登録のメールアドレスへ送信します。
+          アプリにライセンスキーを入力していただくと、その時点からPro版の機能をご利用いただけます。
+        </td></tr>
+        <tr><th>返品・キャンセル</th><td>
+          本サービスはデジタルコンテンツであり、ライセンスキーの送信をもって提供が完了するため、
+          お客様のご都合による返金・キャンセルは承っておりません。<br><br>
+          解約はいつでも可能です。アプリ内の「お支払い情報の管理」からお手続きください。
+          解約された場合、当該請求期間の末日まではPro版をご利用いただけます。
+          日割りでの返金は行っておりません。<br><br>
+          なお、当方の責に帰すべき事由によりサービスが正常に利用できない場合は、
+          この限りではありません。info@zui.works までご連絡ください。
+        </td></tr>
+        <tr><th>動作環境</th><td>
+          iOS（Safari）、Android（Google Chrome）の最新版を推奨します。<br>
+          インターネット接続が必要な機能があります（AI液晶OCR、CSV・写真付き観測記録の出力・共有）。
+        </td></tr>
+        <tr><th>特別な販売条件</th><td>
+          1つのライセンスキーにつき、ご利用いただける端末は1台です。
+          機種変更などで端末を変更される場合は、アプリ内の手続きにより移行できます。
+        </td></tr>
+        <tr><th>表記事項の開示について</th><td>
+          本表記に記載のない事項および記載事項の詳細につきましては、
+          ご請求があった場合に遅滞なく開示いたします。
+          info@zui.works までご連絡ください。
+        </td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  SiteLogger — ZUI（ズイ）<br>
+  <a href="https://sitelogger.zui.works/" style="color:var(--text-sub);">アプリに戻る</a> ·
+  <a href="terms.html" style="color:var(--text-sub);">利用規約</a> ·
+  <a href="terms.html#tab-privacy" style="color:var(--text-sub);">プライバシーポリシー</a>
+</footer>
+
+</body>
+</html>
