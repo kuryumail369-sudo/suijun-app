@@ -902,10 +902,16 @@ function getDeviceId(){
 }
 function isPro(){
   // ローカルキャッシュで即時判定（オフライン対応）
-  const cached = localStorage.getItem('suijun_pro_cache');
-  if(cached){
-    const {valid, expires} = JSON.parse(cached);
-    if(Date.now() < expires) return valid;
+  // キャッシュが壊れていても例外を投げないこと。ここで投げると起動処理ごと止まり、
+  // 路線作成・PDF出力など isPro() を使う機能がすべて動かなくなる。
+  try{
+    const cached = localStorage.getItem('suijun_pro_cache');
+    if(cached){
+      const {valid, expires} = JSON.parse(cached);
+      if(Date.now() < expires) return valid;
+    }
+  }catch(e){
+    try{ localStorage.removeItem('suijun_pro_cache'); }catch(e2){}
   }
   return false;
 }
@@ -934,8 +940,10 @@ async function verifyKeyOnline(key){
     return {valid:!!data.valid, error:data.error||null};
   }catch(e){
     // オフライン時はキャッシュを延長
-    const cached = localStorage.getItem('suijun_pro_cache');
-    if(cached){const c=JSON.parse(cached);if(c.valid)return {valid:true,error:null};}
+    try{
+      const cached = localStorage.getItem('suijun_pro_cache');
+      if(cached){const c=JSON.parse(cached);if(c.valid)return {valid:true,error:null};}
+    }catch(e2){}
     return {valid:false,error:null};
   }
 }
@@ -2389,28 +2397,6 @@ function blurKb(){
 }
 
 // カメラを直接起動してOCR
-function captureDirectKb(){
-  if(!activeKb)return;
-  ocrTgt={id:activeKb.rid,field:activeKb.field,dir:viewMode};
-  const inp=document.createElement('input');
-  inp.type='file';inp.accept='image/*';inp.capture='environment';inp.style.display='none';
-  inp.onchange=()=>{
-    const file=inp.files[0];if(!file){inp.remove();return;}
-    // OCRパネルを開いて画像を処理
-    const lbs={bs:'後視 BS',fs:'前視 FS',is_:'中間視 IS'};
-    const r=getCurRows().find(r=>r.id===activeKb?.rid)||{point:''};
-    document.getElementById('ocr-lbl').textContent=`→${r.point} ${lbs[ocrTgt.field]||''}`;
-    ['ocr-res','ocr-spin','ocr-err'].forEach(x=>document.getElementById(x).style.display='none');
-    document.getElementById('ocr-prev').style.display='none';
-    document.getElementById('pv').style.display='none';
-    document.getElementById('ocr').style.display='block';
-    document.getElementById('ocr').scrollIntoView({behavior:'smooth',block:'start'});
-    handleOcrF(file);
-    inp.remove();
-  };
-  document.body.appendChild(inp);inp.click();
-}
-
 function captureDirectKb(){
   if(!activeKb)return;
   captureForCell(activeKb.rid,activeKb.field);

@@ -1,13 +1,15 @@
 // SiteLogger（水準測量 現場野帳）— Service Worker
 // v2: ネットワーク優先＋オフライン時はキャッシュにフォールバック。
 // 旧キャッシュ(suijun-v1)は活性化時に破棄する。
-const CACHE = 'sitelogger-v2';
+const CACHE = 'sitelogger-v3';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './manual.html',
   './terms.html',
+  './tokushoho.html',
+  './landing.html',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
