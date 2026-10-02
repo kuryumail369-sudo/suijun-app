@@ -199,6 +199,21 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
 .js-note{font-size:11px;line-height:1.6;color:var(--color-text-secondary);margin-top:8px;}
 .bk-btn{flex:1;min-height:48px;padding:12px 8px;font-size:14px;font-weight:600;border-radius:10px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;}
 .bk-btn:active{background:var(--color-background-secondary);}
+/* ===== 「このアプリを紹介する」カード ===== */
+.share-app-card{display:flex;align-items:center;gap:10px;width:100%;margin-top:14px;padding:12px 14px;
+  border:1px solid #BBD4EC;border-radius:12px;background:#F4F8FD;
+  font-family:inherit;text-align:left;cursor:pointer;}
+.share-app-card:active{background:#E8F1FA;}
+.share-app-icon{font-size:19px;line-height:1;}
+.share-app-text{flex:1;display:flex;flex-direction:column;gap:2px;}
+.share-app-title{font-size:13.5px;font-weight:600;color:#185FA5;}
+.share-app-sub{font-size:11px;color:var(--color-text-secondary);line-height:1.5;}
+.share-app-arrow{font-size:17px;color:#185FA5;opacity:.6;}
+@media (prefers-color-scheme:dark){
+  .share-app-card{border-color:#2B4D70;background:#16202B;}
+  .share-app-card:active{background:#1D2B39;}
+  .share-app-title,.share-app-arrow{color:#69A8E0;}
+}
 #bk-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;align-items:center;justify-content:center;padding:16px;}
 #bk-ov.open{display:flex;}
 #bk-box{background:var(--color-background-primary);border-radius:14px;width:100%;max-width:430px;max-height:82vh;overflow:auto;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);}
@@ -294,13 +309,22 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
     <button class="bk-btn" onclick="restorePick()">📥 バックアップから復元</button>
   </div>
   <div style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin-top:8px;line-height:1.6;">機種変更・端末の故障に備えて、全路線をファイルに書き出せます（無料）。</div>
+  <!-- 紹介の導線。フッターの小さなリンクに紛れていて気づかれないため、独立した枠にした。
+       主要操作（新規路線・バックアップ）より目立たせず、かつ見落とされない強さを狙う。 -->
+  <button class="share-app-card" onclick="showShareApp()">
+    <span class="share-app-icon">📣</span>
+    <span class="share-app-text">
+      <span class="share-app-title">このアプリを紹介する</span>
+      <span class="share-app-sub">QRコード・リンクで同僚や知り合いに送れます</span>
+    </span>
+    <span class="share-app-arrow">›</span>
+  </button>
   <div style="text-align:center;margin-top:20px;padding-bottom:8px;">
     <a href="manual.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📖 使い方</a>
     <a href="terms.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">利用規約</a>
     <a href="terms.html#tab-privacy" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">プライバシーポリシー</a>
     <a href="https://forms.gle/qoXR73eMvkxGerjL6" target="_blank" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">💬 フィードバック</a>
     <a href="tokushoho.html" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">特定商取引法に基づく表記</a>
-    <a href="javascript:void(0)" onclick="showShareApp()" style="font-size:11px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);margin:0 8px;">📣 このアプリを紹介する</a>
   </div>
 </div>
 
@@ -341,7 +365,7 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 成果表PDFのフッター表示なし</div>
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> スケッチPDF出力</div>
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> CSV・写真レポート出力</div>
-      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 点検タブ（全機能）</div>
+      <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> メール・アプリでのデータ共有</div>
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span> 音声・OCR・GPS（継続利用）</div>
     </div>
     <a id="stripe-link" class="upgrade-btn-primary" href="https://buy.stripe.com/5kQ4gscht1KF8UN1uo4Vy01" target="_blank">
@@ -355,6 +379,17 @@ body{background:var(--color-background-secondary);color:var(--color-text-primary
         <button class="upgrade-key-btn" onclick="applyLicenseKey()">適用</button>
       </div>
       <div class="upgrade-key-msg" id="license-key-msg"></div>
+      <div style="margin-top:10px;text-align:center;">
+        <a href="javascript:void(0)" onclick="showResendKey()" style="font-size:11.5px;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-secondary);">キーが届かない・なくした方はこちら</a>
+      </div>
+      <div id="resend-box" style="display:none;margin-top:10px;padding:12px;border:0.5px solid var(--color-border-secondary);border-radius:10px;background:var(--color-background-secondary);">
+        <div style="font-size:11.5px;color:var(--color-text-secondary);line-height:1.55;margin-bottom:8px;">ご購入時のメールアドレスを入力してください。ご契約が有効であれば、キーを記載したメールをお送りします。</div>
+        <div class="upgrade-key-row">
+          <input class="upgrade-key-input" id="resend-email-input" type="email" placeholder="example@example.com" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <button class="upgrade-key-btn" onclick="resendLicenseKey()">送信</button>
+        </div>
+        <div class="upgrade-key-msg" id="resend-msg"></div>
+      </div>
     </div>
     <!-- キーの入れ替え。ひとまとまりの枠にして、何のための操作かを見出しで示す。
          下線つきの小さな文字だと注釈に見えて、押せることも用途も伝わらなかった。 -->
@@ -998,6 +1033,40 @@ async function switchDeviceAndApply(key){
     msg.style.color='#E24B4A';
   }
 }
+// ===== ライセンスキーの再送依頼 =====
+// 購入メールを紛失した／迷惑メールに入って気づかなかった人の自力復旧手段。
+// サーバーは登録の有無にかかわらず同じ応答を返す（購入者リストが外から
+// 分かってしまうため）ので、こちら側の表示も結果によらず同じ文面にする。
+function showResendKey(){
+  const box=document.getElementById('resend-box');
+  if(!box)return;
+  box.style.display = box.style.display==='none' ? 'block' : 'none';
+  if(box.style.display==='block') document.getElementById('resend-email-input').focus();
+}
+async function resendLicenseKey(){
+  const el=document.getElementById('resend-email-input');
+  const msg=document.getElementById('resend-msg');
+  const email=(el.value||'').trim();
+  if(!email || email.indexOf('@')<1){
+    msg.textContent='メールアドレスを入力してください。';msg.style.color='#E24B4A';return;
+  }
+  msg.textContent='📨 送信中...';msg.style.color='#185FA5';
+  try{
+    const res=await fetch(LICENSE_WORKER_BASE+'/resend',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email})
+    });
+    if(res.status===429){
+      msg.textContent='お試しの回数が上限に達しました。しばらく時間をおいてからお試しください。';
+      msg.style.color='#E24B4A';return;
+    }
+    msg.innerHTML='ご契約が有効であれば、数分以内にキーをお送りします。<br>届かない場合は迷惑メールフォルダもご確認のうえ、info@zui.works までご連絡ください。';
+    msg.style.color='#1D9E75';
+  }catch(e){
+    msg.textContent='通信エラーが発生しました。ネット接続をご確認のうえ、再度お試しください。';
+    msg.style.color='#E24B4A';
+  }
+}
 function showUpgrade(){
   document.getElementById('upgrade-modal').style.display='flex';
   document.getElementById('license-key-msg').textContent='';
@@ -1005,6 +1074,9 @@ function showUpgrade(){
   // キーが入っているときだけ「解除」を出す
   const rr=document.getElementById('license-release-row');
   if(rr)rr.style.display=getLicense()?'block':'none';
+  // 再送欄は毎回たたんだ状態から始める
+  const rb=document.getElementById('resend-box');
+  if(rb){rb.style.display='none';document.getElementById('resend-email-input').value='';document.getElementById('resend-msg').textContent='';}
 }
 // この端末からライセンスキーを外す。サーバー側の契約や端末の紐づけには触れないので、
 // 同じキーを入れ直せばそのまま元に戻る（別端末へ移すときは切り替え機能を使う）。
